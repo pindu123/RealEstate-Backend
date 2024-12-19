@@ -14,7 +14,9 @@ const createResidential = async (req, res) => {
     req.body.amenities.electricityFacility = String( req.body.amenities.electricityFacility );
 
 
+    req.body.amenities.powerSupply = String( req.body.amenities.powerSupply );
 
+    req.body.amenities.distanceFromRoad=String( req.body.amenities.distanceFromRoad)
 
 
 

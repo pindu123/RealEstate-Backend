@@ -86,8 +86,7 @@ const fieldSchema = new mongoose.Schema(
       },
       crops: {
         type: [String],
-        required: true,
-      },
+       },
       litigation: {
         type: Boolean,
         required: true,

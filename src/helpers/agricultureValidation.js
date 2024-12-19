@@ -57,13 +57,13 @@ const fieldValidationSchema = Joi.object({
           return capitalizeWords(value);
         }, "Capitalization for crops")
       )
-      .required(),
+      .optional(),
     litigation: Joi.boolean().required(),
     litigationDesc: Joi.string().when("litigation", {
       is: true, // When litigation is true
-      then: Joi.string().required(), // litigationDesc is required
+      then: Joi.string().optional(), // litigationDesc is required
       otherwise: Joi.string().optional(), // If litigation is false, litigationDesc is optional
-    }),
+    }).optional(),
     images: Joi.array().items(Joi.string()).optional(),
     videos:Joi.array().optional(),
     propertyDesc: Joi.string().allow("").optional(),
