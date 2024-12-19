@@ -107,7 +107,7 @@ const residentialSchema = Joi.object({
   }).required(), // Address is required
 
   amenities: Joi.object({
-    powerSupply: Joi.boolean().required(),
+    powerSupply: Joi.string().required(),
     waterFacility: Joi.boolean().required(),
     electricityFacility: Joi.boolean().required(),
     roadType:Joi.string().optional(),

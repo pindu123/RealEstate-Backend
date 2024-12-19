@@ -136,7 +136,7 @@ const residentialSchema = new mongoose.Schema(
     },
     amenities: {
       powerSupply: {
-        type: Boolean,
+        type: String,
       },
       waterFacility: {
         type: Boolean,

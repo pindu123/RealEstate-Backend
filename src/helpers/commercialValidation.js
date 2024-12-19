@@ -141,7 +141,7 @@ const commercialSchema = Joi.object({
     }).required(),
 
     amenities: Joi.object({
-      isElectricity: Joi.boolean().optional(),
+      isElectricity: Joi.string().optional(),
       isWaterFacility: Joi.boolean().optional(),
       isRoadFace: Joi.boolean().optional(),
       roadType:Joi.string().optional(),

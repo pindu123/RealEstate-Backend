@@ -136,7 +136,7 @@ const commercialSchema = new mongoose.Schema(
 
       amenities: {
         isElectricity: {
-          type: Boolean,
+          type: String,
         },
         isWaterFacility: {
           type: Boolean,

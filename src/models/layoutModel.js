@@ -151,7 +151,7 @@ const layoutSchema = new mongoose.Schema(
       required:false
     },
       electricityFacility: {
-        type: Boolean,
+        type: String,
       },
       swimmingPool: {
         type: Boolean,

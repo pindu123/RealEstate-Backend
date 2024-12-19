@@ -115,7 +115,7 @@ const fieldValidationSchema = Joi.object({
 
   amenities: Joi.object({
     boreWell: Joi.boolean(),
-    electricity: Joi.boolean(),
+    electricity: Joi.string(),
     roadType:Joi.string().required(),
     distanceFromRoad: Joi.number().min(0),
     storageFacility: Joi.boolean(),

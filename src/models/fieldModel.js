@@ -155,7 +155,7 @@ const fieldSchema = new mongoose.Schema(
         type: Boolean,
       },
       electricity: {
-        type: Boolean,
+        type: String,
       },
       roadType:{
          type:String
