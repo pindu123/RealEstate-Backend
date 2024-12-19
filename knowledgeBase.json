@@ -1,0 +1,158 @@
+[
+    {
+      "question": "What is Real Estate Lokam?",
+      "answer": "Real Estate Lokam is a real estate application that connects buyers and agents, allowing agents to upload property details and manage their listings."
+    },
+    {
+      "question": "What types of properties can be listed?",
+      "answer": "The types of properties include commercial, residential, layouts, and agricultural properties."
+    },
+    {
+      "question": "What commercial properties are available?",
+      "answer": "In commercial properties, you can find options for selling, renting, and leasing."
+    },
+    {
+      "question": "What residential properties can I find?",
+      "answer": "In residential properties, options include houses and flats."
+    },
+    {
+      "question": "How can agents upload properties?",
+      "answer": "Agents can upload properties by filling out the necessary forms related to the property type and details."
+    },
+    {
+      "question": "Can agents modify their property listings?",
+      "answer": "Yes, agents can edit the details of the properties they have added."
+    },
+    {
+      "question": "How can agents mark properties as sold or unsold?",
+      "answer": "Agents can mark properties as sold or unsold through their account dashboard."
+    },
+    {
+      "question": "What can buyers do on the platform?",
+      "answer": "Buyers can view all properties, add properties to their wishlist, and book appointments with agents."
+    },
+    {
+      "question": "How do I register on the site?",
+      "answer": "To register, users need to create an account by providing the required information and verifying their email or mobile number."
+    },
+    {
+      "question": "What filters are available for searching properties?",
+      "answer": "Buyers can filter properties by location, district, mandal, price, sold or unsold status, and property type (rent, sell, or lease)."
+    },
+    {
+      "question": "How can buyers view agents near a particular property?",
+      "answer": "Buyers can view all agents located near a specific property location through the agents' section of the website."
+    },
+    {
+      "question": "Can buyers book appointments with agents?",
+      "answer": "Yes, buyers can book appointments by specifying the time, date, and location for a particular property with a selected agent."
+    },
+    {
+      "question": "What can agents do with the appointments booked by buyers?",
+      "answer": "Agents can accept or reject appointment requests and view all appointments booked by buyers."
+    },
+    {
+      "question": "Can users update their profiles?",
+      "answer": "Yes, users can update their profiles with new information at any time."
+    },
+    {
+      "question": "How can users log in?",
+      "answer": "Users can log in using their email or through OTP verification."
+    },
+    {
+      "question": "Is there a wishlist feature for buyers?",
+      "answer": "Yes, buyers can add properties to their wishlist and remove them as needed."
+    },
+    {
+      "question": "What information is displayed on the landing page?",
+      "answer": "The landing page displays the latest properties along with featured properties for quick access."
+    },
+    {
+      "question": "How do I contact customer support?",
+      "answer": "You can contact customer support through the 'Contact Us' section on our website."
+    },
+    {
+      "question": "Are there any fees for using the platform?",
+      "answer": "Registration and property browsing are free for buyers. Agents may have specific fees associated with premium listings."
+    },
+    {
+      "question": "How is data secured on the platform?",
+      "answer": "We follow industry-standard security practices to ensure that all user data is protected and secure."
+    },
+    {
+      "question": "What should I do if I forget my password?",
+      "answer": "If you forget your password, you can reset it through the 'Forgot Password' link on the login page."
+    },
+    {
+      "question": "Are there mobile apps available for Real Estate Lokam?",
+      "answer": "Currently, our services are accessible through the website, but we are working on mobile app development for better user experience."
+    },
+    {
+      "question": "How frequently is the property data updated?",
+      "answer": "Property listings are updated in real-time to ensure that all information is current and accurate."
+    },
+    {
+      "question": "Help me find the least price property",
+      "answer": "You can use the filters provided to view the required property."
+    },
+    {
+      "question": "How do I search for properties in a specific location?",
+      "answer": "Use the location filter to enter the desired city or neighborhood for your property search."
+    },
+    {
+      "question": "Can I filter properties by type?",
+      "answer": "Yes, you can use the filter to select residential, commercial, agricultural, or layout properties."
+    },
+    {
+      "question": "How can I find properties with specific amenities?",
+      "answer": "In the search filters, select the required type of property and you can find the list of amenities in the property details."
+    },
+    {
+      "question": "How do I find recently added properties or latest properties?",
+      "answer": "You can find a banner in the landing page which shows all the 'Newest Listings' on the platform."
+    },
+    {
+      "question": "Can I search for properties within my budget?",
+      "answer": "Use the price range filter to specify your budget and find properties within that range."
+    },
+    {
+      "question": "How do I find properties available for rent?",
+      "answer": "Select 'Rent' under the listing type filter to view properties available for rental."
+    },
+    {
+      "question": "Can I view properties available for lease?",
+      "answer": "Yes, select 'For Lease' in the listing type filter to find properties available for lease."
+    },
+    {
+      "question": "How do I find properties with the highest ratings?",
+      "answer": "You can view the rating and other details of a property by clicking on it."
+    },
+    {
+      "question": "How do I find properties with a virtual tour option?",
+      "answer": "You can view the images by clicking on a property, and you can use the map provided to view it."
+    },
+    {
+      "question":"Ratings of a property",
+      "answer":"Each property has its own individual rating. You can view it by clicking on it."
+    },
+    {
+      "question":"How to contact or connect with agents, or how to get assistance in buying or selling a property?",
+      "answer":"For each property, there will be an agent who added the property into the property listings. Also, all the agents nearer to that property location will also be displayed, You can book an appointment with that agent, also you will be provided with contact info of agents. You can connect and communicate with them. Buyers can also provide ratings to agents."
+    },
+    {
+      "question":"Help me find an agent",
+      "answer":"Each property listing includes the agent who added it, along with nearby agents 📍 for easy access. You can book appointments 🗓️ with agents, and their contact info 📞 is provided for direct communication. Buyers can also rate agents ⭐ to help others find top-rated professionals!"
+    },
+    {
+      "question":"How to book appointment with an agent?",
+      "answer":"Click on a property card 🏠 to view its details. Select \"Find Agents\" 👥 to see agents associated with that property. Choose \"View Requests\" 📋 for a specific agent to book an appointment 🗓️ or review your previous requests. Happy browsing! 😊"
+    },
+    {
+      "question":"How to register?",
+      "answer":"Click on the Sign In button on the landing page. If you are a registered user, login. If you are a new user, click on Register and sign up."
+    }
+    
+  ]
+  
+  
+  

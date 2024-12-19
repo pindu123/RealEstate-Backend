@@ -1,0 +1,13 @@
+{
+ "type": "service_account",
+ "project_id": "realestate-433908",
+ "private_key_id": "1959ff1d7df8750873600215dc74eb00e281952e",
+ "private_key": "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC2Q5yMUdAHudE5\nG/H0ng+6i195M5y/neh1CW6sOEQ895ulhjIPW8+nO5ZPPdfkkGgPjFsCQbvLELGR\nBU6SleVQhDwoHYdSMHLi5h5FsCVJ4K4ZVXbkUkfbGt9fG//RgjbMS0MUWU+lzaZB\ncse6ceMpYp+4z25W7nTzGFG1VSLAHs6xxQZCWEdPvgahz79snJIR9UQ/5VOvBo3c\nUwmkhBeKctdcJ+JyiZA75bcXfTU9EQTo4mstQCu5t6F0mOrnvtTLoZZgA/1jPTLt\nRHjQrU6b7+fhKhPkw9amg3x/2v5NOl1TuDG0czYNBEH8PSSx7xctOnrd/fkBzHAk\nEKAti2HBAgMBAAECggEAEqbtJpv5vMyqiVxfgK/LPsUkDlh2jlJ310BRm9y/OPkC\n6+fFiDZWVBAgQ/g5d4nCqHKt3peBAxkwfr2LCqu91aVOrbFF56aPH0K67tlFm5+b\nWXraSafU9Cp2GPrZzWQ0vOfn07WHFdnrjW+UWnNsso/F9ij+KvXIsJb4x6SQg5YH\nFE66cKEireI7xQxx0ImpK2+Eb20H1bHKZ54LzdDdH9HocoyMwls+lB+nNPRjbIPJ\n9g8MKQJ4y6Ot/c2Ny2y0UbKOw/QBeXxVz9wKdDooYmEJ7nwRlnQ854e4pkGHbntr\n9d+UTh4n4xvuVIw0FdnhsQuQe+rawhRKNhc8L4SchQKBgQDu06lzR2GU1qC5r1z6\nDipKvbDi1JgPeJ3nXgkiB1fMlLsd4zQ+lESvChEtElzQFoMS6mnkedZwViLIXKEK\nECE1OHzrj13TnwVk63mByPH/PQaql3KzroREz2sZJaLqk23JJr2U1+Vn1lOQ2yFp\nskqIksziOzYGK4zSK9WfcSALxQKBgQDDXr13AbxteqxZJC0iVXe9F007QqbLgkIh\n7kESPwJw7rZPwFmItqhQ+PKE3OaXLT7KRh3TICL7GdFhpjV7VCC/sIBEsH/JFLeg\nWP+7tmoqM2jBVA99Wq3eZmbP5B9MF/iq/YqCOudCBblx30Ddgx9SP7mozUB7/G09\nIrnQVfBxzQKBgGp+OTXtI2cB2UNTHctmm5ceRIywrWlgqFBtzva8fXr86v7lu/sX\nlBTVEVmesYIcN7AslLFLXsJStknPfAOHs7cOjC1hjT36z6Xzlge4OahNZvaUd5IF\nhHdGYgQhkya0PKUQQELpjiKiIDscaya9WJzTkMZkDq/rpWxmHWhuQhLdAoGBAL0w\nuXjNDZNXAB8ykSJ2cYWDUx7X5H2enjwNZKYurkZ+Y73HHuztNQF0kiVnZUVwYyWt\n0KPqsvVGgyR0t8W+Khh26z+ZS6WFkmyMwtkcRKKpNgBBTt6tOUHtGBKpbkVZ0UyE\nSeTi9Z9Ru8sxzrazi1kyrK9yU8e9ImvZfObq0fThAoGAHVfI6fATFqGoppVp5N4V\nmNEklxc23GAlDkyo7gt+r/Gm6OmICtVF9WhMRCX3qrKXOeJoKz+89iTHG5YMh+hy\nc9qBf7moQwSdW9m1Yb7H/cUttGFjpoODIz81grAbHaiTxGCpBw4PQgpd63MZv3CP\nRbN7S5TofqpdLu9PPUtGStA=",
+ "client_email": "monika@realestate-433908.iam.gserviceaccount.com",
+ "client_id": "114440187855081863727",
+ "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+ "token_uri": "https://oauth2.googleapis.com/token",
+ "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+ "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/monika%40realestate-433908.iam.gserviceaccount.com",
+ "universe_domain": "googleapis.com"
+}
