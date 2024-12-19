@@ -15,6 +15,7 @@ const insertLayoutDetails = async (req, res) => {
 console.log("asas",req.body,userId, role )
     let layoutDetailsData;
     let message={}
+    req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
 if(role===1)
  {  
 

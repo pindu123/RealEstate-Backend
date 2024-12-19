@@ -11,6 +11,12 @@ const createResidential = async (req, res) => {
 
     let insertData;
     let message={}
+    req.body.amenities.electricityFacility = String( req.body.amenities.electricityFacility );
+
+
+
+
+
 
 if(role===1)
 {

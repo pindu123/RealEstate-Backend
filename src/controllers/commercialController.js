@@ -25,6 +25,13 @@ const createCommercial = async (req, res) => {
     const { userId, role } = req.user.user;
     console.log(userId,role)
     let createcomm;
+    req.body.propertyDetails.amenities.isElectricity = String(req.body.propertyDetails.amenities.isElectricity);
+
+
+
+
+
+
     let message={}
     if(role ===1)
     {

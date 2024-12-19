@@ -126,7 +126,7 @@ const fieldValidationSchema = Joi.object({
         }, "Capitalization for extra amenities")
       )
       .optional(),
-  }),
+  }).optional(),
 });
 
 module.exports = { fieldValidationSchema };

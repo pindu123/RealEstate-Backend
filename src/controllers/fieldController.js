@@ -29,6 +29,11 @@ const insertFieldDetails = async (req, res) => {
     // console.log(req.user.user);
     let fieldDetailsData;
     console.log("enteredby", req.body.enteredBy);
+    req.body.amenities.electricity=String(req.body.amenities.electricity.toString() )
+
+
+
+
 
     let message={}
      if (role === 1) {

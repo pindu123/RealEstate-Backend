@@ -142,7 +142,7 @@ const residentialSchema = new mongoose.Schema(
         type: Boolean,
       },
       electricityFacility: {
-        type: Boolean,
+        type: String,
       },
       elevator: {
         type: Boolean,

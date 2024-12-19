@@ -102,7 +102,7 @@ const layoutValidationSchema = Joi.object({
   amenities: Joi.object({
     underGroundWater: Joi.boolean().required(),
     drainageSystem: Joi.boolean().required(),
-    electricityFacility: Joi.string().required(),
+    electricityFacility: Joi.string(),
     swimmingPool: Joi.boolean().required(),
     playZone: Joi.boolean().required(),
     gym: Joi.boolean().required(),

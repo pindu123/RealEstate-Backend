@@ -109,7 +109,7 @@ const residentialSchema = Joi.object({
   amenities: Joi.object({
     powerSupply: Joi.string().required(),
     waterFacility: Joi.boolean().required(),
-    electricityFacility: Joi.boolean().required(),
+    electricityFacility: Joi.string().optional(),
     roadType:Joi.string().optional(),
     distanceFromRoad: Joi.string().optional(),
 
