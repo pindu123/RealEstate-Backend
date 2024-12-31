@@ -17,7 +17,9 @@ const {
   unAssignAgent,
   deleteDeal,
   getPropsOnFilter,
-} = require("../controllers/adminController");
+  getPropertiesFilter,
+  getMaxPriceAndSize,
+ } = require("../controllers/adminController");
 
 const adminRoutes = express.Router();
 
@@ -42,7 +44,8 @@ adminRoutes.put("/deleteDeal",deleteDeal)
 
 adminRoutes.get("/getPropsOnFilter", getPropsOnFilter)
 
+adminRoutes.get("/getMaxPriceAndSize",getMaxPriceAndSize)
 
-
+adminRoutes.get("/getPropertiesFilter/:text",getPropertiesFilter )
 adminRoutes.put("/unAssignAgent",unAssignAgent)
 module.exports = adminRoutes;

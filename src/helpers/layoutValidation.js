@@ -102,7 +102,7 @@ const layoutValidationSchema = Joi.object({
   amenities: Joi.object({
     underGroundWater: Joi.boolean().required(),
     drainageSystem: Joi.boolean().required(),
-    electricityFacility: Joi.string(),
+    electricityFacility: Joi.string().optional(),
     swimmingPool: Joi.boolean().required(),
     playZone: Joi.boolean().required(),
     gym: Joi.boolean().required(),
@@ -122,6 +122,8 @@ const layoutValidationSchema = Joi.object({
   }).optional(),
 
   uploadPics: Joi.array().items(Joi.string()).optional(),
+  videos:Joi.array().items(Joi.string()).optional(),
+
 });
 
 //update plots schema

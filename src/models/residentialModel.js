@@ -16,7 +16,7 @@ const residentialSchema = new mongoose.Schema(
     },
     propertyType: {
       type: String,
-      required: true,
+      required: false,
     },
     rating: {
       type: Number,
@@ -58,7 +58,7 @@ const residentialSchema = new mongoose.Schema(
     propertyDetails: {
       type: {
         type: String,
-        required: true,
+        required: false,
       },
       apartmentName: {
         type: String,
@@ -136,7 +136,7 @@ const residentialSchema = new mongoose.Schema(
     },
     amenities: {
       powerSupply: {
-        type: String,
+        type: Boolean,
       },
       waterFacility: {
         type: Boolean,

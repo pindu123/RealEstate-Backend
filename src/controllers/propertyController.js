@@ -61,18 +61,34 @@ const getPropertiesByLocation = async (req, res) => {
 //getPropertyByUserId
 const getPropertiesByUserId = async (req, res) => {
   try {
-    const userId = req.params.agentId;
-    console.log(userId);
-    const properties = await fieldModel.find({ userId: userId });
-    if (properties.length === 0) {
+    const userId = req.params.agentId;  // The userId from the request URL
+
+    // Query all models for properties related to the userId
+    const fieldData = await fieldModel.find({ userId: userId });
+    const commercialProperties = await commercialModel.find({ userId: userId });
+    const layoutProperties = await layoutModel.find({ userId: userId });
+    const residentialProperties = await residentialModel.find({ userId: userId });
+
+    // Combine all the properties into one array
+    const allProperties = [
+      ...fieldData,
+      ...commercialProperties,
+      ...layoutProperties,
+      ...residentialProperties
+    ];
+    // If no properties are found across all models
+    if (allProperties.length === 0) {
       return res.status(404).json({ message: "No properties found" });
     }
 
-    res.status(200).json(properties);
+    // Return all properties found
+    res.status(200).json(allProperties);
   } catch (error) {
+    // Handle errors and return a 500 status
     res.status(500).json({ message: error.message });
   }
 };
+
 
 //get all properties ----- for landing page
 const getAllProperties = async (req, res) => {
@@ -104,10 +120,9 @@ const getAllProperties = async (req, res) => {
             "landDetails.totalPrice": 1,
             propertyType: 1,
           }
-        )
+        ).sort({createdAt:-1})
         // .limit(4)
-        .exec();
-    } else {
+     } else {
       // Fetch data from Field properties collection
       fieldProperties = await fieldModel
         .find(
@@ -121,7 +136,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     }
     // Iterate over field properties and push to the fields array
     fieldProperties.forEach((property) => {
@@ -150,7 +165,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+      .sort({createdAt:-1});
     } else {
       residentialProperties = await residentialModel
         .find(
@@ -164,7 +179,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     }
     // Iterate over residential properties and push to the residentials array
     residentialProperties.forEach((property) => {
@@ -191,7 +206,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     } else {
       commercialProperties = await commercialModel
         .find(
@@ -203,7 +218,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     }
     // Iterate over commercial properties and extract necessary fields
     commercialProperties.forEach((property) => {
@@ -247,7 +262,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     } else {
       layoutProperties = await layoutModel
         .find(
@@ -261,7 +276,7 @@ const getAllProperties = async (req, res) => {
             propertyType: 1,
           }
         )
-        .exec();
+        .sort({createdAt:-1});
     }
     // Iterate over layout properties and push to the layouts array
     layoutProperties.forEach((property) => {
@@ -290,7 +305,7 @@ const getAllProperties = async (req, res) => {
     }
 
     // Send the combined result back to the client
-    res.status(200).json(allProperties);
+    res.status(200).json(allProperties.sort());
   } catch (error) {
     // Handle any errors
     res.status(500).json({ message: "Error fetching properties", error });
@@ -2455,6 +2470,7 @@ const propertyFilters = async (req, res) => {
 };
 
 
+ 
 module.exports = {
   getPropertiesByLocation, //unused
   getPropertiesByUserId, //only fields(unused)

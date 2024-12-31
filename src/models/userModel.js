@@ -76,6 +76,8 @@ const userSchema = new mongoose.Schema(
     },
     assignedMandal: {
       type: String,
+    },addedBy:{
+      type:String,
     },
   },
   { timestamps: true }

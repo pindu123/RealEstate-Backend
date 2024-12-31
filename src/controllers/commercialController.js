@@ -25,13 +25,10 @@ const createCommercial = async (req, res) => {
     const { userId, role } = req.user.user;
     console.log(userId,role)
     let createcomm;
+
     req.body.propertyDetails.amenities.isElectricity = String(req.body.propertyDetails.amenities.isElectricity);
-
-
-
-
-
-
+ req.body.propertyDetails.landDetails.address.latitude=String(req.body.propertyDetails.landDetails.address.latitude);
+ req.body.propertyDetails.landDetails.address.longitude=String(req.body.propertyDetails.landDetails.address.longitude);
     let message={}
     if(role ===1)
     {

@@ -13,6 +13,8 @@ const {
   getCsrDataFromExcel,
   getPropsByCsr,
   getAssignedCsr,
+  assignCustomerToAgent,
+  assignPropertyToAgent,
 } = require("../controllers/csrController");
 const csrRoutes = express.Router();
 
@@ -25,8 +27,8 @@ csrRoutes.put("/assignAgentToCSR", assignAgentToCSR);
 csrRoutes.get("/getPropsByCsr/:csrId", getPropsByCsr);
 
 csrRoutes.get("/getAssignedCsr/:agentId",getAssignedCsr)
-
-
+csrRoutes.post("/assignCustomer", assignCustomerToAgent);
+csrRoutes.post("/assigneProperty",assignPropertyToAgent);
 csrRoutes.get("/abc",async(req,res)=>{
   console.log("abc")
   console.log(req.query)

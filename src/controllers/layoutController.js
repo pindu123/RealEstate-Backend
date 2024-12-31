@@ -12,10 +12,16 @@ const notifyModel = require("../models/notificationModel");
 const insertLayoutDetails = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
-console.log("asas",req.body,userId, role )
+console.log("asas",req.body.amenities.electricityFacility  )
+
+  
+
+ 
     let layoutDetailsData;
     let message={}
+
     req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
+
 if(role===1)
  {  
 
@@ -27,6 +33,8 @@ if(role===1)
         role,
         ...req.body,
         csrId: csrData[0].assignedCsr,
+        // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+
       };
     } else {
       console.log("abc");
@@ -38,6 +46,8 @@ if(role===1)
         enteredBy: userId,
         ...req.body,
         csrId: csrData[0].assignedCsr,
+        // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+
       };
     }
     const csrData = await userModel.find({ _id: userId });
@@ -62,6 +72,8 @@ if(role===1)
           role,
           ...req.body,
           userId: userData[0]._id.toString(),
+          // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+
         };
       } else {
         console.log("abc");
@@ -69,12 +81,15 @@ if(role===1)
           csrId: userId,
           role,
           enteredBy: userId,
+          // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+
           ...req.body,
           userId: userData[0]._id.toString(),
+ 
         };
       }
       const csrData = await userModel.find({ _id: req.user.user.userId });
-
+console.log("layoutDetailsData",layoutDetailsData)
       message={
         "senderId":req.user.user.userId,
         "receiverId":req.body.agentDetails.userId,

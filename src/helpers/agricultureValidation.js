@@ -56,16 +56,15 @@ const fieldValidationSchema = Joi.object({
         Joi.string().custom((value) => {
           return capitalizeWords(value);
         }, "Capitalization for crops")
-      )
-      .optional(),
+      ).optional(),
     litigation: Joi.boolean().required(),
     litigationDesc: Joi.string().when("litigation", {
       is: true, // When litigation is true
-      then: Joi.string().optional(), // litigationDesc is required
+      then: Joi.string().optional().allow(null), // litigationDesc is required
       otherwise: Joi.string().optional(), // If litigation is false, litigationDesc is optional
-    }).optional(),
+    }),
     images: Joi.array().items(Joi.string()).optional(),
-    videos:Joi.array().optional(),
+    videos:Joi.array().items(Joi.string()).optional(),
     propertyDesc: Joi.string().allow("").optional(),
   }).required(),
 
@@ -115,8 +114,8 @@ const fieldValidationSchema = Joi.object({
 
   amenities: Joi.object({
     boreWell: Joi.boolean(),
-    electricity: Joi.string(),
-    roadType:Joi.string().required(),
+    electricity: Joi.string().optional(),
+    roadType:Joi.string(),
     distanceFromRoad: Joi.number().min(0),
     storageFacility: Joi.boolean(),
     extraAmenities: Joi.array()

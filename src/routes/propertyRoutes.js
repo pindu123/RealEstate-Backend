@@ -46,4 +46,6 @@ propertyRoutes.get('/countOfRatings/:propertyId/:propertyType',getCountOfRatings
 
  
 
+
+
 module.exports = propertyRoutes;

@@ -14,6 +14,8 @@ const residentialModel = require("../models/residentialModel");
 const commercialModel = require("../models/commercialModel");
 const layoutModel = require("../models/layoutModel");
 const notifyModel = require("../models/notificationModel");
+const customerAssignmentModel = require("../models/customerAssignmentModel");
+const propertyAssignmentModel = require("../models/propertyAssignmentModel");
 const getUnAssignedAgents = async (req, res) => {
   try {
     let csrId = req.params.csrId;
@@ -51,20 +53,31 @@ const getUnAssignedAgents = async (req, res) => {
 
 const getAssignedAgents = async (req, res) => {
   try {
+    const csrId = req.params.csrId;
+
+    // Check if csrId is provided and is valid
+    if (!csrId) {
+      return res.status(400).json({ message: 'CSR ID is required' });
+    }
+
+    // Find the users with the assigned CSR and role 1, excluding the password
     const data = await userModel.find(
-      { assignedCsr: req.params.csrId },
-      { password: 0 }
+      { assignedCsr: csrId, role: '1' }, // Query conditions
+      { password: 0 } // Exclude password from the response
     );
 
+    // Check if any agents were found
     if (data.length > 0) {
-      res.status(200).json(data);
+      return res.status(200).json(data); // Return the found agents
     } else {
-      res.status(404).json("No Assigned Agents");
+      return res.status(404).json({ message: 'No Assigned Agents' }); // No agents found
     }
   } catch (error) {
-    res.status(500).json("Internal Server Error");
+    console.error('Error fetching assigned agents:', error); // Log the error for debugging
+    return res.status(500).json({ message: 'Internal Server Error' }); // Handle server errors
   }
 };
+
 
 const getAgentByPhone = async (req, res) => {
   try {
@@ -2791,6 +2804,81 @@ console.log(csrData)
   }
 };
 
+
+// api to assign customer to agnet
+const assignCustomerToAgent = async (req, res) => {
+  try {
+    const { assignedTo, customerIds, assignedBy,assignedDate } = req.body;
+    if (!assignedTo || !Array.isArray(customerIds) || customerIds.length === 0 || !assignedBy) {
+      return res.status(400).json({
+        message: "Required fields: assignedTo, assignedBy, customerIds (array of IDs)",
+      });
+    }
+
+    // Check if the same assignment already exists
+    // const existingAssignment = await customerAssignmentModel.findOne({
+    //   assignedTo,
+    //   customerIds: { $in: customerIds },
+    // });
+
+    // if (existingAssignment) {
+    //   return res.status(400).json({
+    //     message: "These customers are already assigned to this agent.",
+    //   });
+    // }
+
+    // Create a new assignment
+    const newAssignment = new customerAssignmentModel({
+      customerIds,
+      assignedBy,
+      assignedTo,
+      assignedDate,
+    });
+
+    await newAssignment.save();
+
+    res.status(201).json({
+      message: "Customers successfully assigned to the agent",
+      data: newAssignment,
+    });
+  } catch (error) {
+    console.error("Error assigning customers to agent:", error);
+    res.status(500).json({
+      message: "An error occurred while assigning customers to the agent",
+      error: error.message,
+    });
+  }
+};
+const assignPropertyToAgent = async (req, res) => {
+  try {
+    const { assignedTo, propertyIds, assignedBy,assignedDate } = req.body;
+    if (!assignedTo || !Array.isArray(propertyIds) || propertyIds.length === 0 || !assignedBy) {
+      return res.status(400).json({
+        message: "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
+      });
+    }
+    const newAssignment = new propertyAssignmentModel({
+      propertyIds,
+      assignedBy,
+      assignedTo,
+      assignedDate,
+    });
+
+    await newAssignment.save();
+
+    res.status(201).json({
+      message: "Properties successfully assigned to the agent",
+      data: newAssignment,
+    });
+  } catch (error) {
+    console.error("Error assigning Properties to agent:", error);
+    res.status(500).json({
+      message: "An error occurred while assigning Properties to the agent",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getUnAssignedAgents,
   getAssignedAgents,
@@ -2799,5 +2887,7 @@ module.exports = {
   getDataFromExcel,
   getCsrDataFromExcel,
   getPropsByCsr,
-  getAssignedCsr
+  getAssignedCsr,
+  assignCustomerToAgent,
+  assignPropertyToAgent,
 };

@@ -146,6 +146,7 @@ const commercialSchema = Joi.object({
       isRoadFace: Joi.boolean().optional(),
       roadType:Joi.string().optional(),
       distanceFromRoad: Joi.string().optional(),
+      roadProximity:Joi.string().optional(),
       extraAmenities: Joi.array()
         .items(
           Joi.string().custom((value) => {

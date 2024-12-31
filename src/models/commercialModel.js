@@ -154,6 +154,9 @@ const commercialSchema = new mongoose.Schema(
         extraAmenities: {
           type: [String],
         },
+        roadProximity:{
+          type:String
+        }
       },
 
       uploadPics: {

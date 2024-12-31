@@ -327,6 +327,12 @@ const createCSR = async (req, res) => {
         assignedCsr: "0",
       };
     }
+    if (result.role === 6) {
+      result = {
+        ...result,
+        assignedCsr:req.user.user.userId,
+      };
+    }
     console.log("result", result);
     const user = new userModel(result);
     const salt = await bcrypt.genSalt(saltRounds);
@@ -341,10 +347,9 @@ const createCSR = async (req, res) => {
     }
 
     await user.save();
-    // Send email if role is 1
-    if (user.role === 5 || user.role===1) {
+    if (user.role === 5 || user.role===1 || user.role===6) {
       const transporter = nodemailer.createTransport({
-        service: "Gmail", // or any other email service
+        service: "Gmail", 
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,
@@ -386,6 +391,7 @@ const createCSR = async (req, res) => {
     });
   }
 };
+
 
 
 

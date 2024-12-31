@@ -23,110 +23,236 @@ const getFields = async (req, res) => {
 };
 
 // Create a new field
+// const insertFieldDetails = async (req, res) => {
+//   try {
+//     const { userId, role } = req.user.user;
+//     // console.log(req.user.user);
+//     let fieldDetailsData;
+//   req.body.amenities.electricity=String(req.body.amenities.electricity)
+
+//     let message={}
+//      if (role === 1) {
+//       const csrData = await userModel.find({ _id: userId });
+//       console.log("csrData", csrData.assignedCsr);
+//       if (req.body.enteredBy) {
+//         fieldDetailsData = {
+//           userId,
+//           csrId: csrData[0].assignedCsr,
+//           role,
+//           ...req.body,
+ 
+//         };
+//       } else {
+//         const csrData = await userModel.find({ _id: userId });
+
+//         console.log("abc");
+//         fieldDetailsData = {
+//           userId,
+//           role,
+//           enteredBy: userId,
+//           csrId: csrData[0].assignedCsr,
+//           ...req.body,
+
+//          };
+//       }  
+
+// message={
+//   "senderId":req.user.user.userId,
+//   "receiverId":csrData[0].assignedCsr,
+//      "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+//      "notifyType":"Property"
+// }
+
+//     }
+//     if (role === 5) {
+//       console.log("csr")
+//       const userData = await userModel.find({
+//         email: req.body.agentDetails.userId,
+//       });
+
+//       if (req.body.enteredBy) {
+//         fieldDetailsData = {
+//           csrId: userId,
+
+//           role,
+//           ...req.body,
+ 
+//           userId: userData[0]._id.toString(),
+//         };
+//       } else {
+//         console.log("abc");
+//         fieldDetailsData = {
+//           csrId: userId,
+//           role,
+//           enteredBy: userId,
+//           ...req.body,
+//           userId: userData[0]._id.toString(),
+ 
+//         };
+//       }
+//       const csrData = await userModel.find({ _id: req.user.user.userId });
+
+//       message={
+//         "senderId":req.user.user.userId,
+//         "receiverId":req.body.agentDetails.userId,
+//         "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+//         "notifyType":"Property"
+
+//       }
+//     }
+
+//     if (fieldDetailsData.address.latitude === '' || fieldDetailsData.address.latitude === undefined) {
+//       delete fieldDetailsData.address.latitude;
+//     }
+    
+//     if (fieldDetailsData.address.longitude === '' || fieldDetailsData.address.longitude === undefined) {
+//       delete fieldDetailsData.address.longitude;
+//     }
+    
+//     const validatedData = await fieldValidationSchema.validateAsync(
+//       fieldDetailsData,
+//       { abortEarly: false }
+//     );
+//     console.log("after validation", validatedData);
+//     const fieldDetails = new fieldModel(validatedData);
+//     await fieldDetails.save();
+//     console.log("success");
+
+// const notify=new notifyModel(message)
+// await notify.save()
+
+//     res
+//       .status(201)
+//       .json({ message: "field details added successfully", success: true ,"landDetails":validatedData});
+//   } catch (error) {
+//     // Handle validation errors
+
+//     if (error.isJoi) {
+//       console.log(error);
+//       return res.status(422).json({
+//         message: "Validation failed",
+//         details: error.details.map((err) => err.message), // Provide detailed Joi validation errors
+//         success: false,
+//       });
+//     }
+
+//     // Handle server errors
+//     console.log(error);
+//     res.status(500).json({ message: "Error inserting field details", error });
+//   }
+// };
+
 const insertFieldDetails = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
-    // console.log(req.user.user);
+    req.body.amenities.electricity = String(req.body.amenities.electricity); // Ensure electricity is a string
+
     let fieldDetailsData;
-    console.log("enteredby", req.body.enteredBy);
-    req.body.amenities.electricity=String(req.body.amenities.electricity.toString() )
+    let message = {};
 
+    // Fetch user data once
+    const userData = await userModel.findById(userId);
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
+    if (role === 1) { // CSR role
+      const csrData = await userModel.findById(userData.assignedCsr);
+      if (!csrData) {
+        return res.status(404).json({ message: "CSR not found" });
+      }
 
-
-
-    let message={}
-     if (role === 1) {
-      const csrData = await userModel.find({ _id: userId });
-      console.log("csrData", csrData.assignedCsr);
       if (req.body.enteredBy) {
         fieldDetailsData = {
           userId,
-          csrId: csrData[0].assignedCsr,
+          csrId: csrData._id,
           role,
           ...req.body,
         };
       } else {
-        const csrData = await userModel.find({ _id: userId });
-
-        console.log("abc");
         fieldDetailsData = {
           userId,
           role,
           enteredBy: userId,
-          csrId: csrData[0].assignedCsr,
+          csrId: csrData._id,
           ...req.body,
         };
-      }  
+      }
 
-message={
-  "senderId":req.user.user.userId,
-  "receiverId":csrData[0].assignedCsr,
-     "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
-     "notifyType":"Property"
-}
-
+      message = {
+        senderId: userId,
+        receiverId: csrData._id,
+        message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
+        notifyType: "Property",
+      };
     }
-    if (role === 5) {
-      const userData = await userModel.find({
-        email: req.body.agentDetails.userId,
-      });
+
+    if (role === 5) { // Agent role
+      const agentData = await userModel.findOne({ email: req.body.agentDetails.userId });
+      if (!agentData) {
+        return res.status(404).json({ message: "Agent not found" });
+      }
 
       if (req.body.enteredBy) {
         fieldDetailsData = {
           csrId: userId,
-
           role,
+          userId: agentData._id.toString(),
           ...req.body,
-          userId: userData[0]._id.toString(),
         };
       } else {
-        console.log("abc");
         fieldDetailsData = {
           csrId: userId,
           role,
           enteredBy: userId,
+          userId: agentData._id.toString(),
           ...req.body,
-          userId: userData[0]._id.toString(),
         };
       }
-      const csrData = await userModel.find({ _id: req.user.user.userId });
 
-      message={
-        "senderId":req.user.user.userId,
-        "receiverId":req.body.agentDetails.userId,
-        "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
-        "notifyType":"Property"
-
+      const csrData = await userModel.findById(userId);
+      if (!csrData) {
+        return res.status(404).json({ message: "CSR not found" });
       }
+
+      message = {
+        senderId: userId,
+        receiverId: req.body.agentDetails.userId,
+        message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
+        notifyType: "Property",
+      };
     }
 
-    if (fieldDetailsData.address.latitude === '' || fieldDetailsData.address.latitude === undefined) {
+    // Handle address latitude and longitude if they are empty or undefined
+    if (!fieldDetailsData.address.latitude) {
       delete fieldDetailsData.address.latitude;
     }
-    
-    if (fieldDetailsData.address.longitude === '' || fieldDetailsData.address.longitude === undefined) {
+
+    if (!fieldDetailsData.address.longitude) {
       delete fieldDetailsData.address.longitude;
     }
-    
-    const validatedData = await fieldValidationSchema.validateAsync(
-      fieldDetailsData,
-      { abortEarly: false }
-    );
-    console.log("after validation", validatedData);
+
+    // Validate the data using Joi schema
+    const validatedData = await fieldValidationSchema.validateAsync(fieldDetailsData, { abortEarly: false });
+    console.log("After validation:", validatedData);
+
+    // Save the field details to the database
     const fieldDetails = new fieldModel(validatedData);
     await fieldDetails.save();
-    console.log("success");
+    console.log("Field details added successfully");
 
-const notify=new notifyModel(message)
-await notify.save()
+    // Create and save the notification
+    const notification = new notifyModel(message);
+    await notification.save();
 
-    res
-      .status(201)
-      .json({ message: "field details added successfully", success: true });
+    // Respond to the client
+    res.status(201).json({
+      message: "Field details added successfully",
+      success: true,
+      landDetails: validatedData,
+    });
   } catch (error) {
     // Handle validation errors
-
     if (error.isJoi) {
       console.log(error);
       return res.status(422).json({
@@ -141,6 +267,8 @@ await notify.save()
     res.status(500).json({ message: "Error inserting field details", error });
   }
 };
+
+
 
 //get all the fields
 const getAllFields = async (req, res) => {

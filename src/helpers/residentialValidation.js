@@ -22,7 +22,7 @@ const residentialSchema = Joi.object({
 
   rating: Joi.number().default(0),
   ratingCount: Joi.number().default(0),
-  status: Joi.number().default(0).required(),
+  status: Joi.number().default(0),
   csrId: Joi.string().optional(),
   owner: Joi.object({
     ownerName: Joi.string()
@@ -42,7 +42,7 @@ const residentialSchema = Joi.object({
   }).required(),
 
   propertyDetails: Joi.object({
-    type: Joi.string().required(),
+    type: Joi.string(),
 
     apartmentName: Joi.string()
       .required()
@@ -104,6 +104,7 @@ const residentialSchema = Joi.object({
     latitude: Joi.string().optional(),
     longitude: Joi.string().optional(),
     landMark: Joi.string().optional(),
+    currentLocation:Joi.string().optional(),
   }).required(), // Address is required
 
   amenities: Joi.object({
@@ -112,7 +113,6 @@ const residentialSchema = Joi.object({
     electricityFacility: Joi.string().optional(),
     roadType:Joi.string().optional(),
     distanceFromRoad: Joi.string().optional(),
-
     elevator: Joi.boolean().required(),
     watchman: Joi.boolean().required(),
     cctv: Joi.boolean().required(),
@@ -120,14 +120,8 @@ const residentialSchema = Joi.object({
     educational: Joi.number().min(0).required(),
     grocery: Joi.number().min(0).required(),
     gymFacility: Joi.boolean().required(),
-    extraAmenities: Joi.array()
-      .items(
-        Joi.string().custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for extra amenities")
-      )
-      .optional(),
-  }).required(),
+ 
+  }).optional(),
 
   propPhotos: Joi.array().items(Joi.string()).optional(),
   videos:Joi.array().items(Joi.string()).optional(),
@@ -147,7 +141,14 @@ const residentialSchema = Joi.object({
       )
       .required(),
     playZone: Joi.boolean().required(),
+    extraAmenities: Joi.array()
+    .items(
+      Joi.string().custom((value) => {
+        return capitalizeWords(value);
+      }, "Capitalization for extra amenities")
+    ).optional(),
   }).required(),
+  
 });
 
 module.exports = { residentialSchema };
