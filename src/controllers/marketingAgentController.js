@@ -315,7 +315,7 @@ const getMarketingAgents = async (req, res) => {
       marketingAgentData = await userModel.find({ addedBy: addedBy });
     }
     if (!marketingAgentData) {
-      return res.status(404).json({ message: "No Marketing Agent Data Found" });
+      return res.status(409).json({ message: "No Marketing Agent Data Found" });
     }
     return res.status(200).json({ data: marketingAgentData });
   } catch (error) {
@@ -323,47 +323,58 @@ const getMarketingAgents = async (req, res) => {
   }
 };
 
-// api to get assigned customer to the marketing Agent
+
+
 const getCustomersByAssignedTo = async (req, res) => {
   try {
-    const role = req.user.user.userId;
+    const role = req.user.user.role;
     let assignedTo;
+
     if (role === 6) {
       assignedTo = req.user.user.userId;
     } else {
-      assignedTo = req.params;
+      assignedTo = req.params.assignedTo; // Ensure `assignedTo` is passed as a parameter
     }
+
     if (!assignedTo) {
       return res.status(400).json({
-        message: "Please provide the assignedTo field (agent ID)"
+        message: "Please provide the assignedTo field (agent ID)",
       });
     }
+
+    // Fetch assignments for the specified agent
     const assignments = await CustomerAssignment.find({ assignedTo });
 
     if (assignments.length === 0) {
-      return res.status(404).json({
-        message: "No customers assigned to the specified agent"
+      return res.status(409).json({
+        message: "No customers assigned to the specified agent",
       });
     }
 
-    const customerIds = assignments.flatMap(assignment => assignment.customerIds);
-    const customers = await customerModel.find({ _id: { $in: customerIds } });
+    // Extract customer details from the assignments
+    const customers = assignments.flatMap(assignment =>
+      assignment.customers.map(customer => ({
+        customerId: customer.customerId,
+        status: customer.status,
+        description: customer.description,
+      }))
+    );
 
     if (customers.length === 0) {
-      return res.status(404).json({
-        message: "No customers found for the assigned agent"
+      return res.status(409).json({
+        message: "No customers found for the assigned agent",
       });
     }
 
     res.status(200).json({
       message: "Customer details fetched successfully",
-      data: customers
+      data: customers,
     });
   } catch (error) {
     console.error("Error fetching customer details:", error);
     res.status(500).json({
       message: "An error occurred while fetching customer details",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -371,54 +382,6 @@ const getCustomersByAssignedTo = async (req, res) => {
 // api to get the properties in marketng agent's district
 
 
-// const myAreaProperties = async (req, res) => {
-//     try {
-//       const { user } = req.user;
-//       const role = user.role;
-//       let agentId;
-//       if (role === 6) {
-//         agentId = req.params.agentId; 
-//       } else if (req.params.agentId) {
-//         agentId = req.params.agentId; 
-//       }
-  
-//       if (!agentId) {
-//         return res.status(400).json({ message: "Agent ID is required" });
-//       }
-  
-//       // Find the agent and their district
-//       const agent = await userModel.findById(agentId);
-//       if (!agent || !agent.district) {
-//         return res.status(404).json({ message: "Marketing agent or district not found" });
-//       }
-  
-//       const { district } = agent;
-  
-//       // Fetch properties in the agent's district concurrently
-//       const [fieldData, layoutData, residentialData, commercialData] = await Promise.all([
-//         fieldModel.find({ "address.district": district }),
-//         layoutModel.find({ "layoutDetails.address.district": district }),
-//         residentialModel.find({ "address.district": district }),
-//         commercialModel.find({ "propertyDetails.landDetails.address.district": district }),
-//       ]);
-  
-//       // Combine all property data
-//       const properties = {
-//         fieldData,
-//         layoutData,
-//         residentialData,
-//         commercialData,
-//       };
-  
-//       res.status(200).json({
-//         message: "Properties found in the agent's district",
-//         data: properties,
-//       });
-//     } catch (error) {
-//       console.error("Error fetching properties:", error);
-//       res.status(500).json({ message: "Internal server error" });
-//     }
-//   };
   
 const myAreaProperties = async (req, res) => {
   try {
@@ -439,7 +402,7 @@ const myAreaProperties = async (req, res) => {
     // Find the agent and their district
     const agent = await userModel.findById(agentId);
     if (!agent || !agent.district) {
-      return res.status(404).json({ message: "Marketing agent or district not found" });
+      return res.status(409).json({ message: "Marketing agent or district not found" });
     }
 
     const { district } = agent;
@@ -510,267 +473,6 @@ const myAreaProperties = async (req, res) => {
   }
 };
 
-// const getAssignedCustomers = async (req, res) => {
-//   try {
-//     const assignedId = req.params.userId;
-//     const role=req.params.role;
-//     console.log(role, assignedId)
-
-//     // const { user } = req.user;
-//     // const role = user.role;
-//     // const assignedId=user.userId;
-   
-//     let filterField;
-//     if (role === 5 ||role === "5" ) {
-//       filterField = "assignedBy";
-//     } else if (role === 6|| role ==="6" ) {
-//       filterField = "assignedTo";
-//     } else {
-//       return res.status(400).json({ message: "Invalid role. Must be 5 or 6." });
-//     }
-
-// //    const assignedId = req.params.assignedId;
-//     if (!assignedId) {
-//       return res.status(400).json({ message: "Assigned ID is required." });
-//     }
-
-//     // Fetch customer assignments based on the role
-//     const assignments = await CustomerAssignment.find({ [filterField]: assignedId });
-
-//     if (!assignments || assignments.length === 0) {
-//       return res.status(404).json({ message: "No customers assigned for the given ID." });
-//     }
-
-//     // Extract customer IDs from the assignments
-//     const customerIds = assignments.flatMap(assignment => assignment.customerIds);
-
-//     // Fetch customer details
-//     const customers = await customerModel.find(
-//       { _id: { $in: customerIds } },
-//       { firstName: 1, lastName: 1, email: 1, phoneNumber: 1, district: 1, village: 1, mandal: 1 }
-//     );
-
-//     res.status(200).json({
-//       message: "Assigned customers retrieved successfully.",
-//       data: customers.map(customer => ({
-//         name: `${customer.firstName} ${customer.lastName}`,
-//         email: customer.email,
-//         phone: customer.phoneNumber,
-//         district: customer.district,
-//         village: customer.village,
-//         mandal: customer.mandal,
-//       })),
-//     });
-//   } catch (error) {
-//     console.error("Error fetching assigned customers:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// to get entire details
-// const getAssignedPropertyDetails = async (req, res) => {
-//   try {
-//     const assignedId = req.params.userId;
-//     const role=req.params.role;
-//     console.log(role, assignedId);
-
-//     let filterField;
-//     if (role === 5||role === "5") {
-//       filterField = "assignedBy"; 
-//     } else if (role === 6||role === "6") {
-//       filterField = "assignedTo"; 
-//     } else {
-//       return res.status(400).json({ message: "Invalid role. Must be 5 or 6." });
-//     }
-
-//     if (!assignedId) {
-//       return res.status(400).json({ message: "Assigned ID is required." });
-//     }
-
-//     // Fetch property assignments based on assignedId (either assignedBy or assignedTo)
-//     const propertyAssignments = await propertyAssignmentModel.find({
-//       [filterField]: assignedId,
-//     });
-
-//     if (!propertyAssignments || propertyAssignments.length === 0) {
-//       return res.status(409).json({ message: "No properties assigned for the given ID." });
-//     }
-
-//     const propertyIds = propertyAssignments.flatMap(assignment => assignment.propertyIds);
-
-//     // Fetch data from all property models using the propertyIds
-//     const commercialProperties = await commercialModel.find({ _id: { $in: propertyIds } });
-//     const fieldsProperties = await fieldModel.find({ _id: { $in: propertyIds } });
-//     const layoutProperties = await layoutModel.find({ _id: { $in: propertyIds } });
-//     const residentialProperties = await residentialModel.find({ _id: { $in: propertyIds } });
-
-//     const allProperties = [
-//       ...commercialProperties,
-//       ...fieldsProperties,
-//       ...layoutProperties,
-//       ...residentialProperties
-//     ];
-
-//     if (allProperties.length === 0) {
-//       return res.status(404).json({ message: "No property details found for the given propertyIds." });
-//     }
-
-//     // Send the response with all the property details
-//     res.status(200).json({
-    
-//       data: allProperties.map(property => {
-//         // Depending on propertyType, extract the relevant fields
-//         let propertyDetails = {};
-//         if (property.propertyType === "Commercial") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             propertyTitle: property.propertyTitle,
-//             owner: property.propertyDetails.owner,
-//             address: property.propertyDetails.address,
-//             amenities: property.propertyDetails.amenities,
-//             uploadPics: property.propertyDetails.uploadPics,
-//           };
-//         } else if (property.propertyType === "Agricultural land") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             ownerDetails: property.ownerDetails,
-//             landDetails: property.landDetails,
-//             address: property.address,
-//             amenities: property.amenities,
-//           };
-//         } else if (property.propertyType === "Layout") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             layoutTitle: property.layoutDetails.layoutTitle,
-//             description: property.layoutDetails.description,
-//             address: property.layoutDetails.address,
-//             amenities: property.layoutDetails.amenities,
-//             uploadPics: property.layoutDetails.uploadPics,
-//           };
-//         } else if (property.propertyType === "Residential") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             apartmentName: property.propertyDetails.apartmentName,
-//             flatNumber: property.propertyDetails.flatNumber,
-//             address: property.propertyDetails.address,
-//             amenities: property.propertyDetails.amenities,
-//             propPhotos: property.propertyDetails.propPhotos,
-//           };
-//         }
-//         return propertyDetails;
-//       }),
-//     });
-//   } catch (error) {
-//     console.error("Error fetching property details:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// const getAllAssignedPropertyDetails = async (req, res) => {
-//   try {
-//     const assignedId = req.params.userId;
-//     const role = req.params.role;
-//     console.log(role, assignedId);
-
-//     let filterField;
-//     if (role === 5 || role === "5") {
-//       filterField = "assignedBy"; 
-//     } else if (role === 6 || role === "6") {
-//       filterField = "assignedTo";
-//     } else {
-//       return res.status(400).json({ message: "Invalid role. Must be 5 or 6." });
-//     }
-//     if (!assignedId) {
-//       return res.status(400).json({ message: "Assigned ID is required." });
-//     }
-//    const propertyAssignments = await propertyAssignmentModel.find({
-//       [filterField]: assignedId,
-//     });
-//     if (!propertyAssignments || propertyAssignments.length === 0) {
-//       return res.status(409).json({ message: "No properties assigned for the given ID." });
-//     }
-//     const propertyIds = propertyAssignments.flatMap(assignment => assignment.propertyIds);
-//    const commercialProperties = await commercialModel.find({ _id: { $in: propertyIds } });
-//     const fieldsProperties = await fieldModel.find({ _id: { $in: propertyIds } });
-//     const layoutProperties = await layoutModel.find({ _id: { $in: propertyIds } });
-//     const residentialProperties = await residentialModel.find({ _id: { $in: propertyIds } });
-//     const allProperties = [
-//       ...commercialProperties,
-//       ...fieldsProperties,
-//       ...layoutProperties,
-//       ...residentialProperties
-//     ];
-//     if (allProperties.length === 0) {
-//       return res.status(404).json({ message: "No property details found for the given propertyIds." });
-//     }
-//  res.status(200).json({
-//       data: allProperties.map(property => {
-//         let propertyDetails = {};
-//   if (property.propertyType === "Commercial") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             propertyTitle: property.propertyTitle,
-//             ownerName: property.propertyDetails.owner ? property.propertyDetails.owner.ownerName : null,
-//             landTitle: property.propertyTitle, // Assuming 'propertyTitle' is the land title for commercial properties
-//             price: property.propertyDetails.landDetails ? property.propertyDetails.landDetails.price : null,
-//             address: {
-//               district: property.propertyDetails.address ? property.propertyDetails.address.district : null,
-//               village: property.propertyDetails.address ? property.propertyDetails.address.village : null,
-//               mandal: property.propertyDetails.address ? property.propertyDetails.address.mandal : null
-//             },
-//             images: property.propertyDetails.uploadPics || [],
-//           };
-//         } else if (property.propertyType === "Agricultural land") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             ownerName: property.ownerDetails ? property.ownerDetails.ownerName : null,
-//             landTitle: property.landDetails ? property.landDetails.title : null,
-//             price: property.landDetails ? property.landDetails.price : null,
-//             address: {
-//               district: property.address ? property.address.district : null,
-//               village: property.address ? property.address.village : null,
-//               mandal: property.address ? property.address.mandal : null
-//             },
-//             images: property.landDetails ? property.landDetails.images : [],
-//           };
-//         } else if (property.propertyType === "Layout") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             propertyTitle: property.layoutDetails ? property.layoutDetails.layoutTitle : null,
-//             ownerName: property.ownerDetails ? property.ownerDetails.ownerName : null,
-//             landTitle: property.layoutDetails ? property.layoutDetails.layoutTitle : null,
-//             price: property.layoutDetails ? property.layoutDetails.plotPrice : null,
-//             address: {
-//               district: property.layoutDetails.address ? property.layoutDetails.address.district : null,
-//               village: property.layoutDetails.address ? property.layoutDetails.address.village : null,
-//               mandal: property.layoutDetails.address ? property.layoutDetails.address.mandal : null
-//             },
-//             images: property.layoutDetails ? property.layoutDetails.uploadPics : [],
-//           };
-//         } else if (property.propertyType === "Residential") {
-//           propertyDetails = {
-//             propertyType: property.propertyType,
-//             apartmentName: property.propertyDetails ? property.propertyDetails.apartmentName : null,
-//             ownerName: property.propertyDetails && property.propertyDetails.owner ? property.propertyDetails.owner.ownerName : null,
-//             landTitle: property.propertyTitle, // Assuming 'propertyTitle' is the land title for residential properties
-//             price: property.propertyDetails ? property.propertyDetails.flatCost : null,
-//             address: {
-//               district: property.propertyDetails && property.propertyDetails.address ? property.propertyDetails.address.district : null,
-//               village: property.propertyDetails && property.propertyDetails.address ? property.propertyDetails.address.village : null,
-//               mandal: property.propertyDetails && property.propertyDetails.address ? property.propertyDetails.address.mandal : null
-//             },
-//             images: property.propertyDetails ? property.propertyDetails.propPhotos : [],
-//           };
-//         }
-//       return propertyDetails;
-//       }),
-//     });
-//   } catch (error) {
-//     console.error("Error fetching property details:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-// Function to fetch assigned property details
 
 const getAssignedCustomers = async (req, res) => {
   try {
@@ -806,52 +508,80 @@ const getAssignedCustomers = async (req, res) => {
     const startOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
     const endOfDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999));
 
-    // Log the date range for debugging
     console.log("Start of Day (UTC):", startOfDay.toISOString());
     console.log("End of Day (UTC):", endOfDay.toISOString());
 
     // Fetch customer assignments based on the assigned ID and assignedDate range
     const assignments = await CustomerAssignment.find({
       [filterField]: assignedId,
-      assignedDate: { $gte: startOfDay, $lte: endOfDay }, // Use date range filter
+      assignedDate: { $gte: startOfDay, $lte: endOfDay },
     });
 
-    console.log("Assignments fetched:", assignments);
+ 
 
-    if (!assignments || assignments.length === 0) {
-      return res.status(404).json({ message: "No customers assigned for the given ID and date." });
+    console.log("Assignments fetched:", assignments);
+     if (!assignments || assignments.length === 0) {
+      return res.status(409).json({ message: "No customers assigned for the given ID and date." });
     }
 
-    const customerIds = assignments.flatMap(assignment => assignment.customerIds);
+    // Extract customer IDs and additional details from assignments
+    const customerDetails = assignments.flatMap(assignment =>
+      assignment.customers.map(customer => ({
+        customerId: customer.customerId,
+        status: customer.status,
+        description: customer.description,
+        assignmentId: assignment._id, // Include assignment ID
+      }))
+    );
 
-    // Fetch customer details based on IDs
+    const customerIds = customerDetails.map(detail => detail.customerId);
+
+    // Fetch customer data from the customers collection
     const customers = await customerModel.find(
       { _id: { $in: customerIds } },
       { firstName: 1, lastName: 1, email: 1, phoneNumber: 1, district: 1, village: 1, mandal: 1 }
     );
 
     if (!customers || customers.length === 0) {
-      return res.status(404).json({ message: "No customer details found for the assigned customers." });
+      return res.status(409).json({ message: "No customer details found for the assigned customers." });
     }
+
+    // Combine details from both sources
+    const responseData = customerDetails.map(detail => {
+      const customer = customers.find(cust => cust._id.toString() === detail.customerId);
+      if (customer) {
+        return {
+          assignmentId: detail.assignmentId, // Include assignment ID in the response
+          customerId: customer._id,
+          name: `${customer.firstName} ${customer.lastName}`,
+          email: customer.email,
+          phone: customer.phoneNumber,
+          district: customer.district,
+          mandal: customer.mandal,
+          village: customer.village,
+          status: detail.status,
+          description: detail.description,
+        };
+      }
+      return {
+        assignmentId: detail.assignmentId, // Include assignment ID even if customer details are not found
+        customerId: detail.customerId,
+        status: detail.status,
+        description: detail.description,
+      };
+    });
 
     // Prepare and send the response
     res.status(200).json({
       message: "Assigned customers retrieved successfully.",
-      data: customers.map(customer => ({
-        customerId: customer._id,
-        name: `${customer.firstName} ${customer.lastName}`,
-        email: customer.email,
-        phone: customer.phoneNumber,
-        district: customer.district,
-        village: customer.village,
-        mandal: customer.mandal,
-      })),
+      data: responseData,
     });
   } catch (error) {
     console.error("Error fetching assigned customers:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
+
 const getAssignedPropertyDetails = async (req, res) => {
   try {
     const assignedId = req.params.userId;
@@ -910,12 +640,13 @@ const getAssignedPropertyDetails = async (req, res) => {
     ];
 
     if (!allProperties.length) {
-      return res.status(404).json({ message: "No property details found for the given property IDs." });
+      return res.status(409).json({ message: "No property details found for the given property IDs." });
     }
 
     // Map property details based on type
     const mapPropertyDetails = (property, assignment) => {
       const commonDetails = {
+        propertyId: property._id.toString(),
         propertyType: property.propertyType,
         assignedDate: assignment?.assignedDate || null,
       };
@@ -982,6 +713,242 @@ const getAssignedPropertyDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// based on propertyId get agentId and agentName 
+
+const propertyAssignedAgents = async (req, res) => {
+    try {
+        const { propertyId } = req.query; // Get the propertyId from the query params
+        
+        if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+            return res.status(400).json({ message: "Invalid property ID format" });
+        }
+
+        let propertyData = null;
+        let agentId = null;
+        let agentName = null;
+
+        
+        if (propertyId) {
+            // Check in each model to find the property by _id
+            propertyData = await residentialModel.findById(propertyId);
+            if (!propertyData) {
+                propertyData = await commercialModel.findById(propertyId);
+            }
+            if (!propertyData) {
+                propertyData = await layoutModel.findById(propertyId);
+            }
+            if (!propertyData) {
+                propertyData = await fieldModel.findById(propertyId);
+            }
+        }
+
+        console.log("Property Data:", propertyData); // Log property data for debugging
+
+        if (!propertyData) {
+            return res.status(409).json({ message: "Property not found." });
+        }
+
+        const userId = propertyData.userId || propertyData.agentDetails?.userId;
+
+        if (userId) {
+            const user = await userModel.findById(userId);
+            if (user) {
+                agentId = user._id;
+                agentName = `${user.firstName} ${user.lastName}`;
+            }
+        }
+
+        if (agentId && agentName) {
+            return res.status(200).json({ agentId, agentName });
+        } else {
+            return res.status(409).json({ message: "Agent not found for this property." });
+        }
+
+    } catch (error) {
+        console.error("Error fetching agent details:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { propertyAssignedAgents };
+
+
+const mongoose = require("mongoose");
+
+// const updateCustomerStatus = async (req, res) => {
+//   try {
+//     const { assignmentId, customerId, status, description } = req.body;
+
+//     // Validate input
+//     if (!assignmentId) {
+//       return res.status(400).json({ message: "Assignment ID is required." });
+//     }
+//     if (!customerId) {
+//       return res.status(400).json({ message: "Customer ID is required." });
+//     }
+   
+
+//     // Ensure ObjectId instances are created correctly
+//     const validAssignmentId = mongoose.Types.ObjectId.isValid(assignmentId)
+//       ? new mongoose.Types.ObjectId(assignmentId)
+//       : null;
+//     const validCustomerId = mongoose.Types.ObjectId.isValid(customerId)
+//       ? new mongoose.Types.ObjectId(customerId)
+//       : null;
+
+//     if (!validAssignmentId || !validCustomerId) {
+//       return res.status(400).json({ message: "Invalid assignmentId or customerId format." });
+//     }
+
+//     // Find the assignment by its ID
+//     const assignment = await CustomerAssignment.findOne({
+//       _id: validAssignmentId,
+//       "customers.customerId": validCustomerId,
+//     });
+
+//     if (!assignment) {
+//       return res.status(409).json({
+//         message: "Assignment not found for the given ID, or customer not found within the assignment.",
+//       });
+//     }
+
+//     // Find the specific customer in the `customers` array
+//     const customerToUpdate = assignment.customers.find(
+//       (customer) =>
+//         customer.customerId.toString() === validCustomerId.toString()
+//     );
+
+//     if (!customerToUpdate) {
+//       return res.status(409).json({ message: "Customer not found in the assignment." });
+//     }
+
+//     // Update status and description
+//     customerToUpdate.status = status;
+//     if (description) {
+//       customerToUpdate.description = description;
+//     }
+
+//     // Save the updated assignment
+//     await assignment.save();
+
+//     res.status(200).json({
+     
+//       data: {
+//         assignmentId: assignment._id,
+//         customerId: customerToUpdate.customerId,
+//         status: customerToUpdate.status,
+//         description: customerToUpdate.description || null,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error updating customer status:", error);
+//     res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message,
+//     });
+//   }
+// };
+const updateCustomerStatus = async (req, res) => {
+  try {
+    const { assignmentId, customerId, status, description, propertyType, propertyname, size, price, location } = req.body;
+
+    // Validate input
+    if (!assignmentId) {
+      return res.status(400).json({ message: "Assignment ID is required." });
+    }
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required." });
+    }
+    if (!status) {
+      return res.status(400).json({ message: "Status is required." });
+    }
+
+    // Ensure ObjectId instances are created correctly
+    const validAssignmentId = mongoose.Types.ObjectId.isValid(assignmentId)
+      ? new mongoose.Types.ObjectId(assignmentId)
+      : null;
+    const validCustomerId = mongoose.Types.ObjectId.isValid(customerId)
+      ? new mongoose.Types.ObjectId(customerId)
+      : null;
+
+    if (!validAssignmentId || !validCustomerId) {
+      return res.status(400).json({ message: "Invalid assignmentId or customerId format." });
+    }
+
+    // Find the assignment by its ID
+    const assignment = await CustomerAssignment.findOne({
+      _id: validAssignmentId,
+      "customers.customerId": validCustomerId,
+    });
+
+    if (!assignment) {
+      return res.status(404).json({
+        message: "Assignment not found for the given ID, or customer not found within the assignment.",
+      });
+    }
+
+    // Find the specific customer in the `customers` array
+    const customerToUpdate = assignment.customers.find(
+      (customer) =>
+        customer.customerId.toString() === validCustomerId.toString()
+    );
+
+    if (!customerToUpdate) {
+      return res.status(409).json({ message: "Customer not found in the assignment." });
+    }
+
+    // Update fields only if provided
+    if (status) {
+      customerToUpdate.status = status;
+    }
+    if (description) {
+      customerToUpdate.description = description;
+    }
+    if (propertyType) {
+      customerToUpdate.propertyType = propertyType;
+    }
+    if (propertyname) {
+      customerToUpdate.propertyname = propertyname;
+    }
+    if (size) {
+      customerToUpdate.size = size;
+    }
+    if (price) {
+      customerToUpdate.price = price;
+    }
+    if (location) {
+      customerToUpdate.location = location;
+    }
+
+    // Save the updated assignment
+    await assignment.save();
+
+    res.status(200).json({
+      data: {
+        assignmentId: assignment._id,
+        customerId: customerToUpdate.customerId,
+        status: customerToUpdate.status,
+        description: customerToUpdate.description || null,
+        propertyType: customerToUpdate.propertyType || null,
+        propertyname: customerToUpdate.propertyname || null,
+        size: customerToUpdate.size || null,
+        price: customerToUpdate.price || null,
+        location: customerToUpdate.location || null,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating customer status:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
   addMarketingAgent,
   getMarketingAgents,
@@ -989,4 +956,6 @@ module.exports = {
   myAreaProperties,
   getAssignedCustomers,
   getAssignedPropertyDetails,
+  updateCustomerStatus,
+  propertyAssignedAgents,
 };

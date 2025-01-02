@@ -1,17 +1,12 @@
-
-const { required } = require("joi");
 const mongoose = require("mongoose");
 
 const customerAssignmentSchema = new mongoose.Schema(
   {
-    customerIds: [
-      {
-        type: String,
-        required: true,
-      },
-    ],
+
+
+
+    
     assignedBy: {
-        // no ids will be in array of strings only
       type: String,
       required: true,
     },
@@ -19,10 +14,40 @@ const customerAssignmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    assignedDate:{
-        type:Date,
-        required:true,
+    assignedDate: {
+      type: Date,
+      required: true,
     },
+    customers: [
+      {
+        customerId: {
+          type: String,
+          required: true,
+        },
+        status: {
+          type: String,
+         default:"Pending"
+        },
+        description: {
+          type: String,
+        },
+        propertyType:{
+          type: String,
+          },
+          propertyname:{
+          type:String,
+          },
+          size:{
+          type:String,
+          },
+          price:{
+          type:String,
+          },
+          location:{
+          type:String,
+          },
+      },
+    ],
   },
   {
     timestamps: true,

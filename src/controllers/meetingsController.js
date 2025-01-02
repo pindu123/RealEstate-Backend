@@ -322,13 +322,44 @@ const currentDayMeetings = async (req, res) => {
     if (currentDay.length > 0) {
       res.status(200).json(currentDay);
     } else {
-      res.status(404).json("No Scheduled Meetings Today");
+      res.status(409).json("No Scheduled Meetings Today");
     }
   } catch (error) {
     console.log(error);
     res.status(500).json("Internal Server Error");
   }
 };
+
+
+
+
+const currentWeekMeetings = async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const currentDay = currentDate.getDay();
+    
+    const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDay));
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(currentDate.setDate(currentDate.getDate() + (6 - currentDay)));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const meetings = await meetingsModel.find({
+      agentId: req.user.user.userId,
+      meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
+    });
+    
+    if (meetings.length > 0) {
+      res.status(200).json(meetings);
+    } else {
+      res.status(409).json("No Scheduled Meetings This Week");
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
 
 const checkUserAvailability = async (req, res) => {
   try {
@@ -388,4 +419,5 @@ module.exports = {
   rescheduleMeeting,
   currentDayMeetings,
   checkUserAvailability,
+  currentWeekMeetings
 };

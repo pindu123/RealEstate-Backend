@@ -1028,7 +1028,7 @@ const getPropsOnFilter=async(req,res)=>{
   try
   {
  
-const { location, propertyType, propertySize, propName ,price} = req.query;
+const { location, propertyType, propertySize,sizeUnit, propName ,price} = req.query;
      let filterCriteria = { status: 0 };  
 
      if (location) {
@@ -1045,8 +1045,6 @@ const { location, propertyType, propertySize, propName ,price} = req.query;
 
     if (propertySize) {
  
-
-
       filterCriteria.$or = [
         { 'propertyDetails.landDetails.sell.plotSize': propertySize },
         { 'propertyDetails.landDetails.rent.plotSize': propertySize },
@@ -1060,6 +1058,24 @@ const { location, propertyType, propertySize, propName ,price} = req.query;
         }
       ];
     }
+
+
+
+    //  if (sizeUnit) {
+ 
+    //   filterCriteria.$or = [
+    //     { 'propertyDetails.landDetails.sell.sizeUnit': sizeUnit },
+    //     { 'propertyDetails.landDetails.rent.sizeUnit': sizeUnit },
+
+    //     { 'propertyDetails.landDetails.lease.sizeUnit': sizeUnit },
+
+    //     { 'layoutDetails.sizeUnit': sizeUnit },
+    //     { 'propertyDetails.sizeUnit': sizeUnit },
+    //     {
+    //       'landDetails.sizeUnit':sizeUnit
+    //     }
+    //   ];
+    // }
 
     if (propName) {
       filterCriteria.$or = [
@@ -1083,11 +1099,11 @@ const { location, propertyType, propertySize, propName ,price} = req.query;
         { 'propertyDetails.landDetails.lease.totalAmount': price },
 
         {
-          'propertyDetails.totalCost':propName
+          'propertyDetails.totalCost':price
         }
       ];
      }
-console.log(filterCriteria,propName)
+console.log(filterCriteria)
      const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
       fieldModel.find({ ...filterCriteria  }),
       commercialModel.find({ ...filterCriteria }),
@@ -1105,7 +1121,7 @@ let property=[]
 for(let prop of properties)
   {
 let result={}
-if(prop.propertyType==="Commercial")
+if(prop.propertyType==="Commercial" || prop.propertyType==="commercial" )
 {
   result={
     "propertyType":prop.propertyType,
@@ -1117,7 +1133,7 @@ if(prop.propertyType==="Commercial")
     "images":prop.propertyDetails.uploadPics
   }
 }
-else if(prop.propertyType==="Layout")
+else if(prop.propertyType==="Layout" || prop.propertyType==="layout")
 {
   result={
     "propertyTitle":prop.layoutDetails.layoutTitle,
@@ -1129,7 +1145,7 @@ else if(prop.propertyType==="Layout")
     "size":prop.layoutDetails.plotSize
   }
 }
-else if(prop.propertyType==="Residential")
+else if(prop.propertyType==="Residential" ||prop.propertyType==="residential" )
 {
  result={
   "propertyTitle":prop.propertyDetails.apartmentName,
@@ -1145,11 +1161,12 @@ else if(prop.propertyType==="Residential")
 
 else
 {
+  console.log(prop)
   result={
     "propertyTitle":prop.landDetails.title,
     "propertyType":prop.propertyType,
     "images":prop.landDetails.images,
-    "size":prop.size,
+    "size":prop.landDetails.size,
     "propertyId":prop._id,
     "address":prop.address.district,
     "price":prop.landDetails.totalPrice
@@ -1164,6 +1181,7 @@ property.push(result)
 res.status(200).json(property)
   }catch(error)
   {
+    console.log(error)
 res.status(500).json("Internal Server Error")
   }
 }
@@ -1440,7 +1458,8 @@ const getPropertiesFilter = async (req, res) => {
     let property = [];
     for (let prop of properties) {
       let result = {};
-      if (prop.propertyType === "Commercial") {
+      console.log(prop)
+      if (prop.propertyType === "Commercial" || prop.propertyType === "commercial") {
         result = {
           "propertyType": prop.propertyType,
           "propertyTitle": prop.propertyTitle,
@@ -1450,7 +1469,7 @@ const getPropertiesFilter = async (req, res) => {
           "price": prop.propertyDetails.landDetails.sell.totalAmount || prop.propertyDetails.landDetails.rent.totalAmount || prop.propertyDetails.landDetails.lease.totalAmount,
           "images": prop.propertyDetails.uploadPics
         };
-      } else if (prop.propertyType === "Layout") {
+      } else if (prop.propertyType === "Layout" || prop.propertyType === "layout") {
         result = {
           "propertyTitle": prop.layoutDetails.layoutTitle,
           "propertyType": prop.propertyType,
@@ -1460,7 +1479,7 @@ const getPropertiesFilter = async (req, res) => {
           "price": prop.layoutDetails.totalAmount,
           "size": prop.layoutDetails.plotSize
         };
-      } else if (prop.propertyType === "Residential") {
+      } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
         result = {
           "propertyTitle": prop.propertyDetails.apartmentName,
           "propertyType": prop.propertyType,
@@ -1492,61 +1511,132 @@ const getPropertiesFilter = async (req, res) => {
 };
 
 
-const getMaxPriceAndSize=async(req,res)=>{
-  try
-  {
-     const agData=await fieldModel.find();
-     const comData=await commercialModel.find();
-     const layoutData=await layoutModel.find();
-     const resiData=await residentialModel.find()
-     const propData=[...agData,...comData,...layoutData,...resiData]
-     let maxPrice=0;
-     let maxSize=0
+// const getMaxPriceAndSize=async(req,res)=>{
+//   try
+//   {
+//      const agData=await fieldModel.find();
+//      const comData=await commercialModel.find();
+//      const layoutData=await layoutModel.find();
+//      const resiData=await residentialModel.find()
+//      const propData=[...agData,...comData,...layoutData,...resiData]
+//      let maxPrice=0;
+//      let maxSize=0
+//      let minPrice=0;
+//      let minSize=0;
+//      for(let prop of propData)
+//      {
+//       if (prop.propertyType === "Commercial"||prop.propertyType === "commercial") {
       
-     for(let prop of propData)
-     {
-      if (prop.propertyType === "Commercial"||prop.propertyType === "commercial") {
-      
-                price =
-                  prop.propertyDetails.landDetails.sell.totalAmount ||
-                  prop.propertyDetails.landDetails.rent.totalAmount ||
-                  prop.propertyDetails.landDetails.lease.totalAmount;
-                  maxPrice = price > maxPrice ? price : maxPrice
-                  size=
-                  prop.propertyDetails.landDetails.sell.plotSize ||
-                  prop.propertyDetails.landDetails.rent.plotSize ||
-                  prop.propertyDetails.landDetails.lease.plotSize,
-                 maxSize=size>maxSize?size:maxSize
+//                 price =
+//                   prop.propertyDetails.landDetails.sell.totalAmount ||
+//                   prop.propertyDetails.landDetails.rent.totalAmount ||
+//                   prop.propertyDetails.landDetails.lease.totalAmount;
+//                   maxPrice = price > maxPrice ? price : maxPrice
+//                   minPrice= price<minPrice?price:minPrice  
+//                   size=
+//                   prop.propertyDetails.landDetails.sell.plotSize ||
+//                   prop.propertyDetails.landDetails.rent.plotSize ||
+//                   prop.propertyDetails.landDetails.lease.plotSize,
+//                   minSize=size<minSize?size:minSize
+//                  maxSize=size>maxSize?size:maxSize
                 
-              } else if (prop.propertyType === "Layout"|| prop.propertyType === "layout") {
-                size= prop.layoutDetails.plotSize,
-                price= prop.layoutDetails.totalAmount,
-                maxPrice =  price > maxPrice ? price : maxPrice        
-                maxSize=size>maxSize?size:maxSize
-              } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
-                  size= prop.propertyDetails.flatSize,
-                  price= prop.propertyDetails.totalCost,       
-                 maxPrice = price > maxPrice ?   price : maxPrice     
-                 maxSize=size>maxSize?size:maxSize   
+//               } else if (prop.propertyType === "Layout"|| prop.propertyType === "layout") {
+//                 size= prop.layoutDetails.plotSize,
+//                 price= prop.layoutDetails.totalAmount,
+//                 maxPrice =  price > maxPrice ? price : maxPrice        
+//                 maxSize=size>maxSize?size:maxSize
+//               } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
+//                   size= prop.propertyDetails.flatSize,
+//                   price= prop.propertyDetails.totalCost,       
+//                  maxPrice = price > maxPrice ?   price : maxPrice     
+//                  maxSize=size>maxSize?size:maxSize   
 
-              } else {
-                console.log(prop.propertyType,prop.landDetails)
-                price = prop.landDetails.totalPrice;
-                size=prop.landDetails.size;
-              maxPrice = price > maxPrice ?price  : maxPrice       
-              maxSize=size>maxSize?size:maxSize 
-       }
-      }
+//               } else {
+//                 console.log(prop.propertyType,prop.landDetails)
+//                 price = prop.landDetails.totalPrice;
+//                 size=prop.landDetails.size;
+//               maxPrice = price > maxPrice ?price  : maxPrice       
+//               maxSize=size>maxSize?size:maxSize 
+//        }
+//       }
     
-    res.status(200).json({"maxPrice":maxPrice,"maxSize":maxSize})
+//     res.status(200).json({"maxPrice":maxPrice,"maxSize":maxSize})
+//     }
+
+//   catch(error)
+//   {
+//     console.log(error)
+//     res.status(500).json("Internal Server Error")
+//   }
+// }
+const getMaxPriceAndSize = async (req, res) => {
+  try {
+    const agData = await fieldModel.find();
+    const comData = await commercialModel.find();
+    const layoutData = await layoutModel.find();
+    const resiData = await residentialModel.find();
+    const propData = [...agData, ...comData, ...layoutData, ...resiData];
+
+    let maxPrice = 0;
+    let maxSize = 0;
+    let minPrice = Infinity;
+    let minSize = Infinity;
+
+    for (let prop of propData) {
+      let price = 0;
+      let size = 0;
+
+      if (prop.propertyType === "Commercial" || prop.propertyType === "commercial") {
+        price = prop.propertyDetails.landDetails.sell.totalAmount ||
+                prop.propertyDetails.landDetails.rent.totalAmount ||
+                prop.propertyDetails.landDetails.lease.totalAmount;
+
+        size = prop.propertyDetails.landDetails.sell.plotSize ||
+               prop.propertyDetails.landDetails.rent.plotSize ||
+               prop.propertyDetails.landDetails.lease.plotSize;
+
+        maxPrice = price > maxPrice ? price : maxPrice;
+        minPrice = price < minPrice ? price : minPrice;
+        maxSize = size > maxSize ? size : maxSize;
+        minSize = size < minSize ? size : minSize;
+
+      } else if (prop.propertyType === "Layout" || prop.propertyType === "layout") {
+        price = prop.layoutDetails.totalAmount;
+        size = prop.layoutDetails.plotSize;
+
+        maxPrice = price > maxPrice ? price : maxPrice;
+        minPrice = price < minPrice ? price : minPrice;
+        maxSize = size > maxSize ? size : maxSize;
+        minSize = size < minSize ? size : minSize;
+
+      } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
+        price = prop.propertyDetails.totalCost;
+        size = prop.propertyDetails.flatSize;
+
+        maxPrice = price > maxPrice ? price : maxPrice;
+        minPrice = price < minPrice ? price : minPrice;
+        maxSize = size > maxSize ? size : maxSize;
+        minSize = size < minSize ? size : minSize;
+
+      } else {
+        // Handle other property types
+        price = prop.landDetails.totalPrice;
+        size = prop.landDetails.size;
+
+        maxPrice = price > maxPrice ? price : maxPrice;
+        minPrice = price < minPrice ? price : minPrice;
+        maxSize = size > maxSize ? size : maxSize;
+        minSize = size < minSize ? size : minSize;
+      }
     }
 
-  catch(error)
-  {
-    console.log(error)
-    res.status(500).json("Internal Server Error")
+    res.status(200).json({ maxPrice, maxSize, minPrice, minSize });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal Server Error");
   }
-}
+};
+
 
 module.exports = {
   countOfPropsInMandal,
