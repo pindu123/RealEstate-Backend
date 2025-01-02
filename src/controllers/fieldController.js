@@ -165,7 +165,7 @@ const insertFieldDetails = async (req, res) => {
       if (req.body.enteredBy) {
         fieldDetailsData = {
           userId,
-          csrId: csrData._id,
+          csrId: csrData._id.toString(),
           role,
           ...req.body,
         };
@@ -174,14 +174,14 @@ const insertFieldDetails = async (req, res) => {
           userId,
           role,
           enteredBy: userId,
-          csrId: csrData._id,
+          csrId: csrData._id.toString(),
           ...req.body,
         };
       }
 
       message = {
         senderId: userId,
-        receiverId: csrData._id,
+        receiverId: csrData._id.toString(),
         message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
         notifyType: "Property",
       };
