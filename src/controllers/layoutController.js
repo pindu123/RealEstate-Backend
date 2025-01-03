@@ -55,7 +55,7 @@ if(role===1)
      message={
       "senderId":req.user.user.userId,
       "receiverId":csrData[0].assignedCsr,
-      "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+      "message":`${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
       "notifyType":"Property"
 
     }

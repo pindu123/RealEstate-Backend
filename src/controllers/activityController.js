@@ -2,6 +2,8 @@ const activityModel = require("../models/activityModel");
 const dealsModel = require("../models/propertyDealsModel");
 const { ObjectId } = require("mongodb");
 const userModel = require("../models/userModel");
+const notifyModel = require("../models/notificationModel");
+const { message } = require("../helpers/taskValidation");
 
 // api to post activity by the agent
 const getActivities = async (req, res) => {
@@ -181,10 +183,53 @@ const updateActivity = async (req, res) => {
     };
   //get all the activities based on the user role
 
+
+const getNotification=async(req,res)=>{
+  try
+  {
+    const userId=req.user.user.userId
+
+    const notification= await notifyModel.find({receiverId:userId,status:"unSeen"});
+    let notifications=[]
+
+    for(let notify of notification )
+    {
+       const userData=await userModel.findById({_id:notify.senderId})
+
+       notifications.push({
+        message:notify.message,
+        senderId:notify.senderId,
+        receiverId:notify.receiverId,
+        notifyType:notify.notifyType,
+         senderName:`${userData.firstName} ${userData.lastName}`,
+         profilePicture:userData.profilePicture     
+       })
+    }
+     
+    if(notifications.length==0)
+    {
+      res.status(409).json("No Notifications")
+    }
+    else{
+      res.status(200).json(notifications)
+    }
+  
+
+  }
+  catch(error)
+  {
+    console.log(error)
+   res.status(500).json("Internal Server Error")
+  }
+}
+
+
+
 module.exports = {
   createActivity,
   updateActivity,
   getSpecificActivity,
   getAllActivities,
-  getActivities,createActivity
+  getActivities,createActivity,
+  getNotification
 };

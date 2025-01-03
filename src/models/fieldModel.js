@@ -97,7 +97,7 @@ const fieldSchema = new mongoose.Schema(
       },
       images: {
         type: [String],
-        required: true,
+        default:["https://res.cloudinary.com/ds1qogjpk/image/upload/v1735582181/agricultural_b1cmq0.png"],
       },
       videos:{
         type:[String],

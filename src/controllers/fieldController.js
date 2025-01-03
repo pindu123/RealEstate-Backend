@@ -6,6 +6,7 @@ const { fieldValidationSchema } = require("../helpers/agricultureValidation");
 const userModel = require("../models/userModel");
 const notifyModel = require("../models/notificationModel");
 
+
 // Get all fields which are added by that user
 const getFields = async (req, res) => {
   try {
@@ -146,20 +147,25 @@ const insertFieldDetails = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity); // Ensure electricity is a string
-
+    console.log(req)
     let fieldDetailsData;
     let message = {};
 
     // Fetch user data once
     const userData = await userModel.findById(userId);
     if (!userData) {
-      return res.status(404).json({ message: "User not found" });
+      console.log(userData,'  user data')
+      return res.status(409).json({ message: "User not found" });
     }
-
+    console.log(userData,'  user data')
+    console.log(userData.assignedCsr,' csr data' )
     if (role === 1) { // CSR role
-      const csrData = await userModel.findById(userData.assignedCsr);
+      const csrId=userData.assignedCsr;
+
+      const csrData = await userModel.findById(csrId);
+      console.log(csrData[0]);
       if (!csrData) {
-        return res.status(404).json({ message: "CSR not found" });
+        return res.status(409).json({ message: "CSR not found" });
       }
 
       if (req.body.enteredBy) {
@@ -179,12 +185,12 @@ const insertFieldDetails = async (req, res) => {
         };
       }
 
-      // message = {
-      //   senderId: userId,
-      //   receiverId: csrData._id.toString(),
-      //   message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
-      //   notifyType: "Property",
-      // };
+      message = {
+        senderId: userId,
+        receiverId: csrData._id.toString(),
+        message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
+        notifyType: "Property",
+      };
     }
 
     if (role === 5) { // Agent role
@@ -212,12 +218,12 @@ const insertFieldDetails = async (req, res) => {
 
       const csrData = await userModel.findById(userId);
       if (!csrData) {
-        return res.status(404).json({ message: "CSR not found" });
+        return res.status(409).json({ message: "CSR not found" });
       }
 
       message = {
         senderId: userId,
-        receiverId: req.body.agentDetails.userId,
+        receiverId: req.body.agentDetails.userId.toString(),
         message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
         notifyType: "Property",
       };
@@ -243,8 +249,8 @@ const insertFieldDetails = async (req, res) => {
 
     // Create and save the notification
     
-    // const notification = new notifyModel(message);
-    // await notification.save();
+    const notification = new notifyModel(message);
+    await notification.save();
 
     // Respond to the client
     res.status(201).json({

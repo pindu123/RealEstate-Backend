@@ -2,37 +2,82 @@ const { date } = require("joi");
 const meetingsModel = require("../models/meetingsModel");
 const nodemailer = require("nodemailer");
 const userModel = require("../models/userModel");
+const customerModel = require("../models/customerModel");
+
+// const getAllScheduledMeetings = async (req, res) => {
+//   try {
+//     let data = [];
+//     if (req.user.user.role === 1) {
+//       data = await meetingsModel.find({ agentId: req.user.user.userId });
+//       console.log(data);
+//     } else if (req.user.user.role === 3 || req.user.user.role === 2) {
+//       data = await meetingsModel.find({ customerId: req.user.user.userId });
+//     }else if (req.user.user.role === 5) {
+//       data = await meetingsModel.find({ csrId: req.user.user.userId });
+//       console.log(data);
+//       }
+
+// let data1=[]
+//   for(let d of data)
+//   {
+//     let scheduledBy=d.scheduledBy
+
+//     const scheduleDetails=await userModel.find({_id:scheduledBy},{password:0})
+
+//     console.log("scheduleDetails",d,d._doc.scheduledBy,scheduledBy,scheduleDetails)
+//        let result={
+//         ...d._doc,
+//         "scheduledByName":scheduleDetails[0].firstName +" "+ scheduleDetails[0].lastName
+//        }
+
+//        data1.push(result)
+//   }
+
+
+
+//     if (data1.length > 0) {
+//       res.status(200).json({ data: data1 });
+//     } else {
+//       res.status(404).json({ message: "No Scheduled Meetings", data: data1 });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
 
 const getAllScheduledMeetings = async (req, res) => {
   try {
     let data = [];
     if (req.user.user.role === 1) {
       data = await meetingsModel.find({ agentId: req.user.user.userId });
-      console.log(data);
     } else if (req.user.user.role === 3 || req.user.user.role === 2) {
       data = await meetingsModel.find({ customerId: req.user.user.userId });
-    }else if (req.user.user.role === 5) {
+    } else if (req.user.user.role === 5) {
       data = await meetingsModel.find({ csrId: req.user.user.userId });
-      console.log(data);
-      }
+    }
 
-let data1=[]
-  for(let d of data)
-  {
-    let scheduledBy=d.scheduledBy
+    let data1 = [];
+    for (let d of data) {
+      let scheduledBy = d.scheduledBy;
 
-    const scheduleDetails=await userModel.find({_id:scheduledBy},{password:0})
+      // Fetch the user who scheduled the meeting (scheduleByName)
+      const scheduleDetails = await userModel.find({ _id: scheduledBy }, { password: 0 });
 
-    console.log("scheduleDetails",d,d._doc.scheduledBy,scheduledBy,scheduleDetails)
-       let result={
+      // Fetch the customer details for the meeting (e.g., customer name, phone number)
+      const customer = await customerModel.findById(d.customerId);
+      const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+      const phoneNumber = customer ? customer.phoneNumber : 'Unknown Number';
+
+      let result = {
         ...d._doc,
-        "scheduledByName":scheduleDetails[0].firstName +" "+ scheduleDetails[0].lastName
-       }
+        "scheduledByName": scheduleDetails[0].firstName + " " + scheduleDetails[0].lastName,
+        "customerName": customerName,
+        "phoneNumber": phoneNumber
+      };
 
-       data1.push(result)
-  }
-
-
+      data1.push(result);
+    }
 
     if (data1.length > 0) {
       res.status(200).json({ data: data1 });
@@ -44,6 +89,13 @@ let data1=[]
     res.status(500).json("Internal Server Error");
   }
 };
+
+
+
+
+
+
+
 
 // const scheduleMeeting = async (req, res) => {
 //   try {
@@ -203,7 +255,8 @@ const scheduleMeeting = async (req, res) => {
       dealingId,
       propertyId,
       customerId,
-      csrId
+      csrId,
+      location,
     });
 console.log(meetingEndTime)
     const savedMeeting = await newMeeting.save();
@@ -303,22 +356,157 @@ const rescheduleMeeting = async (req, res) => {
   }
 };
 
+
+// const currentWeekMeetings = async (req, res) => {
+//   try {
+//     const currentDate = new Date();
+//     const startOfWeek = new Date(currentDate);
+//     const endOfWeek = new Date(currentDate);
+//     const currentDay = currentDate.getDay();
+
+//     startOfWeek.setDate(currentDate.getDate() - currentDay);
+//     startOfWeek.setHours(0, 0, 0, 0);
+
+//     endOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
+//     endOfWeek.setHours(23, 59, 59, 999);
+
+//     const agentId = req.user.user.userId;
+
+//     const meetings = await meetingsModel.find({
+//       agentId: agentId,
+//       meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
+//     });
+
+//     const meetingDetails = [];
+
+//     for (const meeting of meetings) {
+//       const customer = await customerModel.findById(meeting.customerId);
+//       const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+      
+//       meetingDetails.push({
+//         ...meeting.toObject(),
+//         customerName
+//       });
+//     }
+
+//     if (meetingDetails.length > 0) {
+//       res.status(200).json(meetingDetails);
+//     } else {
+//       res.status(409).json("No Scheduled Meetings This Week");
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
+
+// const currentDayMeetings = async (req, res) => {
+//   try {
+//     const meetings = await meetingsModel.find({
+//       agentId: req.user.user.userId,
+//     });
+
+//     const currentDay = [];
+//     const currentDate = new Date();
+//     const formattedDate = currentDate.toISOString().split("T")[0];
+
+//     for (const meeting of meetings) {
+//       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
+
+//       // If the meeting is today, add it to the currentDay array
+//       if (startTime === formattedDate) {
+//         const customer = await customerModel.findById(meeting.customerId);
+//         const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+
+//         currentDay.push({
+//           ...meeting.toObject(),
+//           customerName
+//         });
+//       }
+//     }
+
+//     if (currentDay.length > 0) {
+//       res.status(200).json(currentDay);
+//     } else {
+//       res.status(409).json("No Scheduled Meetings Today");
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
+
+const currentWeekMeetings = async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const startOfWeek = new Date(currentDate);
+    const endOfWeek = new Date(currentDate);
+    const currentDay = currentDate.getDay();
+
+    startOfWeek.setDate(currentDate.getDate() - currentDay);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    endOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const agentId = req.user.user.userId;
+
+    const meetings = await meetingsModel.find({
+      agentId: agentId,
+      meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
+    }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
+
+    // Manually fetching customer names
+    const meetingDetails = [];
+
+    for (const meeting of meetings) {
+      const customer = await customerModel.findById(meeting.customerId);
+      const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+      
+      meetingDetails.push({
+        ...meeting.toObject(),
+        customerName,
+        phoneNumber:customer.phoneNumber
+      });
+    }
+
+    if (meetingDetails.length > 0) {
+      res.status(200).json(meetingDetails);
+    } else {
+      res.status(409).json("No Scheduled Meetings This Week");
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
 const currentDayMeetings = async (req, res) => {
   try {
     const meetings = await meetingsModel.find({
       agentId: req.user.user.userId,
-    });
-    let currentDay = [];
+    }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
+
+    const currentDay = [];
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
-    console.log(meetings);
-    for (let meeting of meetings) {
+
+    for (const meeting of meetings) {
       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
-      console.log(meeting.meetingStartTime, startTime);
+
+      // If the meeting is today, add it to the currentDay array
       if (startTime === formattedDate) {
-        currentDay.push(meeting);
+        const customer = await customerModel.findById(meeting.customerId);
+        const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+
+        currentDay.push({
+          ...meeting.toObject(),
+          customerName,
+          phoneNumber:customer.phoneNumber
+        });
       }
     }
+
     if (currentDay.length > 0) {
       res.status(200).json(currentDay);
     } else {
@@ -329,30 +517,46 @@ const currentDayMeetings = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-
-
-
-
-const currentWeekMeetings = async (req, res) => {
+const meetingOnDate = async (req, res) => {
   try {
-    const currentDate = new Date();
-    const currentDay = currentDate.getDay();
     
-    const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDay));
-    startOfWeek.setHours(0, 0, 0, 0);
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ message: "Date parameter is required" });
+    }
+
+    // date format is (YYYY-MM-DD)
+    const providedDate = new Date(date);
     
-    const endOfWeek = new Date(currentDate.setDate(currentDate.getDate() + (6 - currentDay)));
-    endOfWeek.setHours(23, 59, 59, 999);
+    if (isNaN(providedDate)) {
+      return res.status(400).json({ message: "Invalid date format" });
+    }
+
+    const startOfDay = new Date(providedDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(providedDate.setHours(23, 59, 59, 999));
 
     const meetings = await meetingsModel.find({
       agentId: req.user.user.userId,
-      meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
-    });
-    
-    if (meetings.length > 0) {
-      res.status(200).json(meetings);
+      meetingStartTime: { $gte: startOfDay, $lte: endOfDay },
+    }).sort({ meetingStartTime: 1 }); // asc
+    const dayMeetings = [];
+
+    for (const meeting of meetings) {
+      const customer = await customerModel.findById(meeting.customerId);
+      const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+      const phoneNumber = customer ? customer.phoneNumber : 'Unknown Number';
+
+      dayMeetings.push({
+        ...meeting.toObject(),
+        customerName,
+        phoneNumber,
+      });
+    }
+
+    if (dayMeetings.length > 0) {
+      res.status(200).json(dayMeetings);
     } else {
-      res.status(409).json("No Scheduled Meetings This Week");
+      res.status(409).json("No Scheduled Meetings for the Given Date");
     }
   } catch (error) {
     console.log(error);
@@ -419,5 +623,7 @@ module.exports = {
   rescheduleMeeting,
   currentDayMeetings,
   checkUserAvailability,
-  currentWeekMeetings
+  currentWeekMeetings,
+  meetingOnDate,
+
 };

@@ -5,7 +5,8 @@ createActivity,
 getAllActivities,
 getSpecificActivity,
 updateActivity,
-getActivities
+getActivities,
+getNotification
 } = require("../controllers/activityController");
 
 const activityRoutes = express.Router();
@@ -16,6 +17,8 @@ activityRoutes.get("/activities", getAllActivities);
 activityRoutes.get("/activity/:activityId", getSpecificActivity);
 activityRoutes.put("/activity/:activityId", updateActivity);
 activityRoutes.get("/getActivities",getActivities);
+
+activityRoutes.get("/getNotifications",getNotification);
 
 
 

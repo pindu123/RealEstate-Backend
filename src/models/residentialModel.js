@@ -176,6 +176,7 @@ const residentialSchema = new mongoose.Schema(
     },
     propPhotos: {
       type: [String],
+      default:["https://res.cloudinary.com/ds1qogjpk/image/upload/v1735582521/commercial_qqcdbt.png"],
     },
     videos:{
       type:[String],

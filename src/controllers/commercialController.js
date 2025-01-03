@@ -92,7 +92,7 @@ console.log("agent",req.body)
       message={
         "senderId":req.user.user.userId,
         "receiverId":req.body.propertyDetails.agentDetails.userId,
-        "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+        "message":`${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
         "notifyType":"Property"
 
       }

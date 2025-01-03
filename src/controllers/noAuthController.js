@@ -160,6 +160,7 @@ const userLoginController = async (req, res) => {
             phoneNumber: user.phoneNumber,
             role: user.role,
             district: user.district,
+            profilePicture:user.profilePicture,
           },
         },
         secret_key,

@@ -31,12 +31,24 @@ const customerAssignmentSchema = new mongoose.Schema(
         description: {
           type: String,
         },
-        propertyType:{
-          type: String,
-          },
-          propertyname:{
+       
+          property:[
+          {landTitle:{
           type:String,
           },
+          propertyType:{
+            type: String,
+            },
+          propertyId:{
+            type:String,
+          },
+          agentName:{
+            type:String,
+          },
+          agentId:{
+            type:String,
+          },},
+        ],
           size:{
           type:String,
           },
@@ -46,6 +58,9 @@ const customerAssignmentSchema = new mongoose.Schema(
           location:{
           type:String,
           },
+          reschedule:{
+            type: Date,
+          }
       },
     ],
   },

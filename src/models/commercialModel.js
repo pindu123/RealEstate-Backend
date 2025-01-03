@@ -161,6 +161,7 @@ const commercialSchema = new mongoose.Schema(
 
       uploadPics: {
         type: [String],
+        default:["https://res.cloudinary.com/ds1qogjpk/image/upload/v1735582521/commercial_qqcdbt.png"],
       },
       videos:{
         type:[String],

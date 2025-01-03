@@ -19,6 +19,7 @@ const {
   getPropsOnFilter,
   getPropertiesFilter,
   getMaxPriceAndSize,
+  getAllCsrORMarketingAgent,
  } = require("../controllers/adminController");
 
 const adminRoutes = express.Router();
@@ -41,7 +42,7 @@ adminRoutes.get("/getStateWiseStats", getStateWiseStats);
 adminRoutes.get("/getTopPropOnPrice",getTopPropOnPrice)
 adminRoutes.put("/deleteDeal",deleteDeal)
 
-
+adminRoutes.get("/csrOrMarketingAgents/:role",getAllCsrORMarketingAgent);
 adminRoutes.get("/getPropsOnFilter", getPropsOnFilter)
 
 adminRoutes.get("/getMaxPriceAndSize",getMaxPriceAndSize)

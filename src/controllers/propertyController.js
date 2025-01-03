@@ -629,30 +629,128 @@ const getPropertyRatings = async (req, res) => {
   }
 };
 
+// add filters based on location,propertySize,propertyType, maxPrice and minPrice, sizeUnit,
+// const getPropertiesById = async (req, res) => {
+//   try {
+//     const result = await validateIdAndType.validateAsync(req.params);
+//     const { propertyType, propertyId } = result;
+//     let properties;
+
+//     if (propertyType === "Agricultural" || propertyType==="Agricultural land") {
+//       properties = await fieldModel.findOne({ _id: propertyId });
+//     } else if (propertyType === "Residential") {
+//       properties = await residentialModel.findOne({ _id: propertyId });
+//     } else if (propertyType === "Layout") {
+//       properties = await layoutModel.findOne({ _id: propertyId });
+//     } else {
+//       properties = await commercialModel.findOne({ _id: propertyId });
+//     }
+
+//     if (!properties) {
+//       return res.status(404).json({ message: "No properties found" });
+//     }
+
+//     const agent = await usersModel.findById(properties.userId);
+//     if (!agent) {
+//       return res.status(404).json({ message: "Agent not found" });
+//     }
+//     properties = {
+//       ...properties._doc,
+//       agentName: agent.firstName + " " + agent.lastName,
+//       agentNumber: agent.phoneNumber,
+//       agentEmail: agent.email,
+//       agentCity: agent.city,
+//       agentProfilePicture: agent.profilePicture,
+//     };
+//     console.log(properties);
+//     res.status(200).json(properties);
+//   } catch (error) {
+//     if (error.isJoi) {
+//       console.log(error);
+//       return res.status(422).json({
+//         status: "error",
+//         message: error.details.map((detail) => detail.message).join(", "),
+//       });
+//     }
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 const getPropertiesById = async (req, res) => {
   try {
     const result = await validateIdAndType.validateAsync(req.params);
     const { propertyType, propertyId } = result;
+    const { location, propertySize, sizeUnit, maxPrice, minPrice } = req.query; 
+    let filterCriteria = { _id: propertyId, status: 0 };  
+    
+    if (location) {
+      filterCriteria.$or = [
+        { 'propertyDetails.landDetails.address.district': location },
+        { 'layoutDetails.address.district': location },
+        { 'address.district': location }
+      ];
+    }
+    
+    if (propertyType) {
+      filterCriteria.propertyType = propertyType;
+    }
+    
+    if (propertySize) {
+      filterCriteria.$or = filterCriteria.$or || [];  
+      filterCriteria.$or.push(
+        { 'propertyDetails.landDetails.sell.plotSize': propertySize },
+        { 'propertyDetails.landDetails.rent.plotSize': propertySize },
+        { 'propertyDetails.landDetails.lease.plotSize': propertySize },
+        { 'layoutDetails.plotSize': propertySize },
+        { 'propertyDetails.flatSize': propertySize },
+        { 'landDetails.size': propertySize }
+      );
+    }
+
+    if (sizeUnit) {
+      filterCriteria.$or = filterCriteria.$or || [];
+      filterCriteria.$or.push(
+        { 'propertyDetails.landDetails.sell.sizeUnit': sizeUnit },
+        { 'propertyDetails.landDetails.rent.sizeUnit': sizeUnit },
+        { 'propertyDetails.landDetails.lease.sizeUnit': sizeUnit },
+        { 'layoutDetails.sizeUnit': sizeUnit },
+        { 'propertyDetails.sizeUnit': sizeUnit },
+        { 'landDetails.sizeUnit': sizeUnit }
+      );
+    }
+    
+    if (maxPrice && minPrice) {
+      filterCriteria.$or = filterCriteria.$or || [];
+      filterCriteria.$or.push(
+        { 'landDetails.totalPrice': { $gte: minPrice, $lte: maxPrice } },
+        { 'layoutDetails.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+        { 'propertyDetails.landDetails.sell.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+        { 'propertyDetails.landDetails.rent.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+        { 'propertyDetails.landDetails.lease.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+        { 'propertyDetails.totalCost': { $gte: minPrice, $lte: maxPrice } }
+      );
+    }
+    
     let properties;
-
-    if (propertyType === "Agricultural" || propertyType==="Agricultural land") {
-      properties = await fieldModel.findOne({ _id: propertyId });
+    if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
+      properties = await fieldModel.findOne(filterCriteria);
     } else if (propertyType === "Residential") {
-      properties = await residentialModel.findOne({ _id: propertyId });
+      properties = await residentialModel.findOne(filterCriteria);
     } else if (propertyType === "Layout") {
-      properties = await layoutModel.findOne({ _id: propertyId });
+      properties = await layoutModel.findOne(filterCriteria);
     } else {
-      properties = await commercialModel.findOne({ _id: propertyId });
+      properties = await commercialModel.findOne(filterCriteria);
     }
-
+    
     if (!properties) {
-      return res.status(404).json({ message: "No properties found" });
+      return res.status(409).json({ message: "No properties found" });
     }
-
+    
     const agent = await usersModel.findById(properties.userId);
     if (!agent) {
-      return res.status(404).json({ message: "Agent not found" });
+      return res.status(409).json({ message: "Agent not found" });
     }
+
     properties = {
       ...properties._doc,
       agentName: agent.firstName + " " + agent.lastName,
@@ -663,6 +761,7 @@ const getPropertiesById = async (req, res) => {
     };
     console.log(properties);
     res.status(200).json(properties);
+    
   } catch (error) {
     if (error.isJoi) {
       console.log(error);
@@ -1400,6 +1499,8 @@ const getVillages = async () => {
   }
   return villageNames;
 };
+
+
 
 // for all props
 const getPropsByLocation = async (req, res) => {
