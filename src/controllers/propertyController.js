@@ -676,13 +676,51 @@ const getPropertyRatings = async (req, res) => {
 //   }
 // };
 
+
 const getPropertiesById = async (req, res) => {
   try {
+    // Validate incoming request parameters
     const result = await validateIdAndType.validateAsync(req.params);
     const { propertyType, propertyId } = result;
-    const { location, propertySize, sizeUnit, maxPrice, minPrice } = req.query; 
-    let filterCriteria = { _id: propertyId, status: 0 };  
     
+    // Initial property search by propertyId and type
+    let properties;
+    if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
+      properties = await fieldModel.findOne({ _id: propertyId });
+    } else if (propertyType === "Residential") {
+      properties = await residentialModel.findOne({ _id: propertyId });
+    } else if (propertyType === "Layout") {
+      properties = await layoutModel.findOne({ _id: propertyId });
+    } else {
+      properties = await commercialModel.findOne({ _id: propertyId });
+    }
+
+    // If no properties found based on propertyId
+    if (!properties) {
+      return res.status(404).json({ message: "No properties found" });
+    }
+
+    // Agent details fetching
+    const agent = await usersModel.findById(properties.userId);
+    if (!agent) {
+      return res.status(404).json({ message: "Agent not found" });
+    }
+
+    // Prepare the property data with agent details
+    properties = {
+      ...properties._doc,
+      agentName: agent.firstName + " " + agent.lastName,
+      agentNumber: agent.phoneNumber,
+      agentEmail: agent.email,
+      agentCity: agent.city,
+      agentProfilePicture: agent.profilePicture,
+    };
+
+    // Now we handle additional filtering based on query params like location, size, price
+    const { location, propertySize, sizeUnit, maxPrice, minPrice } = req.query;
+    let filterCriteria = { _id: propertyId, status: 0 }; // Only show available properties
+
+    // Location-based filtering
     if (location) {
       filterCriteria.$or = [
         { 'propertyDetails.landDetails.address.district': location },
@@ -690,13 +728,10 @@ const getPropertiesById = async (req, res) => {
         { 'address.district': location }
       ];
     }
-    
-    if (propertyType) {
-      filterCriteria.propertyType = propertyType;
-    }
-    
+
+    // Property size filtering
     if (propertySize) {
-      filterCriteria.$or = filterCriteria.$or || [];  
+      filterCriteria.$or = filterCriteria.$or || [];
       filterCriteria.$or.push(
         { 'propertyDetails.landDetails.sell.plotSize': propertySize },
         { 'propertyDetails.landDetails.rent.plotSize': propertySize },
@@ -707,6 +742,7 @@ const getPropertiesById = async (req, res) => {
       );
     }
 
+    // Size unit filtering
     if (sizeUnit) {
       filterCriteria.$or = filterCriteria.$or || [];
       filterCriteria.$or.push(
@@ -718,7 +754,8 @@ const getPropertiesById = async (req, res) => {
         { 'landDetails.sizeUnit': sizeUnit }
       );
     }
-    
+
+    // Price range filtering
     if (maxPrice && minPrice) {
       filterCriteria.$or = filterCriteria.$or || [];
       filterCriteria.$or.push(
@@ -730,39 +767,39 @@ const getPropertiesById = async (req, res) => {
         { 'propertyDetails.totalCost': { $gte: minPrice, $lte: maxPrice } }
       );
     }
-    
-    let properties;
+
+    // Applying additional filter criteria
+    let filteredProperties;
     if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
-      properties = await fieldModel.findOne(filterCriteria);
+      filteredProperties = await fieldModel.findOne(filterCriteria);
     } else if (propertyType === "Residential") {
-      properties = await residentialModel.findOne(filterCriteria);
+      filteredProperties = await residentialModel.findOne(filterCriteria);
     } else if (propertyType === "Layout") {
-      properties = await layoutModel.findOne(filterCriteria);
+      filteredProperties = await layoutModel.findOne(filterCriteria);
     } else {
-      properties = await commercialModel.findOne(filterCriteria);
-    }
-    
-    if (!properties) {
-      return res.status(409).json({ message: "No properties found" });
-    }
-    
-    const agent = await usersModel.findById(properties.userId);
-    if (!agent) {
-      return res.status(409).json({ message: "Agent not found" });
+      filteredProperties = await commercialModel.findOne(filterCriteria);
     }
 
+    // If no properties found after additional filtering
+    if (!filteredProperties) {
+      return res.status(409).json({ message: "No properties found with the applied filters" });
+    }
+
+    // Combine original and filtered data if necessary
     properties = {
-      ...properties._doc,
+      ...filteredProperties._doc,
       agentName: agent.firstName + " " + agent.lastName,
       agentNumber: agent.phoneNumber,
       agentEmail: agent.email,
       agentCity: agent.city,
       agentProfilePicture: agent.profilePicture,
     };
-    console.log(properties);
+
+    // Sending final response
     res.status(200).json(properties);
-    
+
   } catch (error) {
+    // Error handling
     if (error.isJoi) {
       console.log(error);
       return res.status(422).json({
@@ -774,8 +811,109 @@ const getPropertiesById = async (req, res) => {
   }
 };
 
+
+// const getPropertiesById = async (req, res) => {
+//   try {
+//     // const result = await validateIdAndType.validateAsync(req.params);
+//     const { propertyType, propertyId } = req.params;
+//     const { location, propertySize, sizeUnit, maxPrice, minPrice } = req.query; 
+//     let filterCriteria = { _id: propertyId, status: 0 };  
+    
+//     if (location) {
+//       filterCriteria.$or = [
+//         { 'propertyDetails.landDetails.address.district': location },
+//         { 'layoutDetails.address.district': location },
+//         { 'address.district': location }
+//       ];
+//     }
+    
+//     if (propertyType) {
+//       filterCriteria.propertyType = propertyType;
+//     }
+    
+//     if (propertySize) {
+//       filterCriteria.$or = filterCriteria.$or || [];  
+//       filterCriteria.$or.push(
+//         { 'propertyDetails.landDetails.sell.plotSize': propertySize },
+//         { 'propertyDetails.landDetails.rent.plotSize': propertySize },
+//         { 'propertyDetails.landDetails.lease.plotSize': propertySize },
+//         { 'layoutDetails.plotSize': propertySize },
+//         { 'propertyDetails.flatSize': propertySize },
+//         { 'landDetails.size': propertySize }
+//       );
+//     }
+
+//     if (sizeUnit) {
+//       filterCriteria.$or = filterCriteria.$or || [];
+//       filterCriteria.$or.push(
+//         { 'propertyDetails.landDetails.sell.sizeUnit': sizeUnit },
+//         { 'propertyDetails.landDetails.rent.sizeUnit': sizeUnit },
+//         { 'propertyDetails.landDetails.lease.sizeUnit': sizeUnit },
+//         { 'layoutDetails.sizeUnit': sizeUnit },
+//         { 'propertyDetails.sizeUnit': sizeUnit },
+//         { 'landDetails.sizeUnit': sizeUnit }
+//       );
+//     }
+    
+//     if (maxPrice && minPrice) {
+//       filterCriteria.$or = filterCriteria.$or || [];
+//       filterCriteria.$or.push(
+//         { 'landDetails.totalPrice': { $gte: minPrice, $lte: maxPrice } },
+//         { 'layoutDetails.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+//         { 'propertyDetails.landDetails.sell.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+//         { 'propertyDetails.landDetails.rent.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+//         { 'propertyDetails.landDetails.lease.totalAmount': { $gte: minPrice, $lte: maxPrice } },
+//         { 'propertyDetails.totalCost': { $gte: minPrice, $lte: maxPrice } }
+//       );
+//     }
+    
+//     let properties;
+//     if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
+//       properties = await fieldModel.findOne(filterCriteria);
+//     } else if (propertyType === "Residential") {
+//       properties = await residentialModel.findOne(filterCriteria);
+//     } else if (propertyType === "Layout") {
+//       properties = await layoutModel.findOne(filterCriteria);
+//     } else {
+//       properties = await commercialModel.findOne(filterCriteria);
+//     }
+    
+//     if (!properties) {
+//       return res.status(409).json({ message: "No properties found" });
+//     }
+    
+//     const agent = await usersModel.findById(properties.userId);
+//     if (!agent) {
+//       return res.status(409).json({ message: "Agent not found" });
+//     }
+
+//     properties = {
+//       ...properties._doc,
+//       agentName: agent.firstName + " " + agent.lastName,
+//       agentNumber: agent.phoneNumber,
+//       agentEmail: agent.email,
+//       agentCity: agent.city,
+//       agentProfilePicture: agent.profilePicture,
+//     };
+//     console.log(properties);
+//     res.status(200).json(properties);
+    
+//   } catch (error) {
+//     if (error.isJoi) {
+//       console.log(error);
+//       return res.status(422).json({
+//         status: "error",
+//         message: error.details.map((detail) => detail.message).join(", "),
+//       });
+//     }
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 //mark a property as sold(1)
 // Controller method to update status to 1 based on propertyId and type
+
+
 const updatePropertyStatus = async (req, res) => {
   const result = await validateIdTypeStatus.validateAsync(req.body);
   const { propertyId, propertyType, status } = result;
