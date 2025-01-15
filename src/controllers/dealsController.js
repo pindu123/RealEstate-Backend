@@ -865,7 +865,7 @@ const fetchPropertyData = async (propertyType, propertyId) => {
 //       throw new Error(`Unknown propertyType: ${propertyType}`);
 //   }
 // };
-const Fuse = require("fuse.js");
+// const Fuse = require("fuse.js");
 
 const getCustomerDealsFiltered = async (req, res) => {
   try {
