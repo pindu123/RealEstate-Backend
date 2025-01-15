@@ -555,7 +555,7 @@ const currentWeekMeetings = async (req, res) => {
     const meetingDetails = [];
 
     for (const meeting of meetings) {
-      const customer = await customerModel.findById(meeting.customerId);
+      const customer = await userModel.findById(meeting.customerId);
       const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
       
       meetingDetails.push({
