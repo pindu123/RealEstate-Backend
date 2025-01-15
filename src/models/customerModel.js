@@ -61,7 +61,13 @@ const customerSchema = new mongoose.Schema(
     income: { type: String, required: false },
     interestedIn:{
       type:String
-    }
+    },
+    // addedBy:{
+    //   type:String,
+    // },
+    // addedByRole:{
+    // type:Number
+    // }
   },
   { timestamps: true }
 );

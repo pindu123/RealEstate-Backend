@@ -8,6 +8,9 @@ const residentialSchema = new mongoose.Schema(
       ref: "users",
       required: true,
     },
+    propertyId:{
+      type:String,
+    },
     csrId: {
       type: String,
     },
@@ -219,6 +222,10 @@ const residentialSchema = new mongoose.Schema(
         type: [String],
       },
     },
+
+    propertyInterestedCount:{
+      type:Number
+    }
   },
   { timestamps: true }
 );

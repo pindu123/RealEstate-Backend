@@ -18,8 +18,6 @@ const insertAgentRatings = async (req, res) => {
     // const firstName = req.user.user.firstName;
     // const lastName = req.user.user.lastName;
     const status = 1;
-    console.log("agent rating", userId);
-    console.log(req.body);
     if (!userId) {
       return res
         .status(400)
@@ -35,8 +33,7 @@ const insertAgentRatings = async (req, res) => {
     };
 
     const result = await agentRatingValidation.validateAsync(ratingsData);
-    console.log(result);
-    //console.log(fieldDetailsData);
+   
     const ratings = new agentRatingModel(result);
     await ratings.save();
     res
@@ -58,7 +55,6 @@ const insertAgentRatings = async (req, res) => {
 const getAgentRatingsByAgentId = async (req, res) => {
   try {
     const agentId = req.user.user.userId;
-    //console.log(userId)
     const ratings = await agentRatingModel.find({ agentId: agentId });
 
     if (ratings.length === 0) {
@@ -81,7 +77,6 @@ const getAgentRatingsByAgentId = async (req, res) => {
         };
       })
     );
-    console.log("new ratings", updatedRatings);
     res.status(200).json(updatedRatings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -92,7 +87,6 @@ const getAgentRatingsByAgentId = async (req, res) => {
 const getAgentRatings = async (req, res) => {
   try {
     const result = await validateId.validateAsync(req.params);
-    console.log("result", result);
     const agentId = result.agentId;
     const ratings = await agentRatingModel.find({ agentId: agentId });
     if (ratings.length === 0) {
@@ -635,7 +629,6 @@ const getAllAgents = async (req, res) => {
         });
       }
       if (csrData.length > 0) {
-        console.log(csrData[0]); // Logging the csrData for debugging purposes
         agent.assignedCsr = csrData[0].email; // Replace assignedCsr with the CSR's email
       } else {
         console.log(
@@ -660,7 +653,7 @@ const getCSRAssignedToAgent = async (req, res) => {
   try {
     const agentId = req.user.user.userId;
     const agent = await userModel.findOne({ _id: agentId }, { password: 0 });
-    console.log(agent);
+   
     if (!agent) {
       return res
         .status(404)

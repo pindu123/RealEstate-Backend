@@ -11,6 +11,7 @@ const {
   otpValidation,
 } = require("../helpers/loginValidation");
 const { getByDistrict } = require("./fieldController");
+const contactModel = require("../models/contactModel");
 
 // const twilio = require('twilio');
 const accountSid = process.env.TWILIO_ACCOUNT_SID; // Your Twilio account SID from environment variables
@@ -63,9 +64,7 @@ function verifyOtp(phoneNumber, inputOtp) {
 const otpForLogin = async (req, res) => {
   try {
     const result = await validateNumber.validateAsync(req.body);
-    console.log(req.body);
     let { phoneNumber } = result;
-    console.log(phoneNumber);
     //let {phoneNumber}= req.params;
     let user = await userModel.findOne({ phoneNumber });
     if (!user) {
@@ -74,9 +73,7 @@ const otpForLogin = async (req, res) => {
     const otp = generateOtp(phoneNumber); // Format the phone number correctly
     const body = `Dear user, your One-Time Password (OTP) for logging into RealEstate Lokam is: "${otp}". Please use this code within 2 minutes to complete your login.`;
     const responseMsg = await sendSMS(phoneNumber, body);
-    console.log("hvbdgvfhjsjdjhyfdgshdu", responseMsg);
     res.status(200).json({ smsResponse: responseMsg });
-    //console.log("msg",responseMsg);
   } catch (error) {
     if (error.isJoi === true) {
       console.log(error);
@@ -101,7 +98,6 @@ const otpLogin = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     const isMatch = verifyOtp(phoneNumber, otp);
-    console.log(isMatch);
     if (isMatch) {
       const token = jwt.sign(
         {
@@ -141,8 +137,8 @@ const otpLogin = async (req, res) => {
 const userLoginController = async (req, res) => {
   try {
     const result = await loginSchema.validateAsync(req.body);
-    console.log(req.body);
-    let { email, password } = result;
+    let {  password } = result;
+    const email = result.email.toLowerCase();
     // Find the user in the database by email and password
     let user = await userModel.findOne({ email });
     if (!user) {
@@ -194,9 +190,8 @@ const verifyPhno = async (req, res) => {
     const { phoneNumber } = req.params;
     const present = await userModel.findOne({ phoneNumber: phoneNumber });
     if (!present) {
-      return res.status(404).json("User with this phone number does not exist");
+      return res.status(409).json("User with this phone number does not exist");
     }
-    console.log(present);
     res.status(200).json("User exists");
   } catch (error) {
     return res.status(500).json("Internal server error");
@@ -204,16 +199,32 @@ const verifyPhno = async (req, res) => {
 };
 
 //check if email exists
+// const verifyEmail = async (req, res) => {
+//   try {
+//     const { email } = req.params;
+    
+//     const present = await userModel.findOne({ email: email });
+//     if (!present) {
+//       return res.status(404).json("User with this email does not exist");
+//     }
+//     res.status(200).json("User exists");
+//   } catch (error) {
+//     return res.status(500).json("Internal server error");
+//   }
+// };
 const verifyEmail = async (req, res) => {
   try {
     const { email } = req.params;
-    const present = await userModel.findOne({ email: email });
+    const userEmail = email.toLowerCase();  // Corrected usage of toLowerCase
+    const present = await userModel.findOne({ email: userEmail });
+
     if (!present) {
-      return res.status(404).json("User with this email does not exist");
+      return res.status(409).json({ message: "User with this email does not exist" });
     }
-    res.status(200).json("User exists");
+    
+    res.status(200).json({ message: "User exists" });
   } catch (error) {
-    return res.status(500).json("Internal server error");
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -222,7 +233,6 @@ const resetMail = async (req, res) => {
     const result = await loginSchema.validateAsync(req.body);
 
     const user = await userModel.find({ email: req.body.email });
-    console.log("user", user);
     if (user) {
       let userId = user[0]._id;
       const salt = await bcrypt.genSalt(saltRounds);
@@ -238,6 +248,15 @@ const resetMail = async (req, res) => {
   }
 };
 
+const contactUs=async (req,res)=>{
+  try{
+  const contact = new contactModel(req.body);
+  await contact.save();
+  res.status(200).json({ message:"Response saved !",success:"true"})
+  }catch(error){
+
+  }
+}
 module.exports = {
   userLoginController,
   otpForLogin,
@@ -245,4 +264,5 @@ module.exports = {
   verifyPhno,
   verifyEmail,
   resetMail,
+  contactUs,
 };

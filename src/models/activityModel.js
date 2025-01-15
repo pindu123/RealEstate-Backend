@@ -30,7 +30,10 @@ type: String,
 required: true
 },
 activityBy: {
-type: String
+type: String,
+},
+activityType:{
+    type:String,
 }
 },
 { timestamps: true }

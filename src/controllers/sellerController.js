@@ -33,7 +33,7 @@ const getAllSellers = async (req, res) => {
     const result = await userModel.find({ role: 2 }, { password: 0 });
 
     if (!result) {
-      res.status(404).json("No Seller Found");
+      res.status(409).json("No Seller Found");
     }
     res.status(200).json(result);
   } catch (error) {
@@ -48,7 +48,7 @@ const removerSeller = async (req, res) => {
     const result = await userModel.findByIdAndDelete({ _id: sellerId });
 
     if (!result) {
-      res.status(404).json("Seller Not Found");
+      res.status(409).json("Seller Not Found");
     }
     res.status(200).json("Seller Removed Successfully");
   } catch (error) {

@@ -219,7 +219,7 @@ const getWishlist = async (req, res) => {
     const wishlistItems = await wishlistModel.find({ userId: userId }).sort({_id:-1});
     //console.log(wishlistItems);
     if (!wishlistItems || wishlistItems.length === 0) {
-      return res.status(404).json({ message: "Your wishlist is empty" });
+      return res.status(409).json({ message: "Your wishlist is empty" });
     }
 
     const filteredWishlistItems = wishlistItems.map((item) => ({
@@ -346,7 +346,7 @@ let wishlistprops= [];
 
     //response for empty wishlist
     if (!fields && !commercials && !residentials && !layouts) {
-      res.status(404).json({ message: "Your wishlist is empty" });
+      res.status(409).json({ message: "Your wishlist is empty" });
     }
     res.status(200).json({
       wishlistprops
@@ -377,7 +377,7 @@ const deleteFromWishlist = async (req, res) => {
 
     if (!deletedItem) {
       return res
-        .status(404)
+        .status(409)
         .json({ message: "This Property is not in WishList to Delete", success: false });
     }
 

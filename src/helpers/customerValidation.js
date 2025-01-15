@@ -67,6 +67,9 @@ const customerSchema = Joi.object({
   interestedIn: Joi.string().optional(),
   // expectedsize: Joi.string().optional(),
   // affordableBudget: Joi.string().optional(),
+  addedBy:Joi.string().optional(),
+  addedByRole:Joi.number().optional(),
+
 });
 
 module.exports = { customerSchema };

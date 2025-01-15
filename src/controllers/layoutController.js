@@ -9,57 +9,51 @@ const {
 const notifyModel = require("../models/notificationModel");
 
 // Create a new field
-const insertLayoutDetails = async (req, res) => {
+const insertLayoutDetail = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
-console.log("asas",req.body.amenities.electricityFacility  )
+    console.log("asas", req.body.amenities.electricityFacility);
 
-  
-
- 
     let layoutDetailsData;
-    let message={}
+    let message = {};
 
-    req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
+    req.body.amenities.electricityFacility = String(
+      req.body.amenities.electricityFacility
+    );
 
-if(role===1)
- {  
+    if (role === 1) {
+      if (req.body.enteredBy) {
+        const csrData = await userModel.find({ _id: userId });
 
-    if (req.body.enteredBy) {
+        layoutDetailsData = {
+          userId,
+          role,
+          ...req.body,
+          csrId: csrData[0].assignedCsr,
+          // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+        };
+      } else {
+        console.log("abc");
+        const csrData = await userModel.find({ _id: userId });
+
+        layoutDetailsData = {
+          userId,
+          role,
+          enteredBy: userId,
+          ...req.body,
+          csrId: csrData[0].assignedCsr,
+          // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
+        };
+      }
       const csrData = await userModel.find({ _id: userId });
 
-      layoutDetailsData = {
-        userId,
-        role,
-        ...req.body,
-        csrId: csrData[0].assignedCsr,
-        // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
-
-      };
-    } else {
-      console.log("abc");
-      const csrData = await userModel.find({ _id: userId });
-
-      layoutDetailsData = {
-        userId,
-        role,
-        enteredBy: userId,
-        ...req.body,
-        csrId: csrData[0].assignedCsr,
-        // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
-
+      message = {
+        senderId: req.user.user.userId,
+        receiverId: csrData[0].assignedCsr,
+        message: `${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
+        notifyType: "Property",
       };
     }
-    const csrData = await userModel.find({ _id: userId });
-
-     message={
-      "senderId":req.user.user.userId,
-      "receiverId":csrData[0].assignedCsr,
-      "message":`${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
-      "notifyType":"Property"
-
-    }
-  }
     if (role === 5) {
       const userData = await userModel.find({
         email: req.body.agentDetails.userId,
@@ -73,7 +67,6 @@ if(role===1)
           ...req.body,
           userId: userData[0]._id.toString(),
           // "amenities.electricityFacility":req.body.amenities.electricityFacility.toString(),
-
         };
       } else {
         console.log("abc");
@@ -85,30 +78,31 @@ if(role===1)
 
           ...req.body,
           userId: userData[0]._id.toString(),
- 
         };
       }
       const csrData = await userModel.find({ _id: req.user.user.userId });
-console.log("layoutDetailsData",layoutDetailsData)
-      message={
-        "senderId":req.user.user.userId,
-        "receiverId":req.body.agentDetails.userId,
-        "message":`${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
-        "notifyType":"Property"
-
-      }
+      console.log("layoutDetailsData", layoutDetailsData);
+      message = {
+        senderId: req.user.user.userId,
+        receiverId: req.body.agentDetails.userId,
+        message: `${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+        notifyType: "Property",
+      };
     }
 
-
-
-    if (layoutDetailsData.layoutDetails.address.latitude === '' || layoutDetailsData.layoutDetails.address.latitude === undefined) {
+    if (
+      layoutDetailsData.layoutDetails.address.latitude === "" ||
+      layoutDetailsData.layoutDetails.address.latitude === undefined
+    ) {
       delete layoutDetailsData.layoutDetails.address.latitude;
     }
-    
-    if (layoutDetailsData.layoutDetails.address.longitude === '' || layoutDetailsData.layoutDetails.address.longitude === undefined) {
+
+    if (
+      layoutDetailsData.layoutDetails.address.longitude === "" ||
+      layoutDetailsData.layoutDetails.address.longitude === undefined
+    ) {
       delete layoutDetailsData.layoutDetails.address.longitude;
     }
-    
 
     // Validate the request body against the Joi schema
     const result = await layoutValidationSchema.validateAsync(
@@ -119,10 +113,8 @@ console.log("layoutDetailsData",layoutDetailsData)
     const layoutDetails = new layoutModel(result);
     await layoutDetails.save();
 
-
-
-    const notify=new notifyModel(message)
-await notify.save()
+    const notify = new notifyModel(message);
+    await notify.save();
     res
       .status(201)
       .json({ message: "Layout details added successfully", success: true });
@@ -139,6 +131,142 @@ await notify.save()
     res.status(500).json({ message: "Error inserting layout details", error });
   }
 };
+
+/**
+ * Utility function to generate a unique property ID for layout properties.
+ * Prefix: "PL"
+ */
+const generatePropertyId = async (typePrefix, model) => {
+  const lastEntry = await model
+    .findOne()
+    .sort({ _id: -1 })
+    .select("propertyId");
+  let lastId = 0;
+  if (lastEntry && lastEntry.propertyId) {
+    lastId = parseInt(lastEntry.propertyId.slice(2), 10); // Extract numeric part after "PL"
+  }
+  return `${typePrefix}${lastId + 1}`;
+};
+
+/**
+ * API to insert layout details.
+ */
+const insertLayoutDetails = async (req, res) => {
+  try {
+    const { userId, role } = req.user.user;
+
+    req.body.amenities.electricityFacility = String(
+      req.body.amenities.electricityFacility
+    );
+
+    // Generate a unique property ID for layout properties
+    const propertyId = await generatePropertyId("PL", layoutModel);
+    req.body.propertyId = propertyId;
+
+    let layoutDetailsData;
+    let message = {};
+
+    if (role === 1) {
+      // CSR role
+      const csrData = await userModel.findById(userId);
+      if (!csrData) {
+        return res.status(404).json({ message: "CSR not found" });
+      }
+
+      layoutDetailsData = {
+        userId,
+        role,
+        enteredBy: req.body.enteredBy || userId,
+        ...req.body,
+        csrId: csrData.assignedCsr,
+      };
+
+      message = {
+        senderId: userId,
+        receiverId: csrData.assignedCsr,
+        message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
+        notifyType: "Property",
+      };
+    } else if (role === 5) {
+      // Agent role
+      const agentData = await userModel.findOne({
+        email: req.body.agentDetails.userId,
+      });
+      if (!agentData) {
+        return res.status(404).json({ message: "Agent not found" });
+      }
+
+      layoutDetailsData = {
+        csrId: userId,
+        role,
+        enteredBy: req.body.enteredBy || userId,
+        ...req.body,
+        userId: agentData._id.toString(),
+      };
+
+      const csrData = await userModel.findById(userId);
+      message = {
+        senderId: userId,
+        receiverId: req.body.agentDetails.userId,
+        message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
+        notifyType: "Property",
+      };
+    } else {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized role for this action" });
+    }
+
+    // Clean up optional latitude/longitude if empty
+    if (!layoutDetailsData.layoutDetails.address.latitude) {
+      delete layoutDetailsData.layoutDetails.address.latitude;
+    }
+    if (!layoutDetailsData.layoutDetails.address.longitude) {
+      delete layoutDetailsData.layoutDetails.address.longitude;
+    }
+
+    // Validate the request body against the Joi schema
+    const validatedData = await layoutValidationSchema.validateAsync(
+      layoutDetailsData,
+      { abortEarly: false }
+    );
+
+    // Save layout details
+    const layoutDetails = new layoutModel(validatedData);
+    await layoutDetails.save();
+
+    // Save notification
+
+    let message1 = {
+      senderId: userId,
+      receiverId: 0,
+      message: "A new property added ! Please checkout",
+      notifyType: "Customer",
+    };
+    const notification = new notifyModel(message);
+
+    const notification1 = new notifyModel(message1);
+    await notification.save();
+    await notification1.save();
+    res.status(201).json({
+      message: "Layout details added successfully",
+      success: true,
+      propertyDetails: validatedData,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(422).json({
+        message: "Validation failed",
+        details: error.details.map((err) => err.message),
+        success: false,
+      });
+    }
+    res.status(500).json({ message: "Error inserting layout details", error });
+  }
+};
+
+module.exports = { insertLayoutDetails };
+
 // Function to get all layout properties added by that user
 const getLayouts = async (req, res) => {
   try {
@@ -161,13 +289,32 @@ const getAllLayouts = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
-    // Fetch all layouts
+
+    const page=req.query.page
+    const limit=req.query.limit
     let layouts;
-    if (role === 3) {
-      layouts = await layoutModel.find({ status: 0 }).sort({ updatedAt: -1 });
-    } else {
-      layouts = await layoutModel.find().sort({ status: 1, updatedAt: -1 });
+
+    // Fetch all layouts
+
+    if(page)
+    {
+           let offset=(page-1)*limit
+           if (role === 3) {
+            layouts = await layoutModel.find({ status: 0 }).skip(offset).limit(limit).sort({ updatedAt: -1 });
+          } else {
+            layouts = await layoutModel.find().skip(offset).limit(limit).sort({ status: 1, updatedAt: -1 });
+          }
     }
+    else
+    {
+      if (role === 3) {
+        layouts = await layoutModel.find({ status: 0 }).sort({ updatedAt: -1 });
+      } else {
+        layouts = await layoutModel.find().sort({ status: 1, updatedAt: -1 });
+      }
+    }
+
+ 
 
     if (layouts.length === 0) {
       return res.status(200).json([]);

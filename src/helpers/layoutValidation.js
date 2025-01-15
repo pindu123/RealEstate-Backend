@@ -13,7 +13,7 @@ const capitalizeWords = (value) => {
 const layoutValidationSchema = Joi.object({
   userId: Joi.string().optional(),
   enteredBy: Joi.string().optional(),
-
+  propertyId:Joi.string().optional(),
   role: Joi.number().optional(),
   propertyType: Joi.string().default("Layout"),
   rating: Joi.number().default(0),
@@ -122,8 +122,8 @@ const layoutValidationSchema = Joi.object({
   }).optional(),
 
   uploadPics: Joi.array().items(Joi.string()).optional(),
-  videos:Joi.array().items(Joi.string()).optional(),
-
+  videos:Joi.array().items(Joi.any()).optional(),
+  propertyInterestedCount:Joi.number().optional()
 });
 
 //update plots schema

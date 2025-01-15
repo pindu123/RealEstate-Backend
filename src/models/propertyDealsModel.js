@@ -34,7 +34,12 @@ const dealsSchema = new mongoose.Schema(
     },
     expectedPrice:{
       type:String,
-    
+    },
+    addedBy:{
+      type:String,
+    },
+    addedByRole:{
+      type:Number,
     }
   },
   { timestamps: true }

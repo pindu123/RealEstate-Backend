@@ -5,7 +5,7 @@ const twilio = require("twilio");
 const nodemailer = require("nodemailer");
 
 const axios = require("axios");
-
+// not in use
 const createCustomer = async (req, res) => {
   try {
     const customers = req.body;
@@ -20,7 +20,7 @@ const createCustomer = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-const getCustomer = async (req, res) => {
+const getCustomers = async (req, res) => {
   try {
     const customerData = await customerModel.find();
 
@@ -30,6 +30,57 @@ const getCustomer = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
+// updated based on customer changed flow
+const getCustomer = async (req, res) => {
+  try {
+   
+    const customerData = await userModel.find({ role: 3 }).select('-password').sort({ createdAt: -1 });
+
+    res.status(200).json(customerData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+// mobile
+const customerBasedOnAddedBy = async (req, res) => {
+  try {
+    const userId = req.user.user.userId;
+    const role = req.user.user.role;
+
+    let customerQuery = { role: 3, addedBy: userId };
+
+    if (role === 1) {
+      const deals = await dealsModel.find({ agentId: userId });
+      const customerIds = deals.map(deal => deal.customerId);
+      customerQuery = { _id: { $in: customerIds }, role: 3 };
+    }
+
+    const customerData = await userModel.find(customerQuery).select('-password');
+    const customerDataAddedBy = await userModel.find({ addedBy: userId }).select('-password');
+
+    const combinedData = [...customerData, ...customerDataAddedBy];
+    const uniqueData = Array.from(new Set(combinedData.map(c => c._id)))
+                             .map(id => combinedData.find(c => c._id === id));
+
+    if (!uniqueData || uniqueData.length === 0) {
+      return res.status(409).json({
+        status: "error",
+        message: "No customers found.",
+      });
+    }
+
+    res.status(200).json(uniqueData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+    });
+  }
+};
+
 
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -165,6 +216,8 @@ const sendPropertyDetailsToCustomer = async (req, res) => {
   }
 };
 const PDFDocument = require("pdfkit");
+const userModel = require("../models/userModel");
+const dealsModel = require("../models/propertyDealsModel");
 const cloudinary = require("cloudinary").v2;
 
 // Configure Cloudinary for file upload
@@ -393,4 +446,5 @@ module.exports = {
   sendEmailWithPDF,
   sendWhatsAppWithPDF,
   generatePropertyPDF,
+  customerBasedOnAddedBy,
 };

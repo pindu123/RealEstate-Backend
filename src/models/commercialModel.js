@@ -7,7 +7,9 @@ const commercialSchema = new mongoose.Schema(
       ref: "users",
       required: true,
     },
-
+    propertyId:{
+      type:String,
+    },
     enteredBy: {
       type: String,
     },
@@ -168,6 +170,10 @@ const commercialSchema = new mongoose.Schema(
         required:false
       },
     },
+     propertyInterestedCount:{
+      type:Number
+     }
+   
   },
   { timestamps: true }
 );

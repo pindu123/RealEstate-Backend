@@ -308,9 +308,8 @@ const getLayoutStats = async (req, res) => {
 
 const removeProperties = async (req, res) => {
   try {
-    console.log("asd");
-    console.log(req.params.type);
     let result;
+
     if (req.params.type === "Agricultural land") {
       result = await fieldModel.findByIdAndDelete({
         _id: req.params.propertyId,
@@ -328,7 +327,6 @@ const removeProperties = async (req, res) => {
         _id: req.params.propertyId,
       });
     }
-    console.log(result);
     if (!result) {
       res.status(404).json(" Property Not Found ");
     }
@@ -476,7 +474,6 @@ const getStateWiseStats = async (req, res) => {
     }
 
     for (let prop of commercial) {
-      console.log(prop);
       if (prop.propertyType === "Commercial") {
         if (
           prop.propertyDetails.landDetails.address.state === "Andhra Pradesh"
@@ -996,7 +993,6 @@ await notifyModel.insertMany(messages)
       const role = req.user.user.role;
       const dealId = req.body.dealId;
   
-      console.log("Role:", role, "Deal ID:", dealId);
   
       // Ensure the user is an admin
       if (role !== 0) {
@@ -1320,7 +1316,6 @@ await notifyModel.insertMany(messages)
 
 // else
 // {
-//   console.log(prop)
 //   result={
 //     "propertyTitle":prop.landDetails.title,
 //     "propertyType":prop.propertyType,
@@ -1350,7 +1345,6 @@ const getAllCsrORMarketingAgent = async (req, res) => {
     const role = parseInt(req.params.role); 
     let agents = '';
 
-    console.log(role); 
 
     if (role === 5) {
       agents = await userModel.find({ role: 5 }, { password: 0 });
@@ -1360,7 +1354,6 @@ const getAllCsrORMarketingAgent = async (req, res) => {
       return res.status(400).json({ message: "Invalid role parameter" });
     }
 
-    console.log(agents); // Log the fetched agents
     res.status(200).json(agents); // Send agents list as response
   } catch (error) {
     console.error(error); // Log the error to the console
@@ -1600,12 +1593,10 @@ const getPropertiesFilter = async (req, res) => {
   try {
     let text = req.params.text;
 
-    // Create a regular expression for partial substring matching (case-insensitive)
-    let regex = new RegExp(text, 'i');  // 'i' for case-insensitive matching
+    let regex = new RegExp(text, 'i'); 
 
     let filterCriteria = { status: 0 };
-
-    // Apply regex to match anywhere in the string
+    // 
     if (text) {
       filterCriteria.$or = [
         { 'propertyDetails.landDetails.address.district': { $regex: regex } },
@@ -1614,7 +1605,9 @@ const getPropertiesFilter = async (req, res) => {
         { 'propertyTitle': { $regex: regex } },
         { 'layoutDetails.layoutTitle': { $regex: regex } },
         { 'propertyDetails.apartmentName': { $regex: regex } },
-        { 'landDetails.title': { $regex: regex } }
+        {'propertyDetails.propertyId':{$regex:regex}},
+        { 'landDetails.title': { $regex: regex } },
+        
       ];
     }
 
@@ -1638,7 +1631,6 @@ const getPropertiesFilter = async (req, res) => {
     let property = [];
     for (let prop of properties) {
       let result = {};
-      console.log(prop)
       if (prop.propertyType === "Commercial" || prop.propertyType === "commercial") {
         result = {
           "propertyType": prop.propertyType,
@@ -1732,7 +1724,6 @@ const getPropertiesFilter = async (req, res) => {
 //                  maxSize=size>maxSize?size:maxSize   
 
 //               } else {
-//                 console.log(prop.propertyType,prop.landDetails)
 //                 price = prop.landDetails.totalPrice;
 //                 size=prop.landDetails.size;
 //               maxPrice = price > maxPrice ?price  : maxPrice       

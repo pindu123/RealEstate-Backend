@@ -17,12 +17,16 @@ const userSchema = new mongoose.Schema(
       match: /^[0-9]{10}$/,
       required: true,
     },
+    altPhoneNumber:{
+      type:String,
+      
+    },
     email: {
       type: String,
       trim: true,
       unique: true,
       match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      required: true,
+      required: false,
     },
     pinCode: {
       type: Number,
@@ -79,6 +83,36 @@ const userSchema = new mongoose.Schema(
     },addedBy:{
       type:String,
     },
+    occupation:{
+      type:String
+    },
+    income:{
+      type:String,
+    },
+    budget:{
+      type:String,
+    },
+    accountId:{
+      type:String,
+    },
+    subscription:{
+      planType:{
+        type:String,
+
+      },
+      planDuration:{
+        type:String
+      },
+      planStartDate:{
+        type:String
+      },
+      planEndDate:{
+        type:String
+      },
+      amount:{
+        type:String
+      }
+    }
   },
   { timestamps: true }
 );

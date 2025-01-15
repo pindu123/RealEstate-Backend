@@ -14,9 +14,9 @@ const capitalizeWords = (value) => {
 // Validation for residential property
 const residentialSchema = Joi.object({
   userId: Joi.string().required(),
-
+  propertyId:Joi.string().optional(),
   enteredBy: Joi.string().optional(),
-
+  propertyInterestedCount:Joi.number().optional(),
   propertyType: Joi.string().required(),
   agentDetails: Joi.object({ userId: Joi.string().optional() }).optional(),
 
@@ -124,7 +124,7 @@ const residentialSchema = Joi.object({
   }).optional(),
 
   propPhotos: Joi.array().items(Joi.string()).optional(),
-  videos:Joi.array().items(Joi.string()).optional(),
+  videos:Joi.array().items(Joi.any()).optional(),
 
   configurations: Joi.object({
     bathroomCount: Joi.number().min(0).required(),
@@ -148,7 +148,7 @@ const residentialSchema = Joi.object({
       }, "Capitalization for extra amenities")
     ).optional(),
   }).required(),
-  
+ 
 });
 
 module.exports = { residentialSchema };

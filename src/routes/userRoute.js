@@ -8,6 +8,8 @@ const {
   getProfile,
   getUsersByRole,
   createCSR,
+  getCsr,
+  updateSubscription,
 } = require("../controllers/userController");
 
 const userRoutes = express.Router();
@@ -20,4 +22,7 @@ userRoutes.get("/getprofile", getProfile);
 userRoutes.get("/getnames/:role", namesBasedOnRole);
 userRoutes.get("/getusersbyrole/:role", getUsersByRole);
 userRoutes.post("/createCSR", createCSR);
+userRoutes.get("/myCsr",getCsr);
+
+userRoutes.put("/updateSubscription",updateSubscription)
 module.exports = userRoutes;

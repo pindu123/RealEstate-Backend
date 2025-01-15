@@ -15,7 +15,7 @@ const meetingSchema = new mongoose.Schema(
     },
     customerMail: {
         type: String,
-        required: true,
+        // required: true,
       },
     meetingInfo: {
       type: String,

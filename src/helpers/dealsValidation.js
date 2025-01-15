@@ -10,8 +10,9 @@ const dealsSchema = Joi.object({
   comments: Joi.string().optional(),
   csrId: Joi.string().optional(),
   agentId: Joi.string().optional(),
-  expectedPrice:Joi.string().optional()
-
+  expectedPrice:Joi.string().optional(),
+  addedBy:Joi.string().optional(),
+  addedByRole:Joi.number().optional(),
 });
 
 module.exports = dealsSchema;

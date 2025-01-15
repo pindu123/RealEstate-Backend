@@ -8,6 +8,17 @@ const {
   closeDeal,
   getClosedDeals,
   getCustomerDeals,
+  getIntresetedCustomers,
+  getDistinctProperties,
+  getPropertyDeals,
+  getDealsRelatedAgents,
+  getIntrestedProperties,
+  dealSearchOnCustomer,
+  dealsSearchOnProps,
+  searchPropertyDeals,
+  getCustomerDealsFilters,
+  getCustomerDealsFiltered,
+  startDeal,
 } = require("../controllers/dealsController");
 const {
   ModuleDataManagementInstance,
@@ -24,8 +35,8 @@ dealsRoutes.get("/checkUser/:phoneNumber", getExisitingCustomer);
 
 dealsRoutes.get("/getDeals", getDeals);
 dealsRoutes.get("/getCustomerDeals/:customerId", getCustomerDeals);
-
-
+dealsRoutes.get("/customerDealsFilter/:customerId",getCustomerDealsFiltered);
+dealsRoutes.put("/startDeal",startDeal);
 dealsRoutes.get("/getAgentDealings", getAgentDealings);
 
 dealsRoutes.put("/changeInterest", changeInterest);
@@ -34,4 +45,21 @@ dealsRoutes.put("/closeDeal",closeDeal)
 
 dealsRoutes.get("/getClosedDeals",getClosedDeals)
 
+
+dealsRoutes.get("/getIntresetedCustomers",getIntresetedCustomers)
+
+
+dealsRoutes.get("/getDistinctProperties",getDistinctProperties)
+
+dealsRoutes.get('/getPropertyDeals/:propertyId',getPropertyDeals)
+
+dealsRoutes.get("/getDealsRelatedAgents",getDealsRelatedAgents)
+
+dealsRoutes.get("/getIntrestedProperties",getIntrestedProperties)
+
+dealsRoutes.get("/dealSearchonCustomer/:text",dealSearchOnCustomer);
+
+dealsRoutes.get("/dealsSearchOnProps/:text",dealsSearchOnProps);
+dealsRoutes.get("/customerFilter/:text/:customerId",getCustomerDealsFilters);
+dealsRoutes.get("/searchPropertyDeals/:text/:propertyId",searchPropertyDeals);
 module.exports = dealsRoutes;

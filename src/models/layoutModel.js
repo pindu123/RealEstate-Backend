@@ -5,6 +5,9 @@ const layoutSchema = new mongoose.Schema(
     userId: {
       type: String,
     },
+    propertyId:{
+      type:String,
+    },
     enteredBy: {
       type: String,
     },
@@ -184,6 +187,11 @@ const layoutSchema = new mongoose.Schema(
     videos:{
       type:[String],
       required:false
+    },
+
+
+    propertyInterestedCount:{
+      type:Number
     }
   },
   { timestamps: true }

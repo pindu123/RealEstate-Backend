@@ -25,8 +25,12 @@ const registrationSchema = Joi.object({
     .length(10)
     .pattern(/[6-9]{1}[0-9]{9}/)
     .required(),
+    budget:Joi.any().optional(),
+    accountId:Joi.string().optional(),
+    addedBy:Joi.string().optional(),
+  email: Joi.string().email().lowercase().optional(),
 
-  email: Joi.string().email().lowercase().required(),
+  altPhoneNumber:Joi.string().optional(),
   village: Joi.string().optional(),
   pinCode: Joi.string()
     .pattern(/^[0-9]{6}$/) // Must be exactly 6 digits
@@ -112,16 +116,25 @@ const registrationSchema = Joi.object({
   profilePicture: Joi.string(),
   identityProof: Joi.array().optional(),
   agentUserId: Joi.string().optional(),
-
+  occupation:Joi.string().optional(),
   assignedDistrict: Joi.string().optional(),
-
+  income:Joi.string().optional(),
   assignedMandal: Joi.string().optional(),
+
+  subscription:Joi.object({
+    planType:Joi.string().optional(),
+    planDuration:Joi.string().optional(),
+    planStartDate:Joi.string().optional(),
+    planEndDate:Joi.string().optional(),
+    amount:Joi.string().optional()
+}).optional()
+
 });
 
 //validation for role
 const roleSchema = Joi.object({
-  role: Joi.number().integer().valid(1, 2, 3, 4, 5).required().messages({
-    "any.only": "Role must be one of 1, 2, or 3.",
+  role: Joi.number().integer().valid(0,1, 2, 3, 4, 5,6).required().messages({
+    "any.only": "Role must be one of 0,1, 2,3,4,5 or 6.",
     "number.base": "Role must be a number.",
   }),
 });

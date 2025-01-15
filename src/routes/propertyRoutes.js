@@ -18,7 +18,11 @@ const {
   getCountOfRatings,
   getMyPropsByLocation,
   propertyFilters,
-  getABC
+  getABC,
+  propertyBasedOnLocation,
+  updatePropertyDetails,
+  plansBasedProperties,
+  recentlyAddedProperties
 } = require("../controllers/propertyController");
 
 const propertyRoutes = express.Router();
@@ -27,9 +31,9 @@ const apicache = require('apicache');
 let cache = apicache.middleware;
 
 // propertyRoutes.get('/latestprops',getLatestProps);
+propertyRoutes.get("/recentlyAddedProperties",recentlyAddedProperties);
 propertyRoutes.put("/markassold/", updatePropertyStatus);
 propertyRoutes.get("/getpropbyid/:agentId", getPropertiesByUserId);
-propertyRoutes.get("/:location",cache('5 seconds'), getPropertiesByLocation);
 propertyRoutes.get("/getproprating/:propertyId",cache('5 seconds'), getPropertyRatings);
 propertyRoutes.post("/insertproprating", insertPropertyRatings);
 propertyRoutes.get("/getpropbyid/:propertyType/:propertyId",cache('5 seconds'), getPropertiesById);
@@ -43,9 +47,10 @@ propertyRoutes.get('/maxSizeForAllProps/:type/:sell/:rent/:lease/:flat/:house/:s
 propertyRoutes.get('/maxSize/:type/:sell/:rent/:lease/:flat/:house/:sold/:unsold',cache('5 seconds'),maximumSize);
 propertyRoutes.get('/maxPriceForAllProps/:type/:sell/:rent/:lease/:flat/:house',cache('5 seconds'),maxPriceForAllProps);
 propertyRoutes.get('/countOfRatings/:propertyId/:propertyType',getCountOfRatings);
+propertyRoutes.get('/userLocation/property',propertyBasedOnLocation);
+propertyRoutes.get("/plansBasedProperties",plansBasedProperties);
+propertyRoutes.get("/:location",cache('5 seconds'), getPropertiesByLocation); 
 
- 
-
-
+propertyRoutes.patch("/updatePropertyDetails",updatePropertyDetails)
 
 module.exports = propertyRoutes;
