@@ -74,6 +74,7 @@ const totalViews = async (req, res) => {
     console.log(count);
     res.status(200).json(count);
   } catch (error) {
+    console.log(error,'view error');
     res.status(500).json("Internal server error");
   }
 };
@@ -87,8 +88,10 @@ const viewsFromABuyer = async (req, res) => {
       views.map(async (view) => {
         const user = await userModel.findOne({ _id: view.userId });
         const buyerName = user.firstName + " " + user.lastName;
+        const profilePicture=user.profilePicture;
         return {
           buyerName: buyerName,
+          profilePicture:profilePicture,
           viewsCount: view.viewsCount,
           createdAt: view.createdAt,
           updatedAt: view.updatedAt,
@@ -97,6 +100,7 @@ const viewsFromABuyer = async (req, res) => {
     );
     res.status(200).json(result);
   } catch (error) {
+    console.log(error,'view error')
     res.status(500).json("Internal server error");
   }
 };
@@ -306,10 +310,59 @@ const getTopProperties = async (req, res) => {
   }
 };
 
+const totalViews1 = async (req, res) => {
+
+  try {
+    console.log('in total views')
+ const { propertyId,propertyType } = req.params;
+ const views = await viewsModel.find({ propertyId:propertyId });
+ console.log(views,'views')
+ 
+ let intrestedCount=0;
+ if(propertyType==="Residential")
+  {
+ const data=await residentialModel.findById(propertyId);
+ intrestedCount=data.propertyInterestedCount;
+ }
+ else if(propertyType==="Commercial")
+  {
+ const data=await commercialModel.findById(propertyId);
+  intrestedCount=data.propertyInterestedCount;
+  }
+ else if(propertyType==="Layout")
+ {
+ const data=await layoutModel.findById(propertyId);
+  intrestedCount=data.propertyInterestedCount;
+ }
+ else
+ {
+ const data=await fieldModel.findById(propertyId);
+  intrestedCount=data.propertyInterestedCount;
+ }
+ 
+ 
+ 
+ let count = 0;
+  views.forEach((view) => {
+  count = count + view.viewsCount;
+  });
+  console.log(count);
+  res.status(200).json({"viewCount":count,"buyerCount":intrestedCount||0});
+  } catch (error) {
+  console.log(error,'view error');
+  res.status(500).json("Internal server error");
+  }
+ };
+
+
+
+
+
 module.exports = {
   updateViewCount,
   totalViews,
   viewsFromABuyer,
   getTopView,
   getTopProperties,
+  totalViews1,
 };

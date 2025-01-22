@@ -16,7 +16,7 @@ const {
 } = require("../controllers/agentController");
 
 const agentRoutes = express.Router();
-
+//
 agentRoutes.post("/rating", insertAgentRatings);
 agentRoutes.get("/getAgentRatingById", getAgentRatingsByAgentId);
 agentRoutes.get("/getratings", getAgentRatings);

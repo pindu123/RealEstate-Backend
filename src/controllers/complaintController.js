@@ -34,25 +34,66 @@ const postComplaint = async (req, res) => {
   }
 };
 
+// const getCompliants = async (req, res) => {
+//   try {
+//     const userData = await userModel.find({ role: req.params.role });
+//     let com = [];
+//     for (const user of userData) {
+//       let userId = user.id;
+//       const complaintData = await complaintModel.find({ userId: userId });
+//       let complaints = [];
+//       for (const complaint of complaintData) {
+//         complaints.push({
+//           message: complaint.message,
+//           time: complaint.createdAt,
+//           attachment: complaint.attachment,
+//           category: complaint.category,
+//         });
+//       }
+
+//       let data = {
+//         name: `${user.firstName} ${user.lastName}`,
+//         profile: user.profilePicture,
+//         contact: user.phoneNumber,
+//         email: user.email,
+//         city: user.city,
+//         state: user.state,
+//         district: user.district,
+//         userId: user.id,
+//         messages: complaints,
+//       };
+//       com.push(data);
+//     }
+
+
+//     res.status(200).json(com);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
+
+
 const getCompliants = async (req, res) => {
   try {
+    
     const userData = await userModel.find({ role: req.params.role });
-    let com = [];
-    for (const user of userData) {
-      let userId = user.id;
-      const complaintData = await complaintModel.find({ userId: userId });
-      let complaints = [];
-      for (const complaint of complaintData) {
-        complaints.push({
-          message: complaint.message,
-          time: complaint.createdAt,
-          attachment: complaint.attachment,
-          category: complaint.category,
-        });
-      }
+    console.log(userData)
+    if (!userData.length) {
+      return res.status(409).json({ message: "No users found with the specified role" });
+    }
 
-      let data = {
-        name: user.firstName,
+    const complaintsPromises = userData.map(async (user) => {
+      const complaintData = await complaintModel.find({ userId: user.id });
+      const complaints = complaintData.map((complaint) => ({
+        message: complaint.message,
+        time: complaint.createdAt,
+        attachment: complaint.attachment,
+        category: complaint.category,
+      }));
+
+      return {
+        name: `${user.firstName} ${user.lastName}`,
         profile: user.profilePicture,
         contact: user.phoneNumber,
         email: user.email,
@@ -62,29 +103,16 @@ const getCompliants = async (req, res) => {
         userId: user.id,
         messages: complaints,
       };
-      com.push(data);
-    }
+    });
 
-    // const complaintData = await complaintModel.find();
-    // let data = [];
-    // for (const item of complaintData) {
-    //   console.log(1, item, item.userId);
-    //   let userId = item.userId;
-    //   const user = await userModel.findById({ _id: userId });
-    //   let complaint = {
-    //     message: item.message,
-    //     firstName: user.firstName,
-    //     userId: item.userId,
-    //   };
-    //   data.push(complaint);
-    // }
-
+    const com = await Promise.all(complaintsPromises);
     res.status(200).json(com);
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Internal Server Error");
+    console.error("Error fetching complaints:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 const getUserCompliants = async (req, res) => {
   try {

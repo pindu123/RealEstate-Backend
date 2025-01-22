@@ -100,7 +100,6 @@ const getAllActivities = async (req, res) => {
       { _id: { $in: userIds } },
       "firstName lastName"
     );
-
     const activitiesWithNames = activities.map((activity) => {
       const user = activity.activityBy
         ? users.find((u) => u._id.toString() === activity.activityBy.toString())
@@ -112,7 +111,6 @@ const getAllActivities = async (req, res) => {
           : "Unknown User",
       };
     });
-
     res
       .status(200)
       .json({
@@ -227,55 +225,169 @@ const createActivity = async (req, res) => {
   }
 };
 //get all the activities based on the user role
+// if role is 3, then also get recieverId as "0" 
+// const getNotification = async (req, res) => {
+//   try {
+//     const userId = req.user.user.userId;
+//     const role = req.user.user.role;
+//     let notification = [];
 
+//     // If role is 3, include both '0' and userId as receiverId
+//     if (role === 3) {
+//       notification = await notifyModel.find({
+//         $or: [
+//           { receiverId: '0' },
+//           { receiverId: userId }
+//         ],
+//         status: "unSeen",
+//       });
+//     } else {
+//       notification = await notifyModel.find({
+//         receiverId: userId,
+//         status: "unSeen",
+//       });
+//     }
+
+//     let notifications = [];
+
+//     for (let notify of notification) {
+//       const userData = await userModel.findById({ _id: notify.senderId });
+
+//       notifications.push({
+//         notificationId: notify._id,
+//         message: notify.message,
+//         senderId: notify.senderId,
+//         receiverId:userId,
+//         details:notify.details||null,
+//         role:`${userData.role}`,
+//         notifyType: notify.notifyType,
+//         senderName: `${userData.firstName} ${userData.lastName}`,
+//         profilePicture: userData.profilePicture,
+//       });
+//     }
+
+//     if (notifications.length === 0) {
+//       res.status(409).json("No Notifications");
+//     } else {
+//       res.status(200).json(notifications);
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
 const getNotification = async (req, res) => {
   try {
     const userId = req.user.user.userId;
-    const role=req.user.user.role;
-    const notification = await notifyModel.find({
-      receiverId: userId,
-      status: "unSeen",
-    });
+    const role = req.user.user.role;
+    let notification = [];
+
+    // If role is 3, include both '0' and userId as receiverId
+    if (role === 3) {
+      notification = await notifyModel
+        .find({
+          $or: [
+            { receiverId: '0' },
+            { receiverId: userId }
+          ],
+          status: "unSeen",
+        })
+        .sort({ createdAt: -1 }); 
+    } else {
+      notification = await notifyModel
+        .find({
+          receiverId: userId,
+          status: "unSeen",
+        })
+        .sort({ createdAt: -1 }); 
+    }
+
     let notifications = [];
 
     for (let notify of notification) {
       const userData = await userModel.findById({ _id: notify.senderId });
 
-    if(role==3 && notify.notifyType==="Customer")
-    {
       notifications.push({
         notificationId: notify._id,
         message: notify.message,
         senderId: notify.senderId,
         receiverId: userId,
+        details: notify.details || null,
+        role: `${userData.role}`,
         notifyType: notify.notifyType,
         senderName: `${userData.firstName} ${userData.lastName}`,
         profilePicture: userData.profilePicture,
       });
-    }
-else{
-      notifications.push({
-        notificationId: notify._id,
-        message: notify.message,
-        senderId: notify.senderId,
-        receiverId: notify.receiverId,
-        notifyType: notify.notifyType,
-        senderName: `${userData.firstName} ${userData.lastName}`,
-        profilePicture: userData.profilePicture,
-      });
-    }
     }
 
-    if (notifications.length == 0) {
+    if (notifications.length === 0) {
       res.status(409).json("No Notifications");
     } else {
       res.status(200).json(notifications);
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json("Internal Server Error");
   }
 };
+
+// const getNotification = async (req, res) => {
+//   try {
+//     const userId = req.user.user.userId;
+//     const role=req.user.user.role;
+//     let notification=''
+//     if(role===3||role==='3'){
+//        notification = await notifyModel.find({
+//         receiverId: userId ||'0'||0,
+
+//         status: "unSeen",
+//       });
+//     }
+//    else {  notification = await notifyModel.find({
+//       receiverId: userId,
+//       status: "unSeen",
+//     });
+//   }
+//     let notifications = [];
+
+//     for (let notify of notification) {
+//       const userData = await userModel.findById({ _id: notify.senderId });
+
+//     if(role==3 && notify.notifyType==="Customer")
+//     {
+//       notifications.push({
+//         notificationId: notify._id,
+//         message: notify.message,
+//         senderId: notify.senderId,
+//         receiverId: userId,
+//         notifyType: notify.notifyType,
+//         senderName: `${userData.firstName} ${userData.lastName}`,
+//         profilePicture: userData.profilePicture,
+//       });
+//     }
+// else{
+//       notifications.push({
+//         notificationId: notify._id,
+//         message: notify.message,
+//         senderId: notify.senderId,
+//         receiverId: notify.receiverId,
+//         notifyType: notify.notifyType,
+//         senderName: `${userData.firstName} ${userData.lastName}`,
+//         profilePicture: userData.profilePicture,
+//       });
+//     }
+//     }
+
+//     if (notifications.length == 0) {
+//       res.status(409).json("No Notifications");
+//     } else {
+//       res.status(200).json(notifications);
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
 
 const updateNotification = async (req, res) => {
   try {

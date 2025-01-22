@@ -9,7 +9,9 @@ const capitalizeWords = (value) => {
   }
   return value;
 };
-// Joi schema for layout details validation
+
+//Joi schema for layout details validation
+
 const layoutValidationSchema = Joi.object({
   userId: Joi.string().optional(),
   enteredBy: Joi.string().optional(),
@@ -126,7 +128,71 @@ const layoutValidationSchema = Joi.object({
   propertyInterestedCount:Joi.number().optional()
 });
 
+// const layoutValidationSchema = Joi.object({
+//   userId: Joi.string().required(),
+//   propertyId: Joi.string().optional(),
+//   enteredBy: Joi.string().required(),
+//   role: Joi.number().required(),
+//   propertyType: Joi.string().default("Layout"),
+//   rating: Joi.number().default(0),
+//   ratingCount: Joi.number().default(0),
+//   status: Joi.number().default(0),
+//   agentDetails: Joi.object({
+//     userId: Joi.string().optional(),
+//   }).optional(),
+//   ownerDetails: Joi.object({
+//     ownerName: Joi.string().required(),
+//     ownerContact: Joi.string()
+//       .length(10)
+//       .pattern(/[6-9]{1}[0-9]{9}/)
+//       .required(),
+//     ownerEmail: Joi.string().email().optional(),
+//   }).required(),
+//   layoutDetails: Joi.object({
+//     reraRegistered: Joi.boolean().required(),
+//     dtcpApproved: Joi.boolean().required(),
+//     tlpApproved: Joi.boolean().required(),
+//     flpApproved: Joi.boolean().required(),
+//     layoutTitle: Joi.string().required(),
+//     description: Joi.string().optional(),
+//     plotCount: Joi.number().required().min(0),
+//     availablePlots: Joi.number().required().min(0),
+//     plotSize: Joi.number().required().min(0.1),
+//     sizeUnit: Joi.string().required(),
+//     plotPrice: Joi.number().required().min(0),
+//     priceUnit: Joi.string().required(),
+//     totalAmount: Joi.number().required(),
+//     address: Joi.object({
+//       pinCode: Joi.string().optional(),
+//       country: Joi.string().default("India").required(),
+//       state: Joi.string().default("Andhra Pradesh").required(),
+//       district: Joi.string().required(),
+//       mandal: Joi.string().required(),
+//       village: Joi.string().required(),
+//       latitude: Joi.string().optional(),
+//       longitude: Joi.string().optional(),
+//     }).required(),
+//   }).required(),
+//   amenities: Joi.object({
+//     underGroundWater: Joi.boolean().optional(),
+//     drainageSystem: Joi.boolean().optional(),
+//     electricityFacility: Joi.string().optional(),
+//     swimmingPool: Joi.boolean().optional(),
+//     playZone: Joi.boolean().optional(),
+//     gym: Joi.boolean().optional(),
+//     conventionHall: Joi.boolean().optional(),
+//     roadType: Joi.string().optional(),
+//     distanceFromRoad: Joi.string().optional(),
+//   }).optional(),
+//   uploadPics: Joi.array().items(Joi.string()).optional(),
+//   videos: Joi.array().items(Joi.string()).optional(),
+//   propertyInterestedCount: Joi.number().optional(),
+// });
+
+
 //update plots schema
+
+
 const updatePlotsValidationSchema = Joi.object({
   userId: Joi.string().required(),
   propertyId: Joi.string().required().messages({
@@ -139,6 +205,9 @@ const updatePlotsValidationSchema = Joi.object({
     "any.required": "Available plots are required.",
   }),
 });
+
+
+
 
 module.exports = {
   layoutValidationSchema,

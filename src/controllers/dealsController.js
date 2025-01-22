@@ -67,13 +67,13 @@ const getAllProperties = async (req, res) => {
 
 
 
-
 // const createDeal = async (req, res) => {
 //   try {
+//     console.log(req.body, 'deal body');
 //     const userId = req.user.user.userId;
 //     const role = req.user.user.role;
 //     let csrId = 0;
-    
+
 //     if (!req.body.properties || req.body.properties.length === 0) {
 //       return res.status(400).json({
 //         status: "error",
@@ -81,69 +81,69 @@ const getAllProperties = async (req, res) => {
 //       });
 //     }
 
-//     if (!req.body.interestIn) {
+//     if (typeof req.body.interestIn === 'undefined') {
 //       return res.status(400).json({
 //         status: "error",
 //         message: "Interest level is required.",
 //       });
 //     }
+
+//     // Translate fields if necessary
+//     if (req.body.comments) {
+//       const translatedComments = await translate(req.body.comments, { to: "te" }); // Translate to Telugu
+//       req.body.commentsTe = translatedComments.text; // Store translated comments with "Te" suffix
+//     }
    
-//     // Check if the current user is role 3 (customer)
-//     let customerId = userId; // Default for role 3
-//     if(role!==3 && req.body.customerId){
-//        customerId=req.body.customerId;
-//     }else if (role !== 3 ) {
-//       if (!req.body.email) {
+
+//     // Determine customer ID
+//     let customerId = userId;
+//     if (role !== 3) {
+//       if (req.body.customerId) {
+//         customerId = req.body.customerId;
+//       } else if (!req.body.email) {
 //         return res.status(400).json({
 //           status: "error",
 //           message: "Email is required for non-customer roles.",
 //         });
+//       } else {
+//         const customer = await userModel.findOne({ email: req.body.email });
+//         if (!customer) {
+//           return res.status(409).json({
+//             status: "error",
+//             message: "Customer not found with the provided email.",
+//           });
+//         }
+//         customerId = customer._id.toString();
 //       }
-
-//       console.log("Searching for customer with email:", req.body.email);
-//       const customer = await userModel.findOne({ email: req.body.email });
-//       if (!customer) {
-//         return res.status(409).json({
-//           status: "error",
-//           message: "Customer not found with the provided email.",
-//         });
-//       }
-//       customerId = customer._id.toString();
 //     }
 
-//     let message;
-
-//     // Process each property and create deals
+//     // Process each property
 //     for (let property of req.body.properties) {
-//       if (
-//         !property.propertyId ||
-//         !property.propertyName ||
-//         !property.propertyType
-//       ) {
+//       const { propertyId, propertyName, propertyType, agentId } = property;
+
+//       if (!propertyId || !propertyName || !propertyType) {
 //         return res.status(400).json({
 //           status: "error",
-//           message:
-//             "Each property must include propertyId, propertyName, and propertyType.",
+//           message: "Each property must include propertyId, propertyName, and propertyType.",
 //         });
 //       }
-//       const dealData = await dealsModel.find({
-//         propertyId: property.propertyId,
-//         customerId: customerId,
+
+//       const existingDeal = await dealsModel.findOne({
+//         propertyId,
+//         customerId,
 //       });
 
-//       if (dealData.length > 0) {
-//         console.log("In deal check");
-//         return res
-//           .status(400)
-//           .status("Customer already made a deal for this property");
-//       }
-//       console.log("dael", dealData, property.propertyId, customerId);
-//       if (role === 5) {
-//         csrId = userId; // CSR
-//       } else if (role === 1 || role === 6 || role === 3) {
-//         const agentData = await userModel.findById(property.agentId, {
-//           assignedCsr: 1,
+//       if (existingDeal) {
+//         return res.status(400).json({
+//           status: "error",
+//           message: `Customer already made a deal for property ${propertyName}.`,
 //         });
+//       }
+
+//       if (role === 5) {
+//         csrId = userId;
+//       } else if ([1, 3, 6].includes(role)) {
+//         const agentData = await userModel.findById(agentId, { assignedCsr: 1 });
 //         if (!agentData) {
 //           return res.status(409).json({
 //             status: "error",
@@ -152,56 +152,89 @@ const getAllProperties = async (req, res) => {
 //         }
 //         csrId = agentData.assignedCsr;
 
-//         if (role === 3) {
-//           message = {
-//             senderId: userId,
-//             receiverId: agentData._id,
-//             message: `Deal has been created for ${property.propertyName}`,
-//             notifyType: "Deal",
-//           };
-//         } 
-//         else if (role === 5) {
-//           message = {
-//             senderId: userId,
-//             receiverId: agentData._id,
-//             message: `Deal has been created for ${property.propertyName}`,
-//             notifyType: "Deal",
-//           };
-//         } 
-        
-//         else {
-//           message = {
-//             senderId: userId,
-//             receiverId: customerId,
-//             message: `Deal has been created for ${property.propertyName}`,
-//             notifyType: "Deal",
-//           };
-//         }
+//         const message = {
+//           senderId: userId,
+//           receiverId: role === 3 ? agentId : customerId,
+//           message: `Deal has been created for ${propertyName}`,
+//           notifyType: "Deal",
+//         };
 
 //         const notify = new notifyModel(message);
-//         console.log("not", notify, message);
+//         await notify.save();
 //       }
 
-//       // Prepare deal details payload
+//       // Prepare deal details
 //       const dealDetails = {
-//         propertyId: property.propertyId,
-//         propertyName: property.propertyName,
-//         propertyType: property.propertyType,
-//         customerId: customerId,
+//         propertyId,
+//         propertyName,
+//         propertyType,
+//         customerId,
 //         interestIn: req.body.interestIn,
-//         csrId: csrId,
-//         agentId: property.agentId || null,
+//         csrId,
+//         agentId: agentId || null,
 //         addedBy: userId,
 //         addedByRole: role,
 //         comments: req.body.comments || "",
 //       };
 
-//       console.log("Deal Details:", dealDetails);
-
 //       // Save the deal
 //       const validatedDeal = await dealsSchema.validateAsync(dealDetails);
 //       const newDeal = new dealsModel(validatedDeal);
 //       await newDeal.save();
+
+//       // Increment propertyInterestedCount if interestIn is 1
+//       if (req.body.interestIn === 1 || req.body.interestIn === "1") {
+//         console.log('entered in updating propertyInterestedCount');
+//         let updateCount;
+//         switch (property.propertyType) {
+//           case "Residential":
+//             updateCount = residentialModel;
+//             break;
+
+//           case "Agricultural land":
+//           case "Agricultural":
+//             updateCount = fieldModel;
+//             break;
+
+//           case "Commercial":
+//             updateCount = commercialModel;
+//             break;
+
+//           case "Layout":
+//             updateCount = layoutModel;
+//             break;
+
+//           default:
+//             throw new Error(`Unknown propertyType: ${property.propertyType}`);
+//         }
+
+//         // Ensure propertyId is in ObjectId format for comparison (in case it's passed as a string)
+//         const propertyObjectId = new mongoose.Types.ObjectId(property.propertyId);
+//         const existsPropertyInDeal = await dealsModel.find({'property.propertyId': propertyId});
+
+//         // Check if the property already exists in the model
+//         const existingProperty = await updateCount.findById({ _id: propertyId });
+//         console.log(existingProperty, "existingProperty");
+
+//         if (existsPropertyInDeal) {
+//           console.log('propertyInterestedCount existing check');
+//           // If the property exists, increment the propertyInterestedCount by 1 using $inc
+//           await updateCount.findByIdAndUpdate(
+//             { _id: propertyObjectId },
+//             { $inc: { propertyInterestedCount: 1 } },
+//             { new: true }  // This will return the updated document
+//           );
+//           console.log(`Property ${property.propertyId} already exists, incremented propertyInterestedCount.`);
+//         } else {
+//           // If the property does not exist, initialize the propertyInterestedCount to 1
+//           await updateCount.create({
+//             _id: propertyObjectId,
+//             propertyType: property.propertyType,
+//             propertyInterestedCount: 1,
+//           });
+//           console.log(`Property ${property.propertyId} does not exist, initialized propertyInterestedCount.`);
+//         }
+//       }
 //     }
 
 //     res.status(200).json({
@@ -223,9 +256,209 @@ const getAllProperties = async (req, res) => {
 //   }
 // };
 
+const translate = require('@iamtraction/google-translate'); 
 
 const createDeal = async (req, res) => {
   try {
+    console.log(req.body, 'deal body');
+    const userId = req.user.user.userId;
+    const role = req.user.user.role;
+    let csrId ;
+     if(role===1||role===3){
+      const agentDetail=await userModel.findById(userId);
+      csrId=agentDetail.assignedCsr;
+     }else if(role===5){
+      csrId=userId;
+     }else if(role===3){
+        
+     }
+    if (!req.body.properties || req.body.properties.length === 0) {
+      return res.status(400).json({
+        status: "error",
+        message: "Properties are required.",
+      });
+    }
+
+    if (typeof req.body.interestIn === 'undefined') {
+      return res.status(400).json({
+        status: "error",
+        message: "Interest level is required.",
+      });
+    }
+
+    if (req.body.comments) {
+      const translatedComments = await translate(req.body.comments, { to: "te" }); 
+      req.body.commentsTe = translatedComments.text; 
+      }
+
+    // Process each property
+    for (let property of req.body.properties) {
+      const { propertyId, propertyName, propertyType, agentId } = property;
+
+      if (propertyName) {
+        const translatedPropertyName = await translate(propertyName, { to: "te" });
+        property.propertyNameTe = translatedPropertyName.text; 
+      }
+
+      if (propertyType) {
+        const translatedPropertyType = await translate(propertyType, { to: "te" });
+        property.propertyTypeTe = translatedPropertyType.text; 
+      }
+
+      if (!propertyId || !propertyName || !propertyType) {
+        return res.status(400).json({
+          status: "error",
+          message: "Each property must include propertyId, propertyName, and propertyType.",
+        });
+      }
+
+    // Determine customer ID
+    let customerId = userId;
+    if (role !== 3) {
+      if (req.body.customerId) {
+        customerId = req.body.customerId;
+      } else if (!req.body.email) {
+        return res.status(400).json({
+          status: "error",
+          message: "Email is required for non-customer roles.",
+        });
+      } else {
+        const customer = await userModel.findOne({ email: req.body.email });
+        if (!customer) {
+          return res.status(409).json({
+            status: "error",
+            message: "Customer not found with the provided email.",
+          });
+        }
+        customerId = customer._id.toString();
+      }
+    }
+
+      const existingDeal = await dealsModel.findOne({
+        propertyId,
+        customerId,
+      });
+
+      if (existingDeal) {
+        return res.status(400).json({
+          status: "error",
+          message: `Customer already made a deal for property ${propertyName}.`,
+        });
+      }
+
+      
+      // Prepare deal details
+      const dealDetails = {
+        propertyId,
+        propertyName,
+        propertyNameTe: property.propertyNameTe, // Include translated propertyNameTe
+        propertyType,
+        propertyTypeTe: property.propertyTypeTe, // Include translated propertyTypeTe
+        customerId,
+        interestIn: req.body.interestIn,
+        csrId,
+        agentId: agentId || null,
+        addedBy: userId,
+        addedByRole: role,
+        comments: req.body.comments || "",
+        commentsTe: req.body.commentsTe || "", // Include translated commentsTe
+      };
+
+      // Save the deal
+      const validatedDeal = await dealsSchema.validateAsync(dealDetails);
+      const newDeal = new dealsModel(validatedDeal);
+      await newDeal.save();
+
+      // Increment propertyInterestedCount if interestIn is 1
+      if (req.body.interestIn === 1 || req.body.interestIn === "1") {
+        console.log('entered in updating propertyInterestedCount');
+        let updateCount;
+        switch (property.propertyType) {
+          case "Residential":
+            updateCount = residentialModel;
+            break;
+
+          case "Agricultural land":
+          case "Agricultural":
+            updateCount = fieldModel;
+            break;
+
+          case "Commercial":
+            updateCount = commercialModel;
+            break;
+
+          case "Layout":
+            updateCount = layoutModel;
+            break;
+
+          default:
+            throw new Error(`Unknown propertyType: ${property.propertyType}`);
+        }
+
+        // Ensure propertyId is in ObjectId format for comparison (in case it's passed as a string)
+        const propertyObjectId = new mongoose.Types.ObjectId(property.propertyId);
+        const existsPropertyInDeal = await dealsModel.find({'property.propertyId': propertyId});
+
+        // Check if the property already exists in the model
+        const existingProperty = await updateCount.findById({ _id: propertyId });
+        console.log(existingProperty, "existingProperty");
+
+        if (existsPropertyInDeal) {
+          console.log('propertyInterestedCount existing check');
+          // If the property exists, increment the propertyInterestedCount by 1 using $inc
+          await updateCount.findByIdAndUpdate(
+            { _id: propertyObjectId },
+            { $inc: { propertyInterestedCount: 1 } },
+            { new: true }  // This will return the updated document
+          );
+          console.log(`Property ${property.propertyId} already exists, incremented propertyInterestedCount.`);
+        } else {
+          // If the property does not exist, initialize the propertyInterestedCount to 1
+          await updateCount.create({
+            _id: propertyObjectId,
+            propertyType: property.propertyType,
+            propertyInterestedCount: 1,
+          });
+          console.log(`Property ${property.propertyId} does not exist, initialized propertyInterestedCount.`);
+          
+          const message = {
+            senderId: userId,
+            receiverId: role === 3 ? agentId : customerId,
+            message: `Deal has created`,
+            details:`Deal for property ${propertyName} has created `,
+            notifyType: "Deal",
+          };
+  
+          const notify = new notifyModel(message);
+          await notify.save();
+        }
+      }
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Deals created successfully.",
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(422).json({
+        status: "error",
+        message: error.details.map((detail) => detail.message).join(", "),
+      });
+    }
+    console.error(error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+const createDealInUse = async (req, res) => {
+  // console.log("Reachde")
+  try {
+    console.log(req.body,'deal body')
     const userId = req.user.user.userId;
     const role = req.user.user.role;
     let csrId = 0;
@@ -332,7 +565,7 @@ const createDeal = async (req, res) => {
       await newDeal.save();
 
       // Increment propertyInterestedCount if interestIn is 1
-      if (req.body.interestIn === 1||req.body.interestIn === '1') {
+      if (req.body.interestIn === 1 || req.body.interestIn === "1") {
         console.log('entered in updating propertyInterestedCount');
         let updateCount;
         switch (property.propertyType) {
@@ -358,24 +591,24 @@ const createDeal = async (req, res) => {
         }
 
         // Ensure propertyId is in ObjectId format for comparison (in case it's passed as a string)
-        const propertyObjectId =new  mongoose.Types.ObjectId(property.propertyId);
-
+        const propertyObjectId = new mongoose.Types.ObjectId(property.propertyId);
+          const existsPropertyInDeal=await dealsModel.find({'property.propertyId':propertyId})
         // Check if the property already exists in the model
-        const existingProperty = await updateCount.findById({ _id: propertyObjectId });
-
-        if (existingProperty) {
-          console.log('propertyInterestedCount exisiting check')
-          // If the property exists, increment the propertyInterestedCount by 1
+        const existingProperty = await updateCount.findById({ _id: propertyId });
+        console.log(existingProperty,"existingProperty")
+        if (existsPropertyInDeal) {
+          console.log('propertyInterestedCount existing check');
+          // If the property exists, increment the propertyInterestedCount by 1 using $inc
           await updateCount.findByIdAndUpdate(
             { _id: propertyObjectId },
-             { propertyInterestedCount: 1 } ,
+            { $inc: { propertyInterestedCount: 1 } },
             { new: true }  // This will return the updated document
           );
           console.log(`Property ${property.propertyId} already exists, incremented propertyInterestedCount.`);
         } else {
           // If the property does not exist, initialize the propertyInterestedCount to 1
           await updateCount.create({
-            propertyId: propertyObjectId,
+            _id: propertyObjectId,
             propertyType: property.propertyType,
             propertyInterestedCount: 1,
           });
@@ -403,6 +636,7 @@ const createDeal = async (req, res) => {
   }
 };
 
+
 const getExisitingCustomers = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
@@ -427,6 +661,7 @@ const getExisitingCustomers = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // updated code as per changes in customer flow
 const getExisitingCustomer = async (req, res) => {
   try {
@@ -656,19 +891,64 @@ const getDeals = async (req, res) => {
 
     console.log("role", role, csrId);
 
+    let page=req.query.page
+    let limit=req.query.limit
+
     // Fetch deals based on the user's role
     if (role === 5) {
+      if(page)
+      {
+        let offset=(page-1)*limit;
+        deals = await dealsModel.find({ ...baseQuery, csrId: csrId }).skip(offset).limit(limit);
+      }
+      else
+      {
       deals = await dealsModel.find({ ...baseQuery, csrId: csrId });
     }
+  }
     if (role === 6) {
-      deals = await dealsModel.find({ ...baseQuery, addedBy: csrId });
-    }
+      if(page)
+      {
+        let offset=(page-1)*limit;
+        deals = await dealsModel.find({ ...baseQuery, addedBy: csrId }).skip(offset).limit(limit);
+
+      }
+      else
+      {
+        deals = await dealsModel.find({ ...baseQuery, addedBy: csrId });
+
+      }
+     }
     if (role === 1) {
-      deals = await dealsModel.find({ ...baseQuery, agentId: csrId });
-    }
+
+      if(page)
+      {
+        let offset=(page-1)*limit;
+        deals = await dealsModel.find({ ...baseQuery, agentId: csrId }).skip(offset).limit(limit);
+
+      }
+      else
+      {
+        deals = await dealsModel.find({ ...baseQuery, agentId: csrId });
+
+      }
+     }
     if (role === 0) {
-      deals = await dealsModel.find(baseQuery);
-    }
+      if(page)
+      {
+        let offset=(page-1)*limit
+        deals = await dealsModel.find(baseQuery).skip(offset).limit(limit);
+
+      }
+      else
+      {
+        deals = await dealsModel.find(baseQuery);
+
+      }
+
+     }
+     
+    
 
     let dealsData = [];
     let customerIdsSeen = new Set(); // To track customer IDs that have already been processed
@@ -751,6 +1031,65 @@ const getDeals = async (req, res) => {
 };
 
 
+// get customer deals fro dealsmodel based on role if role is 3 and check the userId as customerId in deals 
+// then get properties data from deals get propertyId and propertyType from properties in deals 
+// based on propertyType get property details from corrsponding propertyMdel, and get agentId from deal and get agent data from userModel and mathcing coondtion is _id (object id )
+const customerDeals = async (req, res) => {
+  const role = req.user.user.role;
+  const userId = req.user.user.userId;
+
+  if (role === 3 || role === '3') {
+    try {
+      // Find all deals for the customer
+      const deals = await dealsModel.find({ customerId: userId });
+      if (deals && deals.length > 0) {
+        const dealDataList = [];
+
+        // Process each deal
+        for (let deal of deals) {
+          const agentId = deal.agentId;
+          const agentData = await userModel.findById(agentId);
+
+          const propertyType = deal.properties.propertyType; // Assuming propertyType is directly on the deal
+          const propertyId = deal.properties.propertyId;   // Assuming propertyId is directly on the deal
+
+          let propertyData;
+
+          // Get property data based on propertyType
+          if (propertyType === 'Agricultural Land') {
+            propertyData = await fieldModel.findById(new ObjectId(propertyId));
+          } else if (propertyType === 'Commercial') {
+            propertyData = await commercialModel.findById(new ObjectId(propertyId));
+          } else if (propertyType === 'Residential') {
+            propertyData = await residentialModel.findById(new ObjectId(propertyId));
+          } else {
+            propertyData = await layoutModel.findById(new ObjectId(propertyId));
+          }
+
+          // Prepare the deal data
+          const dealData = {
+            ...propertyData.toObject(), // Spread the property data
+            agentData: agentData.toObject(), // Spread the agent data
+            dealDetails: deal.toObject(), // Include deal details
+          };
+
+          // Push the processed deal into the result list
+          dealDataList.push(dealData);
+        }
+
+        // Send the response with all processed deal data
+        return res.status(200).json({ success: true, data: dealDataList });
+      } else {
+        return res.status(404).json({ success: false, message: 'No deals found for this customer' });
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: 'An error occurred while fetching customer deals' });
+    }
+  } else {
+    return res.status(403).json({ success: false, message: 'Unauthorized' });
+  }
+};
 
 
 
@@ -759,18 +1098,26 @@ const mongoose = require("mongoose"); // Ensure mongoose is required at the top 
 const { custom } = require("joi");
 
 
-// filter based on propertyType, propertyName, property's district, propertyId (not objectId)
 const getCustomerDeals = async (req, res) => {
   try {
     const { role, userId: currentUserId } = req.user.user;
     const customerId = req.params.customerId;
 
+    let page = req.query.page;
+    let limit = req.query.limit;
+
     // Build base query based on user role
     const query = { customerId };
-    if (role === 6||role==='6') query.addedBy = currentUserId;
+    if (role === 6 || role === "6") query.addedBy = currentUserId;
 
+    let deals = [];
     // Fetch deals for the customer
-    const deals = await dealsModel.find(query).sort({ createdAt: -1 });
+    if (page) {
+      let offset = (page - 1) * limit;
+      deals = await dealsModel.find(query).skip(offset).limit(limit).sort({ createdAt: -1 });
+    } else {
+      deals = await dealsModel.find(query).sort({ createdAt: -1 });
+    }
 
     if (!deals || deals.length === 0) {
       return res.status(409).json({ message: "No deals found for this customer." });
@@ -790,26 +1137,32 @@ const getCustomerDeals = async (req, res) => {
         }
         seenDeals.add(dealKey);
 
-        // Fetch related data in parallel
-        const [customerData, agentData, propertyData] = await Promise.all([
-          customerModel.findById(customerId,{ password: 0 }).lean(), // Fetch customer data
-          userModel.findById(agentId, { password: 0 }).lean(), // Fetch agent data
-          fetchPropertyData(propertyType, propertyId), // Fetch property data
-        ]);
-        console.log([customerData, agentData, propertyData]);
-        // if (!customerData || !agentData || !propertyData) {
-        //   console.log(`Incomplete data for deal ${deal._id}`);
-        //   return null;
-        // }
+        try {
+          // Fetch related data in parallel
+          const [customerData, agentData, propertyData] = await Promise.all([
+            customerModel.findById(customerId, { password: 0 }).lean(), // Fetch customer data
+            userModel.findById(agentId, { password: 0 }).lean(), // Fetch agent data
+            fetchPropertyData(propertyType, propertyId), // Fetch property data
+          ]);
 
-        // Structure the final data
-        return {
-          deal,
-          customer: customerData,
-          property: propertyData,
-          agent: agentData,
-          agentName: `${agentData.firstName} ${agentData.lastName}`,
-        };
+          // Skip if property data is not found
+          if (!propertyData) {
+            console.log(`Property not found for propertyId: ${propertyId}`);
+            return null;
+          }
+
+          // Structure the final data
+          return {
+            deal,
+            customer: customerData,
+            property: propertyData,
+            agent: agentData,
+            agentName: `${agentData?.firstName || "Unknown"} ${agentData?.lastName || ""}`,
+          };
+        } catch (err) {
+          console.error(`Error processing deal ${deal._id}:`, err);
+          return null;
+        }
       })
     );
 
@@ -827,45 +1180,31 @@ const getCustomerDeals = async (req, res) => {
   }
 };
 
+// Helper function to fetch property data
 const fetchPropertyData = async (propertyType, propertyId) => {
-  switch (propertyType) {
-  case "Residential":
-  return await residentialModel.findOne({ _id: propertyId }).lean();
-  case "Agricultural land" || "Agricultural":
-  return await fieldModel.findOne({ _id: propertyId }).lean();
-  case "Agricultural":
-  return await fieldModel.findOne({ _id: propertyId }).lean();
-  
-  case "Commercial":
-  return await commercialModel.findOne({ _id: propertyId }).lean();
-  case "Layout":
-  return await layoutModel.findOne({ _id: propertyId }).lean();
-  default:
-  throw new Error(`Unknown propertyType: ${propertyType}`);
+  try {
+    let property;
+    switch (propertyType) {
+      case "Layout":
+        property = await layoutModel.findById(propertyId).lean();
+        break;
+      case "Commercial":
+        property = await commercialModel.findById(propertyId).lean();
+        break;
+      case "Residential":
+        property = await residentialModel.findById(propertyId).lean();
+        break;
+      default:
+        property = await fieldModel.findById(propertyId).lean();
+    }
+    return property || null; // Return null if property not found
+  } catch (error) {
+    console.error(`Error fetching property (ID: ${propertyId}):`, error);
+    return null; // Return null if there's an error
   }
-  };
-  
-  
-  
-  
-  
-  
+};
 
-// const fetchPropertyData = async (propertyType, propertyId) => {
-//   switch (propertyType) {
-//     case "Residential":
-//       return await residentialModel.findOne({ _id: propertyId }).lean();
-//     case "Agricultural land":
-//       return await fieldModel.findOne({ _id: propertyId }).lean();
-//     case "Commercial":
-//       return await commercialModel.findOne({ _id: propertyId }).lean();
-//     case "Layout":
-//       return await layoutModel.findOne({ _id: propertyId }).lean();
-//     default:
-//       throw new Error(`Unknown propertyType: ${propertyType}`);
-//   }
-// };
-const Fuse = require("fuse.js");
+
 
 const getCustomerDealsFiltered = async (req, res) => {
   try {
@@ -873,13 +1212,27 @@ const getCustomerDealsFiltered = async (req, res) => {
     const customerId = req.params.customerId;
     const { text } = req.query;
 
+
+    let page=req.query.page
+    let limit=req.query.limit
     // Build base query based on user role
     const query = { customerId };
     if (role === 6 || role === "6") query.addedBy = currentUserId;
 
     // Fetch deals for the customer
-    const deals = await dealsModel.find(query).sort({ createdAt: -1 });
+    let deals=[]
+    if(page)
+    {
+      let offset=(page-1)*limit
+        deals = await dealsModel.find(query).skip(offset).limit(limit).sort({ createdAt: -1 });
 
+    }
+    else
+    {
+        deals = await dealsModel.find(query).sort({ createdAt: -1 });
+
+    }
+ 
     if (!deals || deals.length === 0) {
       return res.status(409).json({ message: "No deals found for this customer." });
     }
@@ -1141,15 +1494,261 @@ const getCustomerDealsInUse = async (req, res) => {
 };
 
 
+// if role is not 3 then send this data 
+// if role is 3 then modify this as I will suggest currently hold this 
 
 const getAgentDealings = async (req, res) => {
   try {
-    const agentId = req.user.user.userId;
+    const { userId, role } = req.user.user;
+    const { page, limit } = req.query;
 
-    const agentDealings = await dealsModel.find({
-      agentId: agentId,
-      interestIn: "1",
-    });
+    if (role === 3 || role === '3') {
+      // Role 3: Fetch and return customer deals
+      try {
+        const deals = await dealsModel.find({ customerId: userId });
+
+        if (!deals || deals.length === 0) {
+          return res.status(409).json({ success: false, message: 'No deals found for this customer' });
+        }
+
+        const dealDataList = await Promise.all(
+          deals.map(async (deal) => {
+            const agentData = await userModel.findById(deal.agentId);
+            const { propertyType, propertyId } = deal;
+
+            let propertyData = null;
+            switch (propertyType?.toLowerCase()) {
+              case 'agricultural land':
+              case 'agricultural':
+                propertyData = await fieldModel.findById(propertyId);
+                break;
+              case 'commercial':
+                propertyData = await commercialModel.findById(propertyId);
+                break;
+              case 'residential':
+                propertyData = await residentialModel.findById(propertyId);
+                break;
+              default:
+                propertyData = await layoutModel.findById(propertyId);
+                break;
+            }
+
+            if (!agentData || !propertyData) return null; // Skip if no agent or property data
+
+            return {
+              property: propertyData?.toObject(),
+              agentData: agentData?.toObject(),
+              dealDetails: deal.toObject(),
+            };
+          })
+        );
+
+        const filteredDealData = dealDataList.filter((deal) => deal); // Remove null entries
+        return res.status(200).json({ success: true, data: filteredDealData });
+      } catch (error) {
+        console.error('Error fetching customer deals:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching customer deals' });
+      }
+    } else {
+      // Non-role 3: Existing agent dealings functionality
+      const offset = page ? (page - 1) * limit : 0;
+      const query = { agentId: userId, interestIn: '1' };
+
+      const agentDealings = page
+        ? await dealsModel.find(query).skip(offset).limit(limit)
+        : await dealsModel.find(query);
+
+      if (!agentDealings || agentDealings.length === 0) {
+        return res.status(409).json({ message: 'No dealings found' });
+      }
+
+      const seenDealings = new Set();
+      const enrichedDealings = await Promise.all(
+        agentDealings.map(async (deal) => {
+          const customerData = await userModel.findById(deal.customerId).select('-password');
+          const propertyType = deal.propertyType?.toLowerCase();
+
+          let propertyData = null;
+          switch (propertyType) {
+            case 'commercial':
+              propertyData = await commercialModel.findById(deal.propertyId);
+              break;
+            case 'layout':
+              propertyData = await layoutModel.findById(deal.propertyId);
+              break;
+            case 'agricultural land':
+              propertyData = await fieldModel.findById(deal.propertyId);
+              break;
+            case 'residential':
+            case 'flat':
+            case 'house':
+              propertyData = await residentialModel.findById(deal.propertyId);
+              break;
+          }
+
+          if (!customerData || !propertyData) return null; // Skip if no customer or property data
+
+          const uniqueKey = `${deal.propertyId}-${deal.customerId}`;
+          if (seenDealings.has(uniqueKey)) return null;
+          seenDealings.add(uniqueKey);
+
+          return {
+            ...deal.toObject(),
+            customer: customerData,
+            property: propertyData,
+          };
+        })
+      );
+
+      const uniqueDealings = enrichedDealings.filter((deal) => deal); // Remove null entries
+      const sortedDealings = uniqueDealings.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      return res.status(200).json({ data: sortedDealings });
+    }
+  } catch (error) {
+    console.error('Error fetching agent dealings:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const getAgentDealingsInUse = async (req, res) => {
+  try {
+    const { userId, role } = req.user.user;
+    const { page, limit } = req.query;
+
+    if (role === 3 || role === '3') {
+      // Role 3: Fetch and return customer deals
+      try {
+        const deals = await dealsModel.find({ customerId: userId });
+
+        if (!deals || deals.length === 0) {
+          return res.status(409).json({ success: false, message: 'No deals found for this customer' });
+        }
+
+        const dealDataList = await Promise.all(
+          deals.map(async (deal) => {
+            const agentData = await userModel.findById(deal.agentId);
+
+            const { propertyType, propertyId } = deal; // Assuming properties exist on the deal
+            let propertyData = null;
+            
+            switch (propertyType?.toLowerCase()) {
+              case 'agricultural land':
+              case 'agricultural':
+                propertyData = await fieldModel.findById(propertyId);
+                break;
+              case 'commercial':
+                propertyData = await commercialModel.findById(propertyId);
+                break;
+              case 'residential':
+                propertyData = await residentialModel.findById(propertyId);
+                break;
+              default:
+                propertyData = await layoutModel.findById(propertyId);
+                break;
+            }
+            return {
+              property: propertyData?.toObject(),
+              // propertyData?.toObject(),
+              agentData: agentData?.toObject(),
+              dealDetails: deal.toObject(),
+            };
+          })
+        );
+
+        return res.status(200).json({ success: true, data: dealDataList });
+      } catch (error) {
+        console.error('Error fetching customer deals:', error);
+        return res.status(500).json({ success: false, message: 'An error occurred while fetching customer deals' });
+      }
+    } else {
+      // Non-role 3: Existing agent dealings functionality
+      const offset = page ? (page - 1) * limit : 0;
+      const query = { agentId: userId, interestIn: '1' };
+
+      const agentDealings = page
+        ? await dealsModel.find(query).skip(offset).limit(limit)
+        : await dealsModel.find(query);
+
+      if (!agentDealings || agentDealings.length === 0) {
+        return res.status(409).json({ message: 'No dealings found' });
+      }
+
+      const seenDealings = new Set();
+      const enrichedDealings = await Promise.all(
+        agentDealings.map(async (deal) => {
+          const customerData = await userModel.findById(deal.customerId);
+          const propertyType = deal.propertyType?.toLowerCase();
+          let propertyData = null;
+
+          switch (propertyType) {
+            case 'commercial':
+              propertyData = await commercialModel.findById(deal.propertyId);
+              break;
+            case 'layout':
+              propertyData = await layoutModel.findById(deal.propertyId);
+              break;
+            case 'agricultural land':
+              propertyData = await fieldModel.findById(deal.propertyId);
+              break;
+            case 'residential':
+            case 'flat':
+            case 'house':
+              propertyData = await residentialModel.findById(deal.propertyId);
+              break;
+          }
+
+          const uniqueKey = `${deal.propertyId}-${deal.customerId}`;
+          if (seenDealings.has(uniqueKey)) return null;
+          seenDealings.add(uniqueKey);
+
+          return {
+            ...deal.toObject(),
+            customer: customerData,
+            property: propertyData,
+          };
+        })
+      );
+
+      const uniqueDealings = enrichedDealings.filter((deal) => deal);
+      const sortedDealings = uniqueDealings.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      return res.status(200).json({ data: sortedDealings });
+    }
+  } catch (error) {
+    console.error('Error fetching agent dealings:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+const getAgentDealingsInUsed = async (req, res) => {
+  try {
+    const agentId = req.user.user.userId;
+    const role =req.user.user.role;  
+    let page=req.query.page
+    let limit=req.query.limit
+  
+    let agentDealings=[]
+if(page)
+{
+let offset=(page-1)*limit
+  agentDealings = await dealsModel.find({
+  agentId: agentId,
+  interestIn: "1",
+}).skip(offset).limit(limit);
+}
+else
+{
+    agentDealings = await dealsModel.find({
+    agentId: agentId,
+    interestIn: "1",
+  });
+}
+ 
 
     if (!agentDealings || agentDealings.length === 0) {
       return res.status(409).json({ message: "No dealings found" });
@@ -1210,134 +1809,8 @@ const getAgentDealings = async (req, res) => {
   }
 };
 
-// const getAgentDealings = async (req, res) => {
-//   try {
-//     const agentId = req.user.user.userId;
 
-//     const agentDealings = await dealsModel.find({
-//       agentId: agentId,
-//       interestIn: "1",
-//     });
 
-//     if (!agentDealings || agentDealings.length === 0) {
-//       return res.status(409).json({ message: "No dealings found" });
-//     }
-
-//     const seenDealings = new Set();
-//     const enrichedDealings = await Promise.all(
-//       agentDealings.map(async (deal) => {
-//         const customerData = await userModel.findOne({
-//           _id: deal.customerId,
-//         });
-//         const propertyType = deal.propertyType;
-//         let propertyData = null;
-
-//         if (propertyType === "Commercial" || propertyType === "commercial") {
-//           propertyData = await commercialModel.findOne({
-//             _id: deal.propertyId,
-//           });
-//         } else if (propertyType === "Layout") {
-//           propertyData = await layoutModel.findOne({ _id: deal.propertyId });
-//         } else if (propertyType === "Agricultural land") {
-//           propertyData = await fieldModel.findOne({ _id: deal.propertyId });
-//         } else if (["Residential", "Flat", "House"].includes(propertyType)) {
-//           propertyData = await residentialModel.findOne({
-//             _id: deal.propertyId,
-//           });
-//         }
-
-//        const uniqueKey = `${deal.propertyId}-${deal.customerId}`;
-
-//         if (seenDealings.has(uniqueKey)) {
-//           // Skip the duplicate
-//           return null;
-//         }
-
-//         seenDealings.add(uniqueKey);
-
-//         return {
-//           ...deal.toObject(),
-//           customer: customerData,
-//           property: propertyData,
-//         };
-//       })
-//     );
-
-//     // Filter out any null values (duplicates)
-//     const uniqueDealings = enrichedDealings.filter(deal => deal !== null);
-
-//     return res.status(200).json({ data: uniqueDealings });
-//   } catch (error) {
-//     console.error("Error fetching agent dealings:", error);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// updated code as per customer module changed
-const getAgentDealing = async (req, res) => {
-  try {
-    const agentId = req.user.user.userId;
-
-    const agentDealings = await dealsModel.find({
-      agentId: agentId,
-      interestIn: "1",
-    });
-
-    if (!agentDealings || agentDealings.length === 0) {
-      return res.status(409).json({ message: "No dealings found" });
-    }
-
-    const seenDealings = new Set(); // To track unique combinations of propertyId and customerId
-    const enrichedDealings = await Promise.all(
-      agentDealings.map(async (deal) => {
-        const customerData = await userModel.findOne({
-          _id: deal.customerId,
-        });
-        const propertyType = deal.propertyType;
-        let propertyData = null;
-
-        if (propertyType === "Commercial" || propertyType === "commercial") {
-          propertyData = await commercialModel.findOne({
-            _id: deal.propertyId,
-          });
-        } else if (propertyType === "Layout") {
-          propertyData = await layoutModel.findOne({ _id: deal.propertyId });
-        } else if (propertyType === "Agricultural land") {
-          propertyData = await fieldModel.findOne({ _id: deal.propertyId });
-        } else if (["Residential", "Flat", "House"].includes(propertyType)) {
-          propertyData = await residentialModel.findOne({
-            _id: deal.propertyId,
-          });
-        }
-
-        // Create a unique identifier based on propertyId and customerId
-        const uniqueKey = `${deal.propertyId}-${deal.customerId}`;
-
-        if (seenDealings.has(uniqueKey)) {
-          // Skip the duplicate
-          return null;
-        }
-
-        // Add the combination to the Set to track it
-        seenDealings.add(uniqueKey);
-
-        return {
-          ...deal.toObject(),
-          customer: customerData,
-          property: propertyData,
-        };
-      })
-    );
-
-    // Filter out any null values (duplicates)
-    const uniqueDealings = enrichedDealings.filter((deal) => deal !== null);
-
-    return res.status(200).json({ data: uniqueDealings });
-  } catch (error) {
-    console.error("Error fetching agent dealings:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 const changeInterest = async (req, res) => {
   try {
@@ -1366,10 +1839,11 @@ const startDeal = async (req, res) => {
     let message = {
       senderId: deals.agentId,
       receiverId: deals.csrId,
-      message: `Deal Has Been Started For ${deals.propertyName}`,
+      message: `Deal Has Been Started`,
+      details:`Deal for the property ${deals.propertyName} has been started.`,
       notifyType: "Deal",
     };
-
+    
     const notify = new notifyModel(message);
     await notify.save();
     console.log('exiting start deal')
@@ -1381,9 +1855,12 @@ const startDeal = async (req, res) => {
 };
 const closeDeal = async (req, res) => {
   try {
+    console.log(req.body,' close deal')
     const dealId = req.body.dealId;
+    console.log(dealId,'dealId')
     const deals = await dealsModel.findById(dealId);
-    let csrId = deals.csrId;
+    let csrId = deals.csrId||'5';
+
     let agentId = deals.agentId;
     if (
       req.body.sellingStatus === "sold" ||
@@ -1430,7 +1907,8 @@ const closeDeal = async (req, res) => {
     let message = {
       senderId: agentId,
       receiverId: csrId,
-      message: `Deal Has Been Closed For ${deals.propertyName}`,
+      message: `Deal Has Been Closed.`,
+      details:`Deal for the property ${deals.propertyName} has been closed.`,
       notifyType: "Deal",
     };
 
@@ -1501,70 +1979,118 @@ const getClosedDeals = async (req, res) => {
   }
 };
 
+
 const getIntresetedCustomers = async (req, res) => {
   try {
     const userId = req.user.user.userId;
-    const customerDeals = await dealsModel.distinct("customerId", {
-      agentId: userId,
-    });
+    let page = req.query.page;
+    let limit = req.query.limit;
 
-    // const deals = await dealsModel.find(  { agentId: userId });
+    let customerDeals = [];
+
+    if (page) {
+      let offset = (page - 1) * limit;
+      customerDeals = await dealsModel.distinct("customerId", {
+        agentId: userId,
+      }).skip(offset).limit(limit);
+    } else {
+      customerDeals = await dealsModel.distinct("customerId", {
+        agentId: userId,
+      });
+    }
 
     let customerData = [];
 
     for (let customer of customerDeals) {
       const userData = await userModel.find({ _id: customer });
 
-      customerData.push({
-        customerId: customer,
-        customerName: userData[0].firstName + " " + userData[0].lastName,
-        phoneNumber: userData[0].phoneNumber,
-        profilePicture: userData[0].profilePicture,
-        email: userData[0].email,
-        district: userData[0].district,
-        mandal: userData[0].mandal,
-        village: userData[0].village,
-        state: userData[0].state,
-        country: userData[0].country,
-        pincode: userData[0].pinCode,
-        userId: userData[0].accountId,
-      });
+      if (userData.length > 0) {
+        customerData.push({
+          customerId: customer,
+          customerName:
+            (userData[0].firstName || '') + " " + (userData[0].lastName || 'NA'),
+          phoneNumber: userData[0].phoneNumber || 'NA',
+          profilePicture: userData[0].profilePicture || 'NA',
+          email: userData[0].email || 'NA',
+          district: userData[0].district || 'NA',
+          mandal: userData[0].mandal || 'NA',
+          village: userData[0].village || 'NA',
+          state: userData[0].state || 'NA',
+          country: userData[0].country || 'NA',
+          pincode: userData[0].pinCode || 'NA',
+          userId: userData[0].accountId || 'NA',
+        });
+      } else {
+        console.warn(`No user found for customerId: ${customer}`);
+      }
     }
 
     return res.status(200).json(customerData);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json("Internal Server Error");
   }
 };
 
+
 const getDistinctProperties = async (req, res) => {
   try {
-    const userId = req.user.user.userId;
-    // const customerDeals = await dealsModel.distinct("propertyId", { agentId: userId });
-    const distinctProperties = await dealsModel.aggregate([
-      { $match: { agentId: userId } }, // Filter by agentId (optional)
-      {
-        $group: {
-          _id: "$propertyId",
-          propertyName: { $first: "$propertyName" },
-          propertyType: { $first: "$propertyType" },
+    const userId = req.user?.user?.userId;
+    let page = req.query.page;
+    let limit = req.query.limit;
+
+    if (!userId) {
+      return res.status(400).json("Invalid user ID.");
+    }
+
+    let distinctProperties = [];
+    if (page) {
+      let offset = (page - 1) * limit;
+      distinctProperties = await dealsModel.aggregate([
+        { $match: { agentId: userId } },
+        {
+          $group: {
+            _id: "$propertyId",
+            propertyName: { $first: "$propertyName" },
+            propertyType: { $first: "$propertyType" },
+          },
         },
-      },
-      {
-        $project: {
-          _id: 0, // Exclude the `_id` field
-          propertyId: "$_id", // Include the propertyId
-          propertyName: 1,
-          propertyType: 1,
+        {
+          $project: {
+            _id: 0,
+            propertyId: "$_id",
+            propertyName: 1,
+            propertyType: 1,
+          },
         },
-      },
-    ]);
+        { $limit: Number(limit) },
+      ]).skip(offset);
+    } else {
+      distinctProperties = await dealsModel.aggregate([
+        { $match: { agentId: userId } },
+        {
+          $group: {
+            _id: "$propertyId",
+            propertyName: { $first: "$propertyName" },
+            propertyType: { $first: "$propertyType" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            propertyId: "$_id",
+            propertyName: 1,
+            propertyType: 1,
+          },
+        },
+      ]);
+    }
 
     let properties = [];
     for (let props of distinctProperties) {
       let property;
 
+      // Fetch distinct customers
       const distinctCustomers = await dealsModel.aggregate([
         { $match: { propertyId: props.propertyId } },
         {
@@ -1580,95 +2106,116 @@ const getDistinctProperties = async (req, res) => {
         },
       ]);
 
-      if (props.propertyType === "Layout") {
-        console.log("propabcdLay", props.propertyId);
+      switch (props.propertyType) {
+        case "Layout":
+          property = await layoutModel.find({ _id: props.propertyId });
+          if (property?.length > 0) {
+            properties.push({
+              ...props,
+              accountId: property[0].propertyId,
+              country: property[0]?.layoutDetails?.address?.country || "",
+              district: property[0]?.layoutDetails?.address?.district || "",
+              pincode: property[0]?.layoutDetails?.address?.pincode || "",
+              village: property[0]?.layoutDetails?.address?.village || "",
+              mandal: property[0]?.layoutDetails?.address?.mandal || "",
+              state: property[0]?.layoutDetails?.address?.state || "",
+              customerCount: distinctCustomers.length,
+              images: property[0]?.uploadPics || [],
+            });
+          }
+          break;
 
-        property = await layoutModel.find({ _id: props.propertyId });
+        case "Commercial":
+          property = await commercialModel.find({ _id: props.propertyId });
+          if (property?.length > 0) {
+            properties.push({
+              ...props,
+              accountId: property[0].propertyId,
+              country: property[0]?.propertyDetails?.landDetails?.address?.country || "",
+              district: property[0]?.propertyDetails?.landDetails?.address?.district || "",
+              pincode: property[0]?.propertyDetails?.landDetails?.address?.pincode || "",
+              village: property[0]?.propertyDetails?.landDetails?.address?.village || "",
+              mandal: property[0]?.propertyDetails?.landDetails?.address?.mandal || "",
+              state: property[0]?.propertyDetails?.landDetails?.address?.state || "",
+              customerCount: distinctCustomers.length,
+              images: property[0]?.propertyDetails?.uploadPics || [],
+            });
+          }
+          break;
 
-        properties.push({
-          ...props,
-          accountId: property[0].propertyId,
-          country: property[0].layoutDetails.address.country,
-          district: property[0].layoutDetails.address.district,
-          pincode: property[0].layoutDetails.address.pincode,
-          village: property[0].layoutDetails.address.village,
-          mandal: property[0].layoutDetails.address.mandal,
-          state: property[0].layoutDetails.address.state,
+        case "Residential":
+          property = await residentialModel.find({ _id: props.propertyId });
+          if (property?.length > 0) {
+            properties.push({
+              ...props,
+              accountId: property[0].propertyId,
+              country: property[0]?.address?.country || "",
+              district: property[0]?.address?.district || "",
+              pincode: property[0]?.address?.pincode || "",
+              village: property[0]?.address?.village || "",
+              mandal: property[0]?.address?.mandal || "",
+              state: property[0]?.address?.state || "",
+              customerCount: distinctCustomers.length,
+              images: property[0]?.propPhotos || [],
+            });
+          }
+          break;
 
-          customerCount: distinctCustomers.length,
-          images: property[0].uploadPics,
-        });
-      } else if (props.propertyType === "Commercial") {
-        console.log("propabcdCom", props.propertyId);
-
-        property = await commercialModel.find({ _id: props.propertyId });
-        properties.push({
-          ...props,
-          accountId: property[0].propertyId,
-          country: property[0].propertyDetails.landDetails.address.country,
-          district: property[0].propertyDetails.landDetails.address.district,
-          pincode: property[0].propertyDetails.landDetails.address.pincode,
-          village: property[0].propertyDetails.landDetails.address.village,
-          mandal: property[0].propertyDetails.landDetails.address.mandal,
-          state: property[0].propertyDetails.landDetails.address.state,
-          customerCount: distinctCustomers.length,
-          images: property[0].propertyDetails.uploadPics,
-        });
-      } else if (props.propertyType === "Residential") {
-        // property=await residentialModel.find({_id:props.propertyId})
-        property = await residentialModel.find({ _id: props.propertyId });
-
-        if (property.length > 0) {
-          properties.push({
-            ...props,
-            accountId: property[0].propertyId,
-            country: property[0].address.country,
-            district: property[0].address.district,
-            pincode: property[0].address.pincode,
-            village: property[0].address.village,
-            mandal: property[0].address.mandal,
-            state: property[0].address.state,
-            customerCount: distinctCustomers.length,
-            images: property[0].propPhotos,
-          });
-        }
-      } else {
-        
-        property = await fieldModel.find({
-          _id: new ObjectId(props.propertyId),
-        });
-        console.log("propertyabcd", property);
-        properties.push({
-          ...props,
-          accountId: property[0].propertyId,
-          country: property[0].address.country,
-          district: property[0].address.district,
-          pincode: property[0].address.pincode,
-          village: property[0].address.village,
-          mandal: property[0].address.mandal,
-          state: property[0].address.state,
-          customerCount: distinctCustomers.length,
-          images: property[0].landDetails.images,
-        });
+        default:
+          property = await fieldModel.find({ _id: props.propertyId });
+          if (property?.length > 0) {
+            properties.push({
+              ...props,
+              accountId: property[0].propertyId,
+              country: property[0]?.address?.country || "",
+              district: property[0]?.address?.district || "",
+              pincode: property[0]?.address?.pincode || "",
+              village: property[0]?.address?.village || "",
+              mandal: property[0]?.address?.mandal || "",
+              state: property[0]?.address?.state || "",
+              customerCount: distinctCustomers.length,
+              images: property[0]?.landDetails?.images || [],
+            });
+          }
+          break;
       }
     }
+
     if (properties.length === 0) {
       return res.status(409).json("No Properties With Deals");
     }
     return res.status(200).json(properties);
   } catch (error) {
-    console.log(error);
+    console.error("Error in getDistinctProperties:", error);
     return res.status(500).json("Internal Server Error");
   }
 };
+
+
 
 const getPropertyDeals = async (req, res) => {
   try {
     const propId = req.params.propertyId;
 
-    const dealsData = await dealsModel
-      .find({ propertyId: propId })
-      .sort({ createdAt: -1 });
+  let page=req.query.page
+  let limit=req.query.limit
+
+  let dealsData=[]
+if(page)
+{
+
+  let offset=(page-1)*limit
+  dealsData = await dealsModel
+  .find({ propertyId: propId }).skip(offset).limit(limit)
+  .sort({ createdAt: -1 });
+}
+else
+{
+  dealsData = await dealsModel
+  .find({ propertyId: propId })
+  .sort({ createdAt: -1 });
+}
+     
 
     let propDeals = [];
 
@@ -1709,27 +2256,68 @@ const getPropertyDeals = async (req, res) => {
 const getDealsRelatedAgents = async (req, res) => {
   try {
     const userId = req.user.user.userId;
+
+
+
+   let page=req.query.page
+   let limit=req.query.limit
+
     // const deals=await dealsModel.distinct("agentId",{customerId:userId});
-    const distinctDeals = await dealsModel.aggregate([
-      { $match: { customerId: userId } },
-      {
-        $group: {
-          _id: "$agentId",
-          propertyId: { $first: "$propertyId" },
-          createdAt: { $first: "$createdAt" },
-          interestIn: { $first: "$interestIn" },
+
+    let distinctDeals=[]
+
+    if(page)
+    {
+
+      let offset=(page-1)*limit
+        distinctDeals = await dealsModel.aggregate([
+        { $match: { customerId: userId } },
+        {
+          $group: {
+            _id: "$agentId",
+            propertyId: { $first: "$propertyId" },
+            createdAt: { $first: "$createdAt" },
+            interestIn: { $first: "$interestIn" },
+          },
         },
-      },
-      {
-        $project: {
-          _id: 0,
-          agentId: "$_id",
-          propertyId: 1,
-          createdAt: 1,
-          interestIn: 1,
+        {
+          $project: {
+            _id: 0,
+            agentId: "$_id",
+            propertyId: 1,
+            createdAt: 1,
+            interestIn: 1,
+          },
         },
-      },
-    ]);
+        {
+          $limit:Number(limit)
+        }
+      ]).skip(offset);
+    }
+    else
+    {
+        distinctDeals = await dealsModel.aggregate([
+        { $match: { customerId: userId } },
+        {
+          $group: {
+            _id: "$agentId",
+            propertyId: { $first: "$propertyId" },
+            createdAt: { $first: "$createdAt" },
+            interestIn: { $first: "$interestIn" },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            agentId: "$_id",
+            propertyId: 1,
+            createdAt: 1,
+            interestIn: 1,
+          },
+        },
+      ]);
+    }
+ 
     let agentData = [];
     for (let deal of distinctDeals) {
       const users = await userModel.find(
@@ -1757,63 +2345,17 @@ const getDealsRelatedAgents = async (req, res) => {
   }
 };
 
-// const getIntrestedProperties = async (req, res) => {
-//   try {
-//     const userId = req.user.user.userId;
-//     const properties = await dealsModel.aggregate([
-//       { $match: { customerId: userId } },
-//       {
-//         $group: {
-//           _id: "$propertyId",
-//           propertyName: { $first: "$propertyName" },
-//           propertyType: { $first: "$propertyType" },
-//           createdAt: { $first: "$createdAt" },
-//           interestIn: { $first: "$interestIn" },
-//           dealId: { $first: "$_id" },
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0,
-//           propertyId: "$_id",
-//           propertyName: 1,
-//           propertyType: 1,
-//           createdAt: 1,
-//           interestIn: 1,
-//           dealId: 1,
-//         },
-//       },
-//     ]);
 
-//     let propertiesData = [];
-
-//     for (let props of properties) {
-//       let data;
-//       if (props.propertyType === "Layout") {
-//         data = await layoutModel.find({ _id: props.propertyId });
-//       } else if (props.propertyType === "Residential") {
-//         data = await residentialModel.find({ _id: props.propertyId });
-//       } else if (props.propertyType === "Commercial") {
-//         data = await commercialModel.find({ _id: props.propertyId });
-//       } else {
-//         data = await fieldModel.find({ _id: props.propertyId });
-//       }
-
-//       propertiesData.push({
-//         ...props,
-//         property: data[0],
-//       });
-//     }
-
-//     return res.status(200).json(propertiesData);
-//   } catch (error) {
-//     return res.status(500).json("Internal Server Error");
-//   }
-// };
 const getIntrestedProperties = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1; // Default page to 1 if not provided
+    const limit = parseInt(req.query.limit) || 10; // Default limit to 10 if not provided
+    const offset = (page - 1) * limit;
+
+    console.log("Fetching interested properties...");
     const userId = req.user.user.userId;
-    const properties = await dealsModel.aggregate([
+
+    const pipeline = [
       { $match: { customerId: userId } },
       {
         $group: {
@@ -1825,9 +2367,7 @@ const getIntrestedProperties = async (req, res) => {
           dealId: { $first: "$_id" },
         },
       },
-      {
-        $sort: { createdAt: -1 }  // Sort by createdAt in descending order
-      },
+      { $sort: { createdAt: -1 } },
       {
         $project: {
           _id: 0,
@@ -1839,12 +2379,21 @@ const getIntrestedProperties = async (req, res) => {
           dealId: 1,
         },
       },
-    ]);
+    ];
 
-    let propertiesData = [];
+    if (page && limit) {
+      pipeline.push({ $skip: offset }, { $limit: limit });
+    }
+
+    const properties = await dealsModel.aggregate(pipeline);
+
+    console.log("Properties fetched:", properties);
+
+    const propertiesData = [];
 
     for (let props of properties) {
-      let data;
+      let data = [];
+
       if (props.propertyType === "Layout") {
         data = await layoutModel.find({ _id: props.propertyId });
       } else if (props.propertyType === "Residential") {
@@ -1855,17 +2404,126 @@ const getIntrestedProperties = async (req, res) => {
         data = await fieldModel.find({ _id: props.propertyId });
       }
 
-      propertiesData.push({
-        ...props,
-        property: data[0],
-      });
+      if (data.length > 0) {
+        propertiesData.push({
+          ...props,
+          property: data[0],
+        });
+      } else {
+        console.log(`No data found for propertyId: ${props.propertyId}`);
+      }
     }
 
     return res.status(200).json(propertiesData);
   } catch (error) {
-    return res.status(500).json("Internal Server Error");
+    console.error("Error fetching properties:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
+// const getIntrestedProperties = async (req, res) => {
+//   try {
+//      let page=req.query.page
+//      let limit=req.query.limit
+// console.log("in interested properties")
+//     const userId = req.user.user.userId;
+//      let properties=[]
+//     if(page)
+//     {
+// let offset=(page-1)*limit
+//         properties = await dealsModel.aggregate([
+//         { $match: { customerId: userId } },
+//         {
+//           $group: {
+//             _id: "$propertyId",
+//             propertyName: { $first: "$propertyName" },
+//             propertyType: { $first: "$propertyType" },
+//             createdAt: { $first: "$createdAt" },
+//             interestIn: { $first: "$interestIn" },
+//             dealId: { $first: "$_id" },
+//           },
+//         },
+//         {
+//           $sort: { createdAt: -1 }  // Sort by createdAt in descending order
+//         },
+//         {
+//           $project: {
+//             _id: 0,
+//             propertyId: "$_id",
+//             propertyName: 1,
+//             propertyType: 1,
+//             createdAt: 1,
+//             interestIn: 1,
+//             dealId: 1,
+//           },
+//         },
+//         {
+//           $limit:Number(limit)
+//         }
+//       ]).skip(offset);
+  
+//     }
+//     else
+//     {
+// console.log("in interested properties without pagination")
+//         properties = await dealsModel.aggregate([
+//         { $match: { customerId: userId } },
+//         {
+//           $group: {
+//             _id: "$propertyId",
+//             propertyName: { $first: "$propertyName" },
+//             propertyType: { $first: "$propertyType" },
+//             createdAt: { $first: "$createdAt" },
+//             interestIn: { $first: "$interestIn" },
+//             dealId: { $first: "$_id" },
+//           },
+//         },
+//         {
+//           $sort: { createdAt: -1 }  // Sort by createdAt in descending order
+//         },
+//         {
+//           $project: {
+//             _id: 0,
+//             propertyId: "$_id",
+//             propertyName: 1,
+//             propertyType: 1,
+//             createdAt: 1,
+//             interestIn: 1,
+//             dealId: 1,
+//           },
+//         },
+//       ]);
+//   console.log(properties)
+//     }
+ 
+//     let propertiesData = [];
+
+//     for (let props of properties) {
+//       let data=[];
+//       if (props.propertyType === "Layout") {
+//         data = await layoutModel.find({ _id: props._id });
+//       } else if (props.propertyType === "Residential") {
+//         data = await residentialModel.find({ _id: props._id });
+//       } else if (props.propertyType === "Commercial") {
+//         data = await commercialModel.find({ _id: props._id });
+//       } else {
+//         data = await fieldModel.find({ _id: props._id });
+//       }
+
+//       console.log(data)
+//        propertiesData.push({
+//         ...props,
+//         property: data[0],
+//       });
+//     }
+
+//     return res.status(200).json(propertiesData);
+//   } catch (error) {
+//     return res.status(500).json("Internal Server Error");
+//   }
+// };
+
 
 const dealSearchOnCustomer = async (req, res) => {
   try {
@@ -2078,11 +2736,14 @@ console.log("delasdee",dealsData,dealsData.length)
 const searchPropertyDeals = async (req, res) => {
   try {
 
+    let page=req.query.page
+    let limit=req.query.limit
+
     let text=req.params.text;
     let propertyId=req.params.propertyId;
 
     let regex = new RegExp(text, "i");
-
+     
     let requestQuery = {};
        if(text)
        {
@@ -2093,18 +2754,31 @@ const searchPropertyDeals = async (req, res) => {
           { district: { $regex: regex } },
         ];
        }
-       const customerDetails = await userModel.find({ ...requestQuery });
-let propDeals=[]
+
+let customerDetails=[]
+       if(page)
+       {
+        let offset=(page-1)*limit
+          customerDetails = await userModel.find({ ...requestQuery }).skip(offset).limit(limit);
+
+       }
+       else
+       {
+          customerDetails = await userModel.find({ ...requestQuery });
+
+       }
+ let propDeals=[]
        for(let customer of customerDetails)
        {
         const dealsData=await dealsModel.find({customerId:customer._id,propertyId:propertyId})
             const users=await userModel.find({_id:customer._id})
             const user1=await userModel.find({_id:customer._id}) 
-          console.log("dealsData123",dealsData)
+          console.log("dealsData",dealsData)
 if(dealsData.length>0)
 {
         propDeals.push({
           dealId: dealsData[0]._id,
+          dealStatus:dealsData[0].dealStatus,
           customerId: dealsData[0].customerId,
           propertyId: dealsData[0].propertyId,
           propertyName: dealsData[0].propertyName,
@@ -2114,6 +2788,7 @@ if(dealsData.length>0)
           sellingStatus: dealsData[0].sellingStatus,
           customer: users[0],
           agent: user1[0],
+
         });
       }
        }
@@ -2134,97 +2809,27 @@ if(dealsData.length>0)
    }
 };
 
-//getCustomerDealsFilters
-// const getCustomerDealsFilters = async (req, res) => {
-//   try {
-//     const { text, userId } = req.params;
-
-//     // Fetch deals for the given userId
-//     const deals = await dealsModel.find({ userId }).sort({ createdAt: -1 });
-
-//     if (!deals.length) {
-//       return res.status(200).json([]);
-//     }
-
-//     let dealsData = [];
-//     let seenDeals = new Set();
-
-//     for (let deal of deals) {
-//       const { propertyId, propertyType, agentId } = deal;
-//       const dealKey = `${userId}_${propertyId}`;
-
-//       // Skip duplicate deals
-//       if (seenDeals.has(dealKey)) continue;
-//       seenDeals.add(dealKey);
-
-//       // Fetch property data dynamically based on propertyType
-//       let propertyData;
-//       switch (propertyType) {
-//         case "Commercial":
-//           propertyData = await commercialModel.findOne({ _id: propertyId });
-//           break;
-//         case "Layout":
-//           propertyData = await layoutModel.findOne({ _id: propertyId });
-//           break;
-//         case "Residential":
-//         case "Flat":
-//         case "House":
-//           propertyData = await residentialModel.findOne({ _id: propertyId });
-//           break;
-//         default:
-//           propertyData = await fieldModel.findOne({ _id: propertyId });
-//           break;
-//       }
-
-//       // Skip if property doesn't exist
-//       if (!propertyData) continue;
-
-//       // Check if the text matches any address field or propertyName
-//       const addressFields = [
-//         propertyData.address?.state,
-//         propertyData.address?.district,
-//         propertyData.address?.mandal,
-//         propertyData.address?.village,
-//         propertyData.propertyDetails?.title,
-//         propertyData.landDetails?.title,
-//         propertyData.layoutDetails?.layoutTitle,
-//         propertyData?.propertyTitle,
-//         propertyData?.propertyId,
-//       ];
-//       const isMatch = addressFields.some((field) =>
-//         field?.toLowerCase().includes(text.toLowerCase())
-//       );
-
-//       if (!isMatch) continue; // Skip if no match found
-
-//       // Fetch related agent data
-//       const agentData = await userModel.findOne({ _id: agentId }, { password: 0 });
-
-//       // Prepare response structure
-//       const data = {
-//         deal,
-//         property: propertyData,
-//         agent: agentData,
-//         agentName: `${agentData?.firstName || ""} ${agentData?.lastName || ""}`.trim(),
-//       };
-
-//       dealsData.push(data);
-//     }
-
-//     res.status(200).json(dealsData);
-//   } catch (error) {
-//     console.error("Error in getCustomerDealsFilters:", error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
 
 const getCustomerDealsFilters = async (req, res) => {
   try {
     const { text, userId } = req.params;
+    let page=req.query.page
+    let limit=req.query.limit
 
+    let deals=[]
     // Fetch deals for the given userId
-    const deals = await dealsModel.find({ userId }).sort({ createdAt: -1 });
+    if(page)
+    {
+      let offset=(page-1)*limit
+        deals = await dealsModel.find({ userId }).skip(offset).limit(limit).sort({ createdAt: -1 });
 
+    }
+     else
+     {
+        deals = await dealsModel.find({ userId }).sort({ createdAt: -1 });
+
+     }
+ 
     if (!deals.length) {
       return res.status(200).json([]);
     }
@@ -2301,6 +2906,106 @@ const getCustomerDealsFilters = async (req, res) => {
     res.status(200).json(dealsData);
   } catch (error) {
     console.error("Error in getCustomerDealsFilters:", error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
+
+
+// 
+const adminDeals = async (req, res) => {
+  try {
+    const role = req.user.user.role;
+    const roleId=req.query;
+    let deals = [];
+
+    // Extract filter parameters from request query
+    const { text } = req.query;
+    let baseQuery = { isActive: { $ne: "-1" } };
+
+    let page = req.query.page;
+    let limit = req.query.limit;
+    if(role===0){
+
+     deals=await dealsModel.find();
+    let dealsData = [];
+    let customerIdsSeen = new Set(); // To track customer IDs that have already been processed
+
+    for (let deal of deals) {
+      let customerId = deal.customerId;
+      let propertyId = deal.propertyId;
+      let propertyType = deal.propertyType;
+      let agentId = deal.agentId;
+      let csrId=deal.csrId;
+      
+
+      // Check if the customer ID has already been processed
+      if (customerIdsSeen.has(customerId)) {
+        continue;
+      }
+
+      // Add the current customerId to the seen set
+      customerIdsSeen.add(customerId);
+
+      // Fetch customer data and apply filters if text is provided
+      const customerData = await userModel.findOne(
+        {
+          _id: customerId,
+          ...(text && {
+            $or: [
+              { firstName: { $regex: text, $options: "i" } },
+              { lastName: { $regex: text, $options: "i" } },
+              { accountId: { $regex: text, $options: "i" } },
+              { district: { $regex: text, $options: "i" } },
+            ],
+          }),
+        },
+        { password: 0 }
+      );
+
+      // Skip if customerData doesn't match the filters
+      if (!customerData) {
+        continue;
+      }
+
+      const agentData = await userModel.findOne({ _id: agentId }, { password: 0 });
+
+      let propertyData;
+      if (propertyType === "Commercial") {
+        propertyData = await commercialModel.findOne({ _id: propertyId });
+      } else if (propertyType === "Layout") {
+        propertyData = await layoutModel.findOne({ _id: propertyId });
+      } else if (
+        propertyType === "Residential" ||
+        propertyType === "Flat" ||
+        propertyType === "House"
+      ) {
+        propertyData = await residentialModel.findOne({ _id: propertyId });
+      } else {
+        propertyData = await fieldModel.findOne({ _id: propertyId });
+      }
+
+      const custDeals = await dealsModel.distinct("propertyId", {
+        customerId: customerData._id,
+      });
+
+      // Prepare response data
+      let data = {
+        deal: deal,
+        customer: customerData,
+        property: propertyData,
+        agent: agentData,
+        totalDeals: custDeals.length,
+      };
+
+      dealsData.push(data);
+    }
+
+    }
+    console.log("dealsData", dealsData);
+    res.status(200).json(dealsData);
+  } catch (error) {
+    console.error(error);
     res.status(500).json("Internal Server Error");
   }
 };

@@ -28,14 +28,12 @@ const getFields = async (req, res) => {
 // const insertFieldDetails = async (req, res) => {
 //   try {
 //     const { userId, role } = req.user.user;
-//     // console.log(req.user.user);
 //     let fieldDetailsData;
 //   req.body.amenities.electricity=String(req.body.amenities.electricity)
 
 //     let message={}
 //      if (role === 1) {
 //       const csrData = await userModel.find({ _id: userId });
-//       console.log("csrData", csrData.assignedCsr);
 //       if (req.body.enteredBy) {
 //         fieldDetailsData = {
 //           userId,
@@ -47,7 +45,6 @@ const getFields = async (req, res) => {
 //       } else {
 //         const csrData = await userModel.find({ _id: userId });
 
-//         console.log("abc");
 //         fieldDetailsData = {
 //           userId,
 //           role,
@@ -67,7 +64,6 @@ const getFields = async (req, res) => {
 
 //     }
 //     if (role === 5) {
-//       console.log("csr")
 //       const userData = await userModel.find({
 //         email: req.body.agentDetails.userId,
 //       });
@@ -82,7 +78,6 @@ const getFields = async (req, res) => {
 //           userId: userData[0]._id.toString(),
 //         };
 //       } else {
-//         console.log("abc");
 //         fieldDetailsData = {
 //           csrId: userId,
 //           role,
@@ -115,10 +110,8 @@ const getFields = async (req, res) => {
 //       fieldDetailsData,
 //       { abortEarly: false }
 //     );
-//     console.log("after validation", validatedData);
 //     const fieldDetails = new fieldModel(validatedData);
 //     await fieldDetails.save();
-//     console.log("success");
 
 // const notify=new notifyModel(message)
 // await notify.save()
@@ -130,7 +123,6 @@ const getFields = async (req, res) => {
 //     // Handle validation errors
 
 //     if (error.isJoi) {
-//       console.log(error);
 //       return res.status(422).json({
 //         message: "Validation failed",
 //         details: error.details.map((err) => err.message), // Provide detailed Joi validation errors
@@ -139,7 +131,6 @@ const getFields = async (req, res) => {
 //     }
 
 //     // Handle server errors
-//     console.log(error);
 //     res.status(500).json({ message: "Error inserting field details", error });
 //   }
 // };
@@ -148,14 +139,13 @@ const insertFieldDetail = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity); // Ensure electricity is a string
-    console.log(req)
+    
     let fieldDetailsData;
     let message = {};
 
     // Fetch user data once
     const userData = await userModel.findById(userId);
     if (!userData) {
-      console.log(userData,'  user data')
       return res.status(409).json({ message: "User not found" });
     }
     console.log(userData,'  user data')
@@ -291,10 +281,11 @@ const generatePropertyId = async (typePrefix, model) => {
   return `${typePrefix}${lastId + 1}`;
 };
 
-// const translate = require('@iamtraction/google-translate'); // Import translation library
+ const translate = require('@iamtraction/google-translate'); // Import translation library
 
-const insertFieldDetailsTransla = async (req, res) => {
+const insertFieldDetails = async (req, res) => {
   try {
+    console.log(req.body,' fields');
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity);
 
@@ -329,7 +320,7 @@ const insertFieldDetailsTransla = async (req, res) => {
       message = {
         senderId: userId,
         receiverId: csrData._id.toString(),
-        message: `${userData.firstName} ${userData.lastName} has added a new property`,
+        message: `${userData.firstName} ${userData.lastName} has added a new Agriculutral property`,
         notifyType: "Property",
       };
     } else if (role === 5) {
@@ -344,7 +335,7 @@ const insertFieldDetailsTransla = async (req, res) => {
       message = {
         senderId: userId,
         receiverId: "Admin",
-        message: `${userData.firstName} ${userData.lastName} has added a new property`,
+        message: `${userData.firstName} ${userData.lastName} has added a new Agriculutral property`,
         notifyType: "Property",
       };
     } else {
@@ -379,7 +370,19 @@ const insertFieldDetailsTransla = async (req, res) => {
     const validatedData = await fieldValidationSchema.validateAsync(sanitizedData, { abortEarly: false });
     const fieldDetails = new fieldModel(validatedData);
     await fieldDetails.save();
-
+    let message1={
+      senderId:userId,
+      receiverId:0,
+      message:"A new property added ! Please checkout",
+      details:`Property type : Agriculutral of location ${req.body.address.district}`,
+      notifyType:"Customer",
+    }
+  
+      console.log("Notification Object:", message);
+     
+      const notification1=new notifyModel(message1);
+      
+      await notification1.save();
     // Validate and save the notification object
     const notification = new notifyModel(message);
     await notification.save();
@@ -401,7 +404,9 @@ const insertFieldDetailsTransla = async (req, res) => {
     res.status(500).json({ message: "Error inserting field details", error });
   }
 };
-const insertFieldDetails = async (req, res) => {
+
+
+const insertFieldDetailsInUse = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity);

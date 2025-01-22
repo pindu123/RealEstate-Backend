@@ -551,16 +551,20 @@ const getAssignedPropertyDetails = async (req, res) => {
         assignedDate: assignment?.assignedDate || null,
         agentId: agentInfo.agentId || null,
         agentName: agentInfo.agentName || null,
+        propertyID:property.propertyId,
       };
 
       switch (property.propertyType) {
         case "Commercial":
           return {
             ...commonDetails,
+
             propertyTitle: property.propertyTitle,
             ownerName: property.propertyDetails.owner?.ownerName || null,
             landTitle: property.propertyTitle,
-            price: property.propertyDetails.landDetails?.price || null,
+            price: property.propertyDetails.landDetails?.sell.price ||property.propertyDetails.landDetails?.rent.price||property.propertyDetails.landDetails?.lease.leasePrice,
+            size:property.propertyDetails.landDetails?.sell.plotSize||property.propertyDetails.landDetails?.rent.plotSize||property.propertyDetails.landDetails?.lease.plotSize,
+            sizeUnit:property.propertyDetails.landDetails?.sell.sizeUnit||property.propertyDetails.landDetails?.rent.sizeUnit||property.propertyDetails.landDetails?.lease.sizeUnit,
             address: property.propertyDetails.address || {},
             images: property.propertyDetails.uploadPics || [],
           };
@@ -573,6 +577,8 @@ const getAssignedPropertyDetails = async (req, res) => {
             price: property.landDetails?.price || null,
             address: property.address || {},
             images: property.landDetails?.images || [],
+            size:property.landDetails.size,
+            sizeUnit:property.landDetails.sizeUnit
           };
 
         case "Layout":
@@ -584,6 +590,9 @@ const getAssignedPropertyDetails = async (req, res) => {
             price: property.layoutDetails?.plotPrice || null,
             address: property.layoutDetails?.address || {},
             images: property.layoutDetails?.uploadPics || [],
+
+            size: property.layoutDetails.plotSize,
+            sizeUnit:property.layoutDetails.sizeUnit
           };
 
         case "Residential":
@@ -595,6 +604,8 @@ const getAssignedPropertyDetails = async (req, res) => {
             price: property.propertyDetails?.flatCost || null,
             address: property.propertyDetails?.address || {},
             images: property.propertyDetails?.propPhotos || [],
+           size: property.propertyDetails.flatSize,
+           sizeUnit:property.propertyDetails.sizeUnit
           };
 
         default:
@@ -615,6 +626,152 @@ const getAssignedPropertyDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// const getAssignedPropertyDetails = async (req, res) => {
+//   try {
+//     const assignedId = req.params.userId;
+//     const role = req.params.role;
+//     const assignedDateQuery = req.query.assignedDate;
+
+//     if (!assignedId) {
+//       return res.status(400).json({ message: "Assigned ID is required." });
+//     }
+
+//     // Determine the filter field based on role
+//     const filterField = role === "5" || role === 5 ? "assignedBy" : role === "6" || role === 6 ? "assignedTo" : null;
+//     if (!filterField) {
+//       return res.status(400).json({ message: "Invalid role. Must be 5 or 6." });
+//     }
+
+//     // Resolve the assigned date range (in UTC)
+//     const assignedDate = assignedDateQuery ? new Date(assignedDateQuery) : new Date();
+//     if (isNaN(assignedDate)) {
+//       return res.status(400).json({ message: "Invalid assignedDate format." });
+//     }
+
+//     const startOfDay = new Date(Date.UTC(assignedDate.getUTCFullYear(), assignedDate.getUTCMonth(), assignedDate.getUTCDate(), 0, 0, 0));
+//     const endOfDay = new Date(Date.UTC(assignedDate.getUTCFullYear(), assignedDate.getUTCMonth(), assignedDate.getUTCDate(), 23, 59, 59, 999));
+
+//     // Fetch property assignments for the assigned ID on the specified date
+//     const propertyAssignments = await propertyAssignmentModel.find({
+//       [filterField]: assignedId,
+//       assignedDate: { $gte: startOfDay, $lte: endOfDay },
+//     });
+
+//     if (!propertyAssignments.length) {
+//       return res.status(409).json({ message: "No properties assigned for the given ID on this date." });
+//     }
+
+//     const propertyIds = propertyAssignments.flatMap((assignment) => assignment.propertyIds);
+
+//     // Fetch all property details
+//     const [commercialProperties, fieldsProperties, layoutProperties, residentialProperties] = await Promise.all([
+//       commercialModel.find({ _id: { $in: propertyIds } }),
+//       fieldModel.find({ _id: { $in: propertyIds } }),
+//       layoutModel.find({ _id: { $in: propertyIds } }),
+//       residentialModel.find({ _id: { $in: propertyIds } }),
+//     ]);
+
+//     const allProperties = [
+//       ...commercialProperties,
+//       ...fieldsProperties,
+//       ...layoutProperties,
+//       ...residentialProperties,
+//     ];
+
+//     if (!allProperties.length) {
+//       return res.status(409).json({ message: "No property details found for the given property IDs." });
+//     }
+
+//     // Fetch user IDs for the properties
+//     const userIds = allProperties.map((property) => property.userId).filter(Boolean);
+
+//     // Fetch agent details using user IDs
+//     const agentDetails = await userModel.find({ _id: { $in: userIds } }, { _id: 1, firstName: 1, lastName: 1 });
+
+//     const agentMap = agentDetails.reduce((acc, agent) => {
+//       acc[agent._id.toString()] = {
+//         agentId: agent._id.toString(),
+//         agentName: `${agent.firstName} ${agent.lastName}`,
+//       };
+//       return acc;
+//     }, {});
+
+//     // Map property details based on type
+//     const mapPropertyDetails = (property, assignment) => {
+//       const agentInfo = agentMap[property.userId?.toString()] || {};
+//       const commonDetails = {
+//         propertyId: property._id.toString(),
+//         propertyType: property.propertyType,
+//         assignedDate: assignment?.assignedDate || null,
+//         agentId: agentInfo.agentId || null,
+//         agentName: agentInfo.agentName || null,
+//         propertyID:property.propertyId,
+//       };
+
+//       switch (property.propertyType) {
+//         case "Commercial":
+//           return {
+//             ...commonDetails,
+
+//             propertyTitle: property.propertyTitle,
+//             ownerName: property.propertyDetails.owner?.ownerName || null,
+//             landTitle: property.propertyTitle,
+//             price: property.propertyDetails.landDetails?.price || null,
+//             address: property.propertyDetails.address || {},
+//             images: property.propertyDetails.uploadPics || [],
+//           };
+
+//         case "Agricultural land":
+//           return {
+//             ...commonDetails,
+//             ownerName: property.ownerDetails?.ownerName || null,
+//             landTitle: property.landDetails?.title || null,
+//             price: property.landDetails?.price || null,
+//             address: property.address || {},
+//             images: property.landDetails?.images || [],
+//           };
+
+//         case "Layout":
+//           return {
+//             ...commonDetails,
+//             propertyTitle: property.layoutDetails?.layoutTitle || null,
+//             ownerName: property.ownerDetails?.ownerName || null,
+//             landTitle: property.layoutDetails?.layoutTitle || null,
+//             price: property.layoutDetails?.plotPrice || null,
+//             address: property.layoutDetails?.address || {},
+//             images: property.layoutDetails?.uploadPics || [],
+//           };
+
+//         case "Residential":
+//           return {
+//             ...commonDetails,
+//             apartmentName: property.propertyDetails?.apartmentName || null,
+//             ownerName: property.propertyDetails?.owner?.ownerName || null,
+//             landTitle: property.propertyTitle,
+//             price: property.propertyDetails?.flatCost || null,
+//             address: property.propertyDetails?.address || {},
+//             images: property.propertyDetails?.propPhotos || [],
+//           };
+
+//         default:
+//           return commonDetails;
+//       }
+//     };
+
+//     const response = allProperties.map((property) => {
+//       const assignment = propertyAssignments.find((assignment) =>
+//         assignment.propertyIds.includes(property._id.toString())
+//       );
+//       return mapPropertyDetails(property, assignment);
+//     });
+
+//     res.status(200).json({ data: response });
+//   } catch (error) {
+//     console.error("Error fetching property details:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 const propertyAssignedAgents = async (req, res) => {
     try {

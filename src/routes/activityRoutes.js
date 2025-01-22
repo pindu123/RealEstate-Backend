@@ -12,7 +12,7 @@ updateNotification
 
 const activityRoutes = express.Router();
 const cache = apicache.middleware;
-
+//activities
 activityRoutes.post("/add", createActivity);
 activityRoutes.get("/activities", getAllActivities);
 activityRoutes.get("/activity/:activityId", getSpecificActivity);

@@ -20,7 +20,9 @@ const propertyAssignmentModel = require("../models/propertyAssignmentModel");
 const getUnAssignedAgents = async (req, res) => {
   try {
     let csrId = req.params.csrId;
-    
+
+    let page = req.query.page;
+    let limit = req.query.limit;
 
     console.log(csrId);
     let csrData = await userModel.findOne(
@@ -30,14 +32,29 @@ const getUnAssignedAgents = async (req, res) => {
       { password: 0 }
     );
     console.log(csrData, csrData.assignedDistrict);
-    const data = await userModel.find(
-      {
-        role: 1,
-        assignedCsr: "0",
-        district: csrData.assignedDistrict,
-      },
-      { password: 0 }
-    );
+    let data = [];
+    if (page) {
+      let offset = (page - 1) * limit;
+
+      data = await userModel.find(
+        {
+          role: 1,
+          assignedCsr: "0",
+          district: csrData.assignedDistrict,
+        },
+        { password: 0 }
+      ).skip(offset).limit(limit);
+    } else {
+      data = await userModel.find(
+        {
+          role: 1,
+          assignedCsr: "0",
+          district: csrData.assignedDistrict,
+        },
+        { password: 0 }
+      );
+    }
+
     console.log(data);
     if (data.length > 0) {
       res.status(200).json(data);
@@ -55,25 +72,24 @@ const getAssignedAgents = async (req, res) => {
     const csrId = req.params.csrId;
 
     if (!csrId) {
-      return res.status(400).json({ message: 'CSR ID is required' });
+      return res.status(400).json({ message: "CSR ID is required" });
     }
 
     const data = await userModel.find(
-      { assignedCsr: csrId, role: '1' }, // Query conditions
-      { password: 0   } // Exclude password from the response
+      { assignedCsr: csrId, role: "1" }, // Query conditions
+      { password: 0 } // Exclude password from the response
     );
 
     if (data.length > 0) {
       return res.status(200).json(data); // Return the found agents
     } else {
-      return res.status(404).json({ message: 'No Assigned Agents' }); // No agents found
+      return res.status(404).json({ message: "No Assigned Agents" }); // No agents found
     }
   } catch (error) {
-    console.error('Error fetching assigned agents:', error); // Log the error for debugging
-    return res.status(500).json({ message: 'Internal Server Error' }); // Handle server errors
+    console.error("Error fetching assigned agents:", error); // Log the error for debugging
+    return res.status(500).json({ message: "Internal Server Error" }); // Handle server errors
   }
 };
-
 
 const getAgentByPhone = async (req, res) => {
   try {
@@ -102,8 +118,8 @@ const assignAgentToCSR = async (req, res) => {
     }
 
     const results = [];
-    let receivers=[]
-     for (const agent of agents) {
+    let receivers = [];
+    for (const agent of agents) {
       try {
         const agentId = new ObjectId(agent);
 
@@ -118,15 +134,11 @@ const assignAgentToCSR = async (req, res) => {
           { _id: agentId },
           { $set: { assignedCsr: csrId } }
         );
-          
-
-        
-
 
         // Check if the update was successful
         if (updateResult.matchedCount > 0 && updateResult.modifiedCount > 0) {
           results.push({ agentId: agent, status: "success" });
-          receivers.push(agentId)
+          receivers.push(agentId);
         } else if (updateResult.matchedCount > 0) {
           results.push({
             agentId: agent,
@@ -143,32 +155,28 @@ const assignAgentToCSR = async (req, res) => {
         });
       }
     }
-    
-  let senderId=req.user.user.userId
-  let csrData=await userModel.findById(csrId,{password:0})
 
-  let notifications=[]
-  for(let r of receivers)
-  {
-    let notify={
-      "senderId":senderId,
-      "receiverId":r,
-      "message":`Your Are Assigned Under ${csrData.firstName} ${csrData.lastName} !`,
-      "notifyType":"Agent"
+    let senderId = req.user.user.userId;
+    let csrData = await userModel.findById(csrId, { password: 0 });
 
+    let notifications = [];
+    for (let r of receivers) {
+      let notify = {
+        senderId: senderId,
+        receiverId: r,
+        message: `You Are Assigned Under ${csrData.firstName} ${csrData.lastName} !`,
+        notifyType: "Agent",
+      };
+      notifications.push(notify);
     }
-    notifications.push(notify)
- 
-  }
-  notifications.push({
-    "senderId":senderId,
-    "receiverId":csrId, 
-     "message":`${agents.length}  New Aggents Are Assigned Under You !`,
-     "notifyType":"Agent"
+    notifications.push({
+      senderId: senderId,
+      receiverId: csrId,
+      message: `${agents.length}  New Agent Assigned Under You !`,
+      notifyType: "Agent",
+    });
 
-  })
-
-   await notifyModel.insertMany(notifications)
+    await notifyModel.insertMany(notifications);
 
     return res.status(201).json({
       message: "Agent assignment processed",
@@ -2673,22 +2681,58 @@ const getCsrDataFromExcel = async (req, res) => {
   }
 };
 
-
 const getPropsByCsr = async (req, res) => {
   try {
-    let fieldData = await fieldModel.find({ csrId: req.params.csrId }).sort({createdAt:-1});
-    let comData = await commercialModel.find({ csrId: req.params.csrId }).sort({createdAt:-1});
-    let layoutData = await layoutModel.find({ csrId: req.params.csrId }).sort({createdAt:-1});
-    let resData = await residentialModel.find({ csrId: req.params.csrId }).sort({createdAt:-1});
 
+     
+    let page=req.query.page
+    let limit=req.query.limit
+
+    let fieldData=[]
+    let comData=[]
+    let layoutData=[]
+    let resData=[]
+if(page)
+{
+
+  let offset=(page-1)*limit
+      fieldData = await fieldModel
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .sort({ createdAt: -1 });
+      comData = await commercialModel
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .sort({ createdAt: -1 });
+      layoutData = await layoutModel
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .sort({ createdAt: -1 });
+      resData = await residentialModel
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .sort({ createdAt: -1 });
+}
+else
+{
+    fieldData = await fieldModel
+  .find({ csrId: req.params.csrId })
+  .sort({ createdAt: -1 });
+  comData = await commercialModel
+  .find({ csrId: req.params.csrId })
+  .sort({ createdAt: -1 });
+  layoutData = await layoutModel
+  .find({ csrId: req.params.csrId })
+  .sort({ createdAt: -1 });
+  resData = await residentialModel
+  .find({ csrId: req.params.csrId })
+  .sort({ createdAt: -1 });
+}
     let totalProps = [...fieldData, ...comData, ...layoutData, ...resData];
     let property = {};
     let propDetails = [];
 
     for (let props of totalProps) {
       const agentData = await userModel.find({ _id: props.userId });
-      const agentName = agentData.length > 0 ? agentData[0].firstName || "NA" : "NA";
-      
+      const agentName =
+        agentData.length > 0 ? agentData[0].firstName || "NA" : "NA";
+
       if (props.propertyType === "Commercial") {
         property = {
           propertyId: props.propertyId,
@@ -2697,15 +2741,27 @@ const getPropsByCsr = async (req, res) => {
           propertyType: props.propertyType,
           propertyName: props.propertyTitle,
           images: props.propertyDetails?.uploadPics || [], // Default to empty array if undefined
-          size: props.propertyDetails?.landDetails?.sell?.plotSize || 
-                props.propertyDetails?.landDetails?.rent?.plotSize || 
-                props.propertyDetails?.landDetails?.lease?.plotSize || "NA", // Provide default
-           sizeUnit:props.propertyDetails.landDetails.sell.sizeUnit||props.propertyDetails.landDetails.rent.sizeUnit||props.propertyDetails.landDetails.lease.sizeUnit,
-        
-                price: props.propertyDetails?.landDetails?.sell?.totalAmount || 
-                 props.propertyDetails?.landDetails?.rent?.totalAmount || 
-                 props.propertyDetails?.landDetails?.lease?.totalAmount || "NA", // Provide default
-          district: props.propertyDetails?.landDetails?.address?.district || "NA", // Provide default
+          size:
+            props.propertyDetails?.landDetails?.sell?.plotSize ||
+            props.propertyDetails?.landDetails?.rent?.plotSize ||
+            props.propertyDetails?.landDetails?.lease?.plotSize ||
+            "NA", // Provide default
+          sizeUnit:
+            props.propertyDetails.landDetails.sell.sizeUnit ||
+            props.propertyDetails.landDetails.rent.sizeUnit ||
+            props.propertyDetails.landDetails.lease.sizeUnit,
+
+          price:
+            props.propertyDetails?.landDetails?.sell?.totalAmount ||
+            props.propertyDetails?.landDetails?.rent?.totalAmount ||
+            props.propertyDetails?.landDetails?.lease?.totalAmount ||
+            "NA", // Provide default
+          district:
+            props.propertyDetails?.landDetails?.address?.district || "NA", // Provide default
+            
+          mandal:
+            props.propertyDetails?.landDetails?.address?.mandal || "NA", // Provide default
+            
           agentName: agentName,
         };
       } else if (props.propertyType === "Layout") {
@@ -2717,10 +2773,14 @@ const getPropsByCsr = async (req, res) => {
           propertyName: props.layoutDetails?.layoutTitle || "NA", // Default to "NA" if undefined
           images: props.uploadPics || [], // Default to empty array if undefined
           size: props.layoutDetails?.plotSize || "NA", // Provide default
-          sizeUnit:props.layoutDetails.sizeUnit||props.layoutDetails.sizeUnit||props.layoutDetails.sizeUnit,
+          sizeUnit:
+            props.layoutDetails.sizeUnit ||
+            props.layoutDetails.sizeUnit ||
+            props.layoutDetails.sizeUnit,
 
           price: props.layoutDetails?.totalAmount || "NA", // Provide default
           district: props.layoutDetails?.address?.district || "NA", // Provide default
+          mandal:props.layoutDetails?.address?.mandal||"NA",
           agentName: agentName,
         };
       } else if (props.propertyType === "Residential") {
@@ -2731,19 +2791,26 @@ const getPropsByCsr = async (req, res) => {
           propertyName: props.propertyDetails?.apartmentName || "NA", // Default to "NA" if undefined
           images: props.propPhotos || [], // Default to empty array if undefined
           size: props.propertyDetails?.flatSize || "NA", // Provide default
-          sizeUnit:props.propertyDetails.sizeUnit||props.propertyDetails.sizeUnit||props.propertyDetails.sizeUnit,
+          sizeUnit:
+            props.propertyDetails.sizeUnit ||
+            props.propertyDetails.sizeUnit ||
+            props.propertyDetails.sizeUnit,
 
           type: props.propertyType,
           price: props.propertyDetails?.totalCost || "NA", // Provide default
           district: props.address?.district || "NA", // Provide default
+          mandal:props.address?.mandal||"NA",
           agentName: agentName,
         };
       } else {
         property = {
           images: props.landDetails?.images || [], // Default to empty array if undefined
           size: props.landDetails?.size || "NA", // Provide default
-          
-          sizeUnit:props.landDetails.sizeUnit||props.landDetails.sizeUnit||props.landDetails.sizeUnit,
+
+          sizeUnit:
+            props.landDetails.sizeUnit ||
+            props.landDetails.sizeUnit ||
+            props.landDetails.sizeUnit,
 
           type: props.propertyType,
           propertyId: props.propertyId,
@@ -2752,6 +2819,7 @@ const getPropsByCsr = async (req, res) => {
           propertyName: props.landDetails?.title || "NA", // Default to "NA" if undefined
           price: props.landDetails?.totalPrice || "NA", // Provide default
           district: props.address?.district || "NA", // Provide default
+          mandal:props.address?.mandal||"NA",
           agentName: agentName,
         };
       }
@@ -2766,27 +2834,25 @@ const getPropsByCsr = async (req, res) => {
   }
 };
 
-
 const getAssignedCsr = async (req, res) => {
   try {
     let agentId = req.params.agentId;
 
     const agentData = await userModel.findById(agentId);
-console.log(agentData)
+    console.log(agentData);
     const csrData = await userModel.findById(agentData.assignedCsr, {
       password: 0,
     });
-console.log(csrData)
+    console.log(csrData);
     if (csrData) {
       res.status(200).json(csrData);
     } else {
       res.status(404).json("No CSR");
     }
   } catch (error) {
-    res.status(500).json("Internal Server Error")
+    res.status(500).json("Internal Server Error");
   }
 };
-
 
 // api to assign customer to agnet
 
@@ -2795,9 +2861,16 @@ const assignCustomerToAgent = async (req, res) => {
     const { assignedTo, customers, assignedBy, assignedDate } = req.body;
 
     // Validate the required fields
-    if (!assignedTo || !Array.isArray(customers) || customers.length === 0 || !assignedBy || !assignedDate) {
+    if (
+      !assignedTo ||
+      !Array.isArray(customers) ||
+      customers.length === 0 ||
+      !assignedBy ||
+      !assignedDate
+    ) {
       return res.status(400).json({
-        message: "Required fields: assignedTo, assignedBy, assignedDate, customers (array with customerId, status, and description)",
+        message:
+          "Required fields: assignedTo, assignedBy, assignedDate, customers (array with customerId, status, and description)",
       });
     }
 
@@ -2809,15 +2882,22 @@ const assignCustomerToAgent = async (req, res) => {
 
     if (existingAssignment) {
       // Check if existingAssignment.customers is defined and an array
-      if (existingAssignment.customers && Array.isArray(existingAssignment.customers)) {
+      if (
+        existingAssignment.customers &&
+        Array.isArray(existingAssignment.customers)
+      ) {
         // Check for duplicate customer assignments
-        const duplicateCustomers = customers.filter(customer =>
-          existingAssignment.customers.some(existingCustomer => existingCustomer.customerId === customer.customerId)
+        const duplicateCustomers = customers.filter((customer) =>
+          existingAssignment.customers.some(
+            (existingCustomer) =>
+              existingCustomer.customerId === customer.customerId
+          )
         );
 
         if (duplicateCustomers.length > 0) {
           return res.status(400).json({
-            message: "Some customers are already assigned to this agent on the same date.",
+            message:
+              "Some customers are already assigned to this agent on the same date.",
             duplicates: duplicateCustomers,
           });
         }
@@ -2861,10 +2941,16 @@ const assignCustomerToAgent = async (req, res) => {
 
 const assignPropertyToAgent = async (req, res) => {
   try {
-    const { assignedTo, propertyIds, assignedBy,assignedDate } = req.body;
-    if (!assignedTo || !Array.isArray(propertyIds) || propertyIds.length === 0 || !assignedBy) {
+    const { assignedTo, propertyIds, assignedBy, assignedDate } = req.body;
+    if (
+      !assignedTo ||
+      !Array.isArray(propertyIds) ||
+      propertyIds.length === 0 ||
+      !assignedBy
+    ) {
       return res.status(400).json({
-        message: "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
+        message:
+          "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
       });
     }
     const newAssignment = new propertyAssignmentModel({

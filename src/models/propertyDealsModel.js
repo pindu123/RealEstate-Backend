@@ -10,12 +10,19 @@ const dealsSchema = new mongoose.Schema(
     propertyName: {
       type: String,
     },
+    propertyNameTe: {
+      type: String,
+    },
     propertyType: {
+      type: String,
+    },
+    propertyTypeTe: {
       type: String,
     },
     propertyId: { type: String },
     customerId: { type: String },
     comments: { type: String },
+    commentsTe: { type: String },
     interestIn: { type: String },
     csrId: {
       type: String,

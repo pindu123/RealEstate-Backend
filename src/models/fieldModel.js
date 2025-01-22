@@ -383,7 +383,7 @@ const fieldSchema = new mongoose.Schema(
         type: String,
       },
       roadTypeTe: {
-        type: String, // Translated field for Telugu
+        type: String, 
       },
       distanceFromRoad: {
         type: String,

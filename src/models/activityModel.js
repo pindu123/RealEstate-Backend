@@ -11,13 +11,13 @@ type: String,
 required: false
 },
 meetingDate: {
-type: Date
+type: String
 },
-startTime: {
-type: Date
+startDate: {
+type: String,
 },
-endTime: {
-type: Date
+endDate: {
+type: String
 },
 location: {
 type: String

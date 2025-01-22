@@ -165,14 +165,16 @@ const capitalizeWords = (value) => {
 const commercialSchema = Joi.object({
   userId: Joi.string().required(),
   enteredBy: Joi.string().optional(),
-  propertyId: Joi.string().optional(), // Add this field
-  role: Joi.number().optional(), // Add this field
+  propertyId: Joi.string().optional(),
+  role: Joi.number().optional(),
   propertyType: Joi.string().required(),
-    propertyInterestedCount:Joi.number().optional(),
-  
+  propertyTypeTe: Joi.string().optional(), // Telugu translation
+  propertyInterestedCount: Joi.number().optional(),
+
   propertyTitle: Joi.string()
     .required()
     .custom((value) => capitalizeWords(value), "Capitalization for propertyTitle"),
+  propertyTitleTe: Joi.string().optional(), // Telugu translation
   rating: Joi.number().default(0),
   ratingCount: Joi.number().default(0),
   status: Joi.number().default(0),
@@ -204,6 +206,7 @@ const commercialSchema = Joi.object({
         priceUnit: Joi.string().optional(),
         totalAmount: Joi.number().min(0).optional(),
         landUsage: Joi.array().items(Joi.string()).optional(),
+        landUsageTe: Joi.array().items(Joi.string()).optional(), // Telugu translation
       }).optional(),
       rent: Joi.object({
         plotSize: Joi.number().min(1).optional(),
@@ -213,6 +216,7 @@ const commercialSchema = Joi.object({
         noOfMonths: Joi.number().min(0).optional(),
         totalAmount: Joi.number().min(0).optional(),
         landUsage: Joi.array().items(Joi.string()).optional(),
+        landUsageTe: Joi.array().items(Joi.string()).optional(), // Telugu translation
       }).optional(),
       lease: Joi.object({
         plotSize: Joi.number().min(1).optional(),
@@ -222,6 +226,7 @@ const commercialSchema = Joi.object({
         duration: Joi.number().min(0).optional(),
         totalAmount: Joi.number().min(0).optional(),
         landUsage: Joi.array().items(Joi.string()).optional(),
+        landUsageTe: Joi.array().items(Joi.string()).optional(), // Telugu translation
       }).optional(),
       address: Joi.object({
         pinCode: Joi.string().pattern(/^[0-9]{6}$/).optional().allow(null),
@@ -230,26 +235,35 @@ const commercialSchema = Joi.object({
         district: Joi.string()
           .required()
           .custom((value) => capitalizeWords(value), "Capitalization for district"),
+        districtTe: Joi.string().optional(), // Telugu translation
         mandal: Joi.string()
           .required()
           .custom((value) => capitalizeWords(value), "Capitalization for mandal"),
+        mandalTe: Joi.string().optional(), // Telugu translation
         village: Joi.string()
           .required()
           .custom((value) => capitalizeWords(value), "Capitalization for village"),
+        villageTe: Joi.string().optional(), // Telugu translation
         latitude: Joi.string().optional(),
         longitude: Joi.string().optional(),
         landMark: Joi.string().optional(),
+        landMarkTe: Joi.string().optional(), // Telugu translation
       }).required(),
       description: Joi.string().optional(),
+      descriptionTe: Joi.string().optional(), // Telugu translation
     }).required(),
     amenities: Joi.object({
       isElectricity: Joi.string().optional(),
+      isElectricityTe: Joi.string().optional(), // Telugu translation
       isWaterFacility: Joi.boolean().optional(),
       isRoadFace: Joi.boolean().optional(),
       roadType: Joi.string().optional(),
+      roadTypeTe: Joi.string().optional(), // Telugu translation
       distanceFromRoad: Joi.string().optional(),
       roadProximity: Joi.string().optional(),
+      roadProximityTe: Joi.string().optional(), // Telugu translation
       extraAmenities: Joi.array().items(Joi.string()).optional(),
+      extraAmenitiesTe: Joi.array().items(Joi.string()).optional(), // Telugu translation
     }).optional(),
     uploadPics: Joi.array().items(Joi.string()).optional(),
     videos: Joi.array().items(Joi.string().allow(null)).optional(),

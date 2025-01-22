@@ -14,13 +14,18 @@ const notifySchema=new mongoose.Schema({
         type:String,
         required:true
     },
+    details:{
+        type:String,
+    },
     status:{
         type:String,
         default:"unSeen"
     },
     notifyType:{
         type:String
-    }
+    },
+   
+   
 },{timestamps:true})
 
 

@@ -18,7 +18,7 @@ const findRelevantAnswer = (userMessage, knowledgeBase) => {
       return entry.answer;
     }
   }
-  return null; // No relevant answer found in the knowledge base
+  return null; // No relevant answer found in the knowledge base 
 };
 
 function getSecondLastWord(str) {
@@ -36,7 +36,6 @@ function getSecondLastWord(str) {
 const getLatestProp = async (type) => {
   let collection;
   console.log(type);
-  console.log("hdhfjh");
   if (type === "agriculture") {
     collection = fieldModel;
   } else if (type === "commercial") {

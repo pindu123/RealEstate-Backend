@@ -192,7 +192,103 @@ const getUsersByRole = async (req, res) => {
     //     });
     //   }
     // };
+
+  
+    const translate = require('@iamtraction/google-translate'); // Import translation library
+
     const createUser = async (req, res) => {
+      try {
+        console.log("password", req.body.password);
+    
+        // Validate the request body
+        let result = await registrationSchema.validateAsync(req.body);
+        console.log("Role:", result.role);
+    
+        // Check if the user already exists by phone number or email
+        const exists = await userModel.findOne({ phoneNumber: result.phoneNumber });
+        if (exists) {
+          console.log("User with this phone number already exists");
+          return res.status(409).json("Phone number exists");
+        }
+    
+        const emailCheck = await userModel.findOne({ email: result.email });
+        if (emailCheck) {
+          console.log("User with this email already exists");
+          return res.status(409).json("Email exists");
+        }
+    
+        // Generate unique ID based on the role
+        let roleBasedId;
+        switch (result.role) {
+          case 0:
+            roleBasedId = await generateUniqueIds("AD");
+            break;
+          case 1:
+            roleBasedId = await generateUniqueIds("AG");
+            break;
+          case 3:
+            roleBasedId = await generateUniqueIds("CS");
+            break;
+          case 5:
+            roleBasedId = await generateUniqueIds("CSR");
+            break;
+          case 6:
+            roleBasedId = await generateUniqueIds("MA");
+            break;
+          default:
+            console.log("Invalid role provided");
+            return res.status(400).json("Invalid role");
+        }
+        result.accountId = roleBasedId;
+        console.log("Generated Role-Based ID:", roleBasedId);
+    
+        // Translate string fields and store both original and translated fields
+        const fieldsToTranslate = ["firstName", "lastName", "city", "state", "district", "village", "mandal"];
+        for (const field of fieldsToTranslate) {
+          if (result[field]) {
+            const translated = await translate(result[field], { to: "te" }); // Translate to Telugu
+            result[`${field}Te`] = translated.text; // Append "Te" to the field name for the translated version
+          }
+        }
+    
+        // Hash the password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(result.password, salt);
+        result.password = hashedPassword;
+    
+        // Set default profile picture if not provided
+        if (!result.profilePicture) {
+          result.profilePicture =
+            "https://res.cloudinary.com/ddv2y93jq/image/upload/v1726132403/zsafjroceoneetkmz5jq.webp";
+        }
+    
+        // Save the user to the database
+        const user = new userModel(result);
+        await user.save();
+    
+        res.status(201).json({
+          message: "User added successfully",
+          success: true,
+          user,
+        });
+      } catch (error) {
+        if (error.isJoi === true) {
+          console.log(error);
+          return res.status(422).json({
+            status: "error",
+            message: error.details.map((detail) => detail.message).join(", "),
+          });
+        }
+        console.log(error);
+        res.status(500).json({
+          status: "error",
+          message: "Internal Server Error",
+        });
+      }
+    };
+    
+
+    const createUserInUse = async (req, res) => {
       try {
         console.log("password", req.body.password);
     
@@ -387,113 +483,6 @@ const createUsers = async (req, res) => {
   }
 };
 
-// Controller to update a user
-// const updateUser = async (req, res) => {
-//   // const updateData = await newProfileSchema.validateAsync(req.body);
-//   const updateData= req.body;
-//   const userId = req.user.user.userId;
-//   if (updateData.hasOwnProperty("password")) {
-//     // Password key is present, encrypt it
-//     bcrypt.hash(
-//       updateData.password,
-//       saltRounds,
-//       async (err, hashedPassword) => {
-//         if (err) {
-//           // Handle the error
-//           return res
-//             .status(500)
-//             .send({ message: "Error hashing password", error: err.message });
-//         }
-
-//         // Update the password with the hashed version
-//         updateData.password = hashedPassword;
-
-//         // Now proceed to update the user data in the database
-//         try {
-//           const updatedUser = await userModel.findByIdAndUpdate(
-//             userId,
-//             updateData,
-//             { new: true, runValidators: true }
-//           );
-//           res.send({ message: "User updated successfully", user: updatedUser });
-//         } catch (error) {
-//            if (error.isJoi === true)
-//         return res.status(422).json({
-//           status: "error",
-//           message: error.details.map((detail) => detail.message).join(", "),
-//         });
-//           res
-//             .status(500)
-//             .send({ message: "Error updating user", error: error.message });
-//         }
-//       }
-//     );
-//   } else {
-//     // If there's no password, just update the other fields
-//     try {
-//       const updatedUser = await userModel.findByIdAndUpdate(
-//         userId,
-//         updateData,
-//         { new: true, runValidators: true }
-//       );
-//       res.send({ message: "User updated successfully", user: updatedUser });
-//     } catch (error) {
-//       if (error.isJoi === true)
-//         return res.status(422).json({
-//           status: "error",
-//           message: error.details.map((detail) => detail.message).join(", "),
-//         });
-//       res
-//         .status(500)
-//         .send({ message: "Error updating user", error: error.message });
-//     }
-//   }
-// };
-
-
-// const updateUser = async (req, res) => {
-//   try {
-//     // Validate the incoming data
-//     const updateData = await newProfileSchema.validateAsync(req.body);
-//     const userId = req.user.user.userId;
-
-//     // Check if password key is present, encrypt it if needed
-//     if (updateData.password) {
-//       const hashedPassword = await bcrypt.hash(updateData.password, saltRounds);
-//       updateData.password = hashedPassword;
-//     }
-
-//     // Optional: Check if phone number exists (uncomment if needed)
-//     const numberExists = await userModel.findOne({ phoneNumber: updateData.phoneNumber });
-//     if (numberExists) {
-//       return res.status(409).json("User with this phone number already exists");
-//     }
-
-//     // Update user information in the database
-//     const updatedUser = await userModel.findByIdAndUpdate(userId, updateData, {
-//       new: true,
-//       runValidators: true, // Ensures that the data is validated against your schema
-//     });
-
-//     // Log the updated user for debugging
-//     console.log(updatedUser);
-
-//     // Respond with the updated user info
-//     res.send({ message: "User updated successfully", user: updatedUser });
-//   } catch (error) {
-//     // Handle Joi validation errors
-//     if (error.isJoi === true) {
-//       console.log(error);
-//       return res.status(422).json({
-//         status: "error",
-//         message: error.details.map((detail) => detail.message).join(", "),
-//       });
-//     }
-
-//     // Handle any other errors
-//     res.status(500).send({ message: "Error updating user", error: error.message });
-//   }
-// };
 
 const updateUser = async (req, res) => {
   try {
@@ -635,8 +624,8 @@ const getProfile = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
-    console.log(role, 'role'); // Debugging role value
-    console.log(userId, 'userId'); // Debugging userId value
+    console.log(role, 'role'); 
+    console.log(userId, 'userId'); 
 
     // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -646,16 +635,16 @@ const getProfile = async (req, res) => {
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Define the fields you want to retrieve for the user profile
-    const fields = "profilePicture firstName lastName pinCode city email phoneNumber district mandal state country createdAt role";
+    const fields = "profilePicture firstName lastName accountId pinCode city email phoneNumber district mandal state country createdAt role altPhoneNumber";
 
     // Find user details with specific fields
-    const user = await userModel.findById(userObjectId, fields).lean(); // Use lean for plain object
-
+    const user = await userModel.findById(userObjectId, fields).lean(); 
+    console.log(user,'user');
     if (!user) {
       return res.status(409).json({ message: "User not found" });
     }
 
-    console.log('User found:', user); // Debugging user fetch
+    console.log('User found:', user);
 
     // If role is 1, also get property counts
     if (role == 1) {
@@ -747,6 +736,260 @@ const namesBasedOnRole = async (req, res) => {
 };
 
 //create CSR, AGENT, BUYER/ CUSTOMER
+const createCSRInUse = async (req, res) => {
+  
+  try {
+    console.log("password", req.body.password);
+    console.log("user data", req.body);
+    // Validate the request body
+    let result = await registrationSchema.validateAsync(req.body);
+
+    // Check if the phone number already exists
+    const exists = await userModel.findOne({ phoneNumber: result.phoneNumber });
+    if (exists) {
+      console.log("User with this phone number already exists");
+      return res.status(409).json("Phone number exists");
+    }
+
+    // If email is provided, check if it already exists
+    if (result.email) {
+      const emailCheck = await userModel.findOne({ email: result.email });
+      if (emailCheck) {
+        console.log("User with this email already exists");
+        return res.status(409).json("Email exists");
+      }
+    }
+
+    // Generate a role-based ID
+    let roleBasedId;
+    switch (result.role) {
+      case 1:
+        roleBasedId = await generateUniqueId("AG",1);
+        result.accountId = roleBasedId;
+        result.assignedCsr = "0";
+        break;
+      case 3:
+        roleBasedId = await generateUniqueId("CS",3);
+        result.accountId = roleBasedId;
+        result.assignedCsr = "0";
+        break;
+      case 5:
+        roleBasedId = await generateUniqueId("CSR",5);
+        result.accountId = roleBasedId;
+        break;
+      case 6:
+        roleBasedId = await generateUniqueId("MA",6);
+        result.accountId = roleBasedId;
+        result.assignedCsr = req.user.user.userId; 
+        break;
+      default:
+        console.log("Invalid role provided");
+        return res.status(400).json("Invalid role");
+    }
+
+    console.log("Generated Role-Based ID:", roleBasedId);
+
+    // Generate a password
+    const generatedPassword = generatePassword(result.firstName, result.lastName);
+    console.log("Generated Password:", generatedPassword);
+
+    // Hash the password if applicable
+    const salt = await bcrypt.genSalt(saltRounds);
+    if ([1, 3, 5, 6].includes(result.role)) {
+      const hashedPassword = await bcrypt.hash(generatedPassword, salt);
+      result.password = hashedPassword;
+    }
+
+    // Set default profile picture if not provided
+    if (!result.profilePicture) {
+      result.profilePicture =
+        "https://res.cloudinary.com/ddv2y93jq/image/upload/v1726132403/zsafjroceoneetkmz5jq.webp";
+    }
+
+    result.addedBy = req.user.user.userId;
+
+    // Save the user to the database
+    const user = new userModel(result);
+    await user.save();
+
+    // Send email only if email is provided and for specific roles
+    if (result.email && [1, 3, 5, 6].includes(result.role)) {
+      const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: "Your Account Details",
+        text: `Hello ${user.firstName},\n\nYour account has been successfully created.\n\nHere are your account details:\nUser ID: ${user.email}\nPassword: ${generatedPassword}\nYou can reset your password here: http://172.17.15.209:3000/resetPassword\n\nPlease keep this information secure.\n\nBest regards,\nReal Estate Team`,
+      };
+
+      await transporter
+        .sendMail(mailOptions)
+        .then(() => {
+          console.log("Email sent successfully");
+        })
+        .catch((err) => {
+          console.error("Error sending email", err);
+        });
+    }
+
+    res.status(201).json({
+      message: "User added successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    if (error.isJoi === true) {
+      return res.status(422).json({
+        status: "error",
+        message: error.details.map((detail) => detail.message).join(", "),
+      });
+    }
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const createCSR = async (req, res) => {
+  try {
+    console.log("password", req.body.password);
+    console.log("user data", req.body);
+
+    // Validate the request body
+    let result = await registrationSchema.validateAsync(req.body);
+
+    // Translate string fields to Telugu and store both original and translated fields
+    const fieldsToTranslate = ["firstName", "lastName", "city", "state", "district", "village", "mandal","country"];
+    for (const field of fieldsToTranslate) {
+      if (result[field]) {
+        const translated = await translate(result[field], { to: "te" }); // Translate to Telugu
+        result[`${field}Te`] = translated.text; // Append "Te" to the field name for the translated version
+      }
+    }
+
+    // Check if the phone number already exists
+    const exists = await userModel.findOne({ phoneNumber: result.phoneNumber });
+    if (exists) {
+      console.log("User with this phone number already exists");
+      return res.status(409).json("Phone number exists");
+    }
+
+    // If email is provided, check if it already exists
+    if (result.email) {
+      const emailCheck = await userModel.findOne({ email: result.email });
+      if (emailCheck) {
+        console.log("User with this email already exists");
+        return res.status(409).json("Email exists");
+      }
+    }
+
+    // Generate a role-based ID
+    let roleBasedId;
+    switch (result.role) {
+      case 1:
+        roleBasedId = await generateUniqueId("AG", 1);
+        result.accountId = roleBasedId;
+        result.assignedCsr = "0";
+        break;
+      case 3:
+        roleBasedId = await generateUniqueId("CS", 3);
+        result.accountId = roleBasedId;
+        result.assignedCsr = "0";
+        break;
+      case 5:
+        roleBasedId = await generateUniqueId("CSR", 5);
+        result.accountId = roleBasedId;
+        break;
+      case 6:
+        roleBasedId = await generateUniqueId("MA", 6);
+        result.accountId = roleBasedId;
+        result.assignedCsr = req.user.user.userId; 
+        break;
+      default:
+        console.log("Invalid role provided");
+        return res.status(400).json("Invalid role");
+    }
+
+    console.log("Generated Role-Based ID:", roleBasedId);
+
+    // Generate a password
+    const generatedPassword = generatePassword(result.firstName, result.lastName);
+    console.log("Generated Password:", generatedPassword);
+
+    // Hash the password if applicable
+    const salt = await bcrypt.genSalt(saltRounds);
+    if ([1, 3, 5, 6].includes(result.role)) {
+      const hashedPassword = await bcrypt.hash(generatedPassword, salt);
+      result.password = hashedPassword;
+    }
+
+    // Set default profile picture if not provided
+    if (!result.profilePicture) {
+      result.profilePicture =
+        "https://res.cloudinary.com/ddv2y93jq/image/upload/v1726132403/zsafjroceoneetkmz5jq.webp";
+    }
+
+    result.addedBy = req.user.user.userId;
+
+    // Save the user to the database
+    const user = new userModel(result);
+    await user.save();
+
+    // Send email only if email is provided and for specific roles
+    if (result.email && [1, 3, 5, 6].includes(result.role)) {
+      const transporter = nodemailer.createTransport({
+        service: "Gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: user.email,
+        subject: "Your Account Details",
+        text: `Hello ${user.firstName},\n\nYour account has been successfully created.\n\nHere are your account details:\nUser ID: ${user.email}\nPassword: ${generatedPassword}\nYou can reset your password here: http://172.17.15.209:3000/resetPassword\n\nPlease keep this information secure.\n\nBest regards,\nReal Estate Team`,
+      };
+
+      await transporter
+        .sendMail(mailOptions)
+        .then(() => {
+          console.log("Email sent successfully");
+        })
+        .catch((err) => {
+          console.error("Error sending email", err);
+        });
+    }
+
+    res.status(201).json({
+      message: "User added successfully",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    if (error.isJoi === true) {
+      return res.status(422).json({
+        status: "error",
+        message: error.details.map((detail) => detail.message).join(", "),
+      });
+    }
+    res.status(500).json({
+      status: "error",
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
 const createCSRs = async (req, res) => {
   try {
     console.log("password", req.body.password);
@@ -982,127 +1225,7 @@ const createCSRss = async (req, res) => {
 };
 
 
-const createCSR = async (req, res) => {
-  
-  try {
-    console.log("password", req.body.password);
-    console.log("user data", req.body);
-    // Validate the request body
-    let result = await registrationSchema.validateAsync(req.body);
 
-    // Check if the phone number already exists
-    const exists = await userModel.findOne({ phoneNumber: result.phoneNumber });
-    if (exists) {
-      console.log("User with this phone number already exists");
-      return res.status(409).json("Phone number exists");
-    }
-
-    // If email is provided, check if it already exists
-    if (result.email) {
-      const emailCheck = await userModel.findOne({ email: result.email });
-      if (emailCheck) {
-        console.log("User with this email already exists");
-        return res.status(409).json("Email exists");
-      }
-    }
-
-    // Generate a role-based ID
-    let roleBasedId;
-    switch (result.role) {
-      case 1:
-        roleBasedId = await generateUniqueId("AG",1);
-        result.accountId = roleBasedId;
-        result.assignedCsr = "0";
-        break;
-      case 3:
-        roleBasedId = await generateUniqueId("CS",3);
-        result.accountId = roleBasedId;
-        result.assignedCsr = "0";
-        break;
-      case 5:
-        roleBasedId = await generateUniqueId("CSR",5);
-        result.accountId = roleBasedId;
-        break;
-      case 6:
-        roleBasedId = await generateUniqueId("MA",6);
-        result.accountId = roleBasedId;
-        result.assignedCsr = req.user.user.userId; 
-        break;
-      default:
-        console.log("Invalid role provided");
-        return res.status(400).json("Invalid role");
-    }
-
-    console.log("Generated Role-Based ID:", roleBasedId);
-
-    // Generate a password
-    const generatedPassword = generatePassword(result.firstName, result.lastName);
-    console.log("Generated Password:", generatedPassword);
-
-    // Hash the password if applicable
-    const salt = await bcrypt.genSalt(saltRounds);
-    if ([1, 3, 5, 6].includes(result.role)) {
-      const hashedPassword = await bcrypt.hash(generatedPassword, salt);
-      result.password = hashedPassword;
-    }
-
-    // Set default profile picture if not provided
-    if (!result.profilePicture) {
-      result.profilePicture =
-        "https://res.cloudinary.com/ddv2y93jq/image/upload/v1726132403/zsafjroceoneetkmz5jq.webp";
-    }
-
-    result.addedBy = req.user.user.userId;
-
-    // Save the user to the database
-    const user = new userModel(result);
-    await user.save();
-
-    // Send email only if email is provided and for specific roles
-    if (result.email && [1, 3, 5, 6].includes(result.role)) {
-      const transporter = nodemailer.createTransport({
-        service: "Gmail",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: user.email,
-        subject: "Your Account Details",
-        text: `Hello ${user.firstName},\n\nYour account has been successfully created.\n\nHere are your account details:\nUser ID: ${user.email}\nPassword: ${generatedPassword}\nYou can reset your password here: http://172.17.15.209:3000/resetPassword\n\nPlease keep this information secure.\n\nBest regards,\nReal Estate Team`,
-      };
-
-      await transporter
-        .sendMail(mailOptions)
-        .then(() => {
-          console.log("Email sent successfully");
-        })
-        .catch((err) => {
-          console.error("Error sending email", err);
-        });
-    }
-
-    res.status(201).json({
-      message: "User added successfully",
-      success: true,
-    });
-  } catch (error) {
-    console.log(error);
-    if (error.isJoi === true) {
-      return res.status(422).json({
-        status: "error",
-        message: error.details.map((detail) => detail.message).join(", "),
-      });
-    }
-    res.status(500).json({
-      status: "error",
-      message: "Internal Server Error",
-    });
-  }
-};
 
 const generateUniqueI = async (prefix, role) => {
   try {

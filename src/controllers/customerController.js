@@ -52,7 +52,7 @@ const customerBasedOnAddedBy = async (req, res) => {
     let customerQuery = { role: 3, addedBy: userId };
 
     if (role === 1) {
-      const deals = await dealsModel.find({ agentId: userId });
+      const deals = await dealsModel.find({ agentId: userId ,createdAt:-1});
       const customerIds = deals.map(deal => deal.customerId);
       customerQuery = { _id: { $in: customerIds }, role: 3 };
     }

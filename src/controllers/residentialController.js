@@ -143,7 +143,7 @@ const generatePropertyId = async (typePrefix, model) => {
   return `${typePrefix}${lastId + 1}`;
 };
 
-const createResidential = async (req, res) => {
+const createResidentialInUse = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
 
@@ -261,6 +261,370 @@ const createResidential = async (req, res) => {
     });
   }
 };
+ 
+const translate = require('@iamtraction/google-translate'); // Import translation library
+
+//translationCheck
+// const createResidential = async (req, res) => {
+//   try {
+//     const { userId, role } = req.user.user;
+
+//     // Transform amenities to ensure proper data types
+//     req.body.amenities = {
+//       ...req.body.amenities,
+//       electricityFacility: String(req.body.amenities.electricityFacility),
+//       powerSupply: String(req.body.amenities.powerSupply),
+//       distanceFromRoad: String(req.body.amenities.distanceFromRoad),
+//     };
+
+//     console.log("Request Body:", req.body);
+
+//     // Generate propertyId
+//     const propertyId = await generatePropertyId("PR", residentialModel);
+
+//     let insertData = {
+//       propertyId,
+//       userId,
+//       ...req.body,
+//     };
+
+//     // Recursive translation of fields
+//     const translateFields = async (data) => {
+//       const translatedData = { ...data };
+
+//       for (const [key, value] of Object.entries(data)) {
+//         if (typeof value === "string" && /^[a-zA-Z\s]+$/.test(value)) {
+//           // Translate strings to Telugu
+//           const { text: translatedValue } = await translate(value, { to: "te" });
+//           translatedData[`${key}Te`] = translatedValue;
+//         } else if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+//           // Recursively handle nested objects
+//           translatedData[key] = await translateFields(value);
+//         }
+//       }
+//       return translatedData;
+//     };
+
+//     // Translate fields
+//     const sanitizedData = await translateFields(insertData);
+
+//     // Assign CSR and enteredBy logic based on user role
+//     if (role === 1) {
+//       const csrData = await userModel.findById(userId);
+//       sanitizedData.csrId = csrData?.assignedCsr || "";
+//       sanitizedData.enteredBy = req.body.enteredBy || userId;
+//     } else if (role === 5) {
+//       const userData = await userModel.findOne({ email: req.body.agentDetails.userId });
+//       sanitizedData.csrId = userId;
+//       sanitizedData.userId = userData?._id?.toString() || sanitizedData.userId;
+//       sanitizedData.enteredBy = req.body.enteredBy || userId;
+//     }
+
+//     // Handle missing latitude and longitude
+//     if (!sanitizedData.address.latitude) delete sanitizedData.address.latitude;
+//     if (!sanitizedData.address.longitude) delete sanitizedData.address.longitude;
+
+//     // Validate data against the schema
+//     const result = await residentialSchema.validateAsync(sanitizedData);
+
+//     // Save to the database
+//     const residential = new residentialModel(result);
+//     await residential.save();
+
+//     console.log("Residential Property Created:", residential);
+
+//     // Notifications
+//     const message = {
+//       senderId: userId,
+//       receiverId: role === 1 ? sanitizedData.csrId : req.body.agentDetails?.userId,
+//       message: "A new property has been added.",
+//       notifyType: "Property",
+//     };
+//     const notification = new notifyModel(message);
+//     await notification.save();
+
+//     res.status(200).send({
+//       message: "Residential Property Added Successfully",
+//       success: true,
+//     });
+//   } catch (error) {
+//     if (error.isJoi) {
+//       return res.status(422).json({
+//         status: "error",
+//         message: error.details.map((detail) => detail.message).join(", "),
+//       });
+//     }
+
+//     console.error("Error Details:", error);
+
+//     res.status(500).send({
+//       message: "Error Adding Residential Property",
+//       error: error.message || error,
+//     });
+//   }
+// };
+
+
+const createResidential = async (req, res) => {
+  try {
+    const { userId, role } = req.user.user;
+
+    req.body.amenities = {
+      ...req.body.amenities,
+      electricityFacility: String(req.body.amenities.electricityFacility),
+      powerSupply: String(req.body.amenities.powerSupply),
+      distanceFromRoad: String(req.body.amenities.distanceFromRoad),
+    };
+
+    console.log("Request Body:", req.body);
+
+    // Generate propertyId
+    const propertyId = await generatePropertyId("PR", residentialModel);
+
+    let insertData = {
+      propertyId,
+      userId,
+      ...req.body,
+    };
+
+    // Function to identify proper nouns or names (can be expanded for more rules)
+    const isProperNoun = (word) => /^[A-Z][a-z]*$/.test(word);
+
+    // Recursive translation of fields
+    const translateFields = async (data) => {
+      const translatedData = { ...data };
+
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === "string" && /^[a-zA-Z\s]+$/.test(value)) {
+          if (isProperNoun(value)) {
+            // Skip translation for proper nouns
+            translatedData[`${key}Te`] = value;
+          } else {
+            // Translate strings to Telugu
+            const { text: translatedValue } = await translate(value, { to: "te" });
+            translatedData[`${key}Te`] = translatedValue;
+          }
+        } else if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+          // Recursively handle nested objects
+          translatedData[key] = await translateFields(value);
+        }
+      }
+      return translatedData;
+    };
+
+    // Translate fields
+    const sanitizedData = await translateFields(insertData);
+
+    // Assign CSR and enteredBy logic based on user role
+    if (role === 1) {
+      const csrData = await userModel.findById(userId);
+      sanitizedData.csrId = csrData?.assignedCsr || "";
+      sanitizedData.enteredBy = req.body.enteredBy || userId;
+    } else if (role === 5) {
+      const userData = await userModel.findOne({ email: req.body.agentDetails.userId });
+      sanitizedData.csrId = userId;
+      sanitizedData.userId = userData?._id?.toString() || sanitizedData.userId;
+      sanitizedData.enteredBy = req.body.enteredBy || userId;
+    }
+
+    // Handle missing latitude and longitude
+    if (!sanitizedData.address.latitude) delete sanitizedData.address.latitude;
+    if (!sanitizedData.address.longitude) delete sanitizedData.address.longitude;
+
+    // Validate data against the schema
+    const result = await residentialSchema.validateAsync(sanitizedData);
+
+    // Save to the database
+    const residential = new residentialModel(result);
+    await residential.save();
+
+    console.log("Residential Property Created:", residential);
+
+    // Notifications
+    const message = {
+      senderId: userId,
+      receiverId: role === 1 ? sanitizedData.csrId : req.body.agentDetails?.userId,
+      message: "A new Residential property has been added.",
+      notifyType: "Property",
+    };
+    let message1 = {
+      senderId: userId,
+      receiverId: 0,
+      message: "A new property added! Please check out",
+      details:`Property type : Residential of location ${req.body.address.district}`,
+      notifyType: "Customer",
+    };
+    const notification = new notifyModel(message);
+    const notification1 = new notifyModel(message1);
+    await notification.save();
+    await notification1.save();
+
+    res.status(200).send({
+      message: "Residential Property Added Successfully",
+      success: true,
+    });
+  } catch (error) {
+    if (error.isJoi) {
+      return res.status(422).json({
+        status: "error",
+        message: error.details.map((detail) => detail.message).join(", "),
+      });
+    }
+
+    console.error("Error Details:", error);
+
+    res.status(500).send({
+      message: "Error Adding Residential Property",
+      error: error.message || error,
+    });
+  }
+};
+
+
+
+const createResidentialWorkedWithOutSavingAllFields = async (req, res) => {
+  try {
+    const { userId, role } = req.user.user;
+
+    let insertData;
+    let message = {};
+
+    // Ensure amenities are stored as strings where required
+    req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
+    req.body.amenities.powerSupply = String(req.body.amenities.powerSupply);
+    req.body.amenities.distanceFromRoad = String(req.body.amenities.distanceFromRoad);
+
+    console.log("Request Body:", req.body);
+
+    // Generate propertyId
+    const propertyId = await generatePropertyId("PR", residentialModel);
+    insertData = {
+      propertyId, // Assign generated propertyId
+      userId, // Add the userId to the insertData object
+      ...req.body,
+    };
+
+    // Function to recursively translate string fields and append `Te` versions
+    const translateFields = async (data) => {
+      const translatedData = { ...data };
+
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === "string" && /^[a-zA-Z\s]+$/.test(value)) {
+          // Translate string values and add the `Te` suffix field
+          const { text: translatedValue } = await translate(value, { to: "te" });
+          translatedData[`${key}Te`] = translatedValue;
+        } else if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+          // Recursively handle nested objects
+          translatedData[key] = await translateFields(value);
+        } else {
+          // Leave non-string or array fields unchanged
+          translatedData[key] = value;
+        }
+      }
+      return translatedData;
+    };
+
+    // Perform translation for the insertData object
+    const sanitizedData = await translateFields(insertData);
+
+    // Handle user and CSR specific details
+    if (role === 1) {
+      if (req.body.enteredBy) {
+        const csrData = await userModel.find({ _id: userId });
+        sanitizedData.csrId = csrData[0].assignedCsr;
+      } else {
+        const csrData = await userModel.find({ _id: userId }, { password: 0 });
+        sanitizedData.enteredBy = userId;
+        sanitizedData.csrId = csrData[0].assignedCsr;
+      }
+
+      const csrData = await userModel.find({ _id: userId });
+
+      message = {
+        senderId: req.user.user.userId,
+        receiverId: csrData[0].assignedCsr,
+        message: `${csrData[0].firstName} ${csrData[0].lastName} has added a new property`,
+        notifyType: "Property",
+      };
+    }
+
+    if (role === 5) {
+      const userData = await userModel.find({ email: req.body.agentDetails.userId });
+
+      if (req.body.enteredBy) {
+        sanitizedData.csrId = userId;
+        sanitizedData.userId = userData[0]._id.toString();
+      } else {
+        sanitizedData.csrId = userId;
+        sanitizedData.enteredBy = userId;
+        sanitizedData.userId = userData[0]._id.toString();
+      }
+
+      const csrData = await userModel.find({ _id: req.user.user.userId });
+
+      message = {
+        senderId: req.user.user.userId,
+        receiverId: req.body.agentDetails.userId,
+        message: `${csrData[0].firstName} ${csrData[0].lastName} has added a new property`,
+        notifyType: "Property",
+      };
+    }
+
+    // Handle the case where latitude and longitude might be missing
+    if (!sanitizedData.address.latitude) {
+      delete sanitizedData.address.latitude;
+    }
+    if (!sanitizedData.address.longitude) {
+      delete sanitizedData.address.longitude;
+    }
+
+    // Validate the data against the Joi schema
+    const result = await residentialSchema.validateAsync(sanitizedData);
+    const residential = new residentialModel(result); // Create the new residential model instance
+
+    // Save the residential property to the database
+    await residential.save();
+    console.log("Residential Property Created:", residential);
+
+    let message1 = {
+      senderId: userId,
+      receiverId: 0,
+      message: "A new Residential property added! Please check out",
+      notifyType: "Customer",
+    };
+
+    // Save the notification for the property addition
+    const notify = new notifyModel(message);
+    const notification1 = new notifyModel(message1);
+    await notify.save();
+    await notification1.save();
+
+    // Send a success response
+    res.send({
+      message: "Residential Property Added Successfully",
+      success: true,
+    });
+  } catch (error) {
+    // Log detailed error information
+    if (error.isJoi) {
+      console.error("Validation Error:", error);
+      return res.status(422).json({
+        status: "error",
+        message: error.details.map((detail) => detail.message).join(", "),
+      });
+    }
+
+    console.error("Error Details:", error);
+
+    // Handle any other errors and send a response
+    res.status(500).send({
+      message: "Error Adding Residential Property",
+      error: error.message || error,
+    });
+  }
+};
+
+
 
 
 

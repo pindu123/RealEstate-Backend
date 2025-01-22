@@ -1055,7 +1055,8 @@ await notifyModel.insertMany(messages)
             { 'propertyDetails.landDetails.lease.plotSize': propertySize },
             { 'layoutDetails.plotSize': propertySize },
             { 'propertyDetails.flatSize': propertySize },
-            { 'landDetails.size': propertySize }
+            { 'landDetails.size': propertySize },
+          
           );
         }
     
@@ -1123,7 +1124,8 @@ await notifyModel.insertMany(messages)
               "address": prop.propertyDetails.landDetails.address.district,
               "propertyId": prop._id,
               "price": prop.propertyDetails.landDetails.sell.totalAmount || prop.propertyDetails.landDetails.rent.totalAmount || prop.propertyDetails.landDetails.lease.totalAmount,
-              "images": prop.propertyDetails.uploadPics
+              "images": prop.propertyDetails.uploadPics,
+              "propId":prop.propertyId,
             };
           } else if (prop.propertyType === "Layout" || prop.propertyType === "layout") {
             result = {
@@ -1133,7 +1135,8 @@ await notifyModel.insertMany(messages)
               "address": prop.layoutDetails.address.district,
               "propertyId": prop._id,
               "price": prop.layoutDetails.totalAmount,
-              "size": prop.layoutDetails.plotSize
+              "size": prop.layoutDetails.plotSize,
+              "propId":prop.propertyId,
             };
           } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
             result = {
@@ -1143,7 +1146,8 @@ await notifyModel.insertMany(messages)
               "size": prop.propertyDetails.flatSize,
               "propertyId": prop._id,
               "address": prop.address.district,
-              "price": prop.propertyDetails.totalCost
+              "price": prop.propertyDetails.totalCost,
+              "propId":prop.propertyId,
             };
           } else {
             result = {
@@ -1153,7 +1157,8 @@ await notifyModel.insertMany(messages)
               "size": prop.landDetails.size,
               "propertyId": prop._id,
               "address": prop.address.district,
-              "price": prop.landDetails.totalPrice
+              "price": prop.landDetails.totalPrice,
+              "propId":prop.propertyId,
             };
           }
           property.push(result);
@@ -1360,242 +1365,140 @@ const getAllCsrORMarketingAgent = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message }); // Send error response with message
   }
 };
-// const getPropertiesFilter=async(req,res)=>{
-//   try
-//   {
-//     let text=req.params.text
-
-//     text = text.charAt(0).toUpperCase() + text.slice(1);
-//    let text1 = text.charAt(0).toLowerCase() + text.slice(1);
-
-// let filterCriteria = { status: 0 };  
-
-// if (text) {
-//  filterCriteria.$or = [
-//    { 'propertyDetails.landDetails.address.district': text },
-//    { 'layoutDetails.address.district': text },
-//    { 'address.district': text },
-//    { 'propertyTitle': text },
-//    { 'layoutDetails.layoutTitle': text },
-//    { 'propertyDetails.apartmentName': text },
-//    {
-//      'landDetails.title':text
-//    },
-//    { 'propertyDetails.landDetails.address.district': text1 },
-//    { 'layoutDetails.address.district': text1 },
-//    { 'address.district': text1 },
-//    { 'propertyTitle': text1 },
-//    { 'layoutDetails.layoutTitle': text1 },
-//    { 'propertyDetails.apartmentName': text1 },
-//    {
-//      'landDetails.title':text1
-//    }
-//  ];
-// }
-
-
-// const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
-//   fieldModel.find({ ...filterCriteria  }),
-//   commercialModel.find({ ...filterCriteria }),
-//   residentialModel.find({ ...filterCriteria }),
-//   layoutModel.find({ ...filterCriteria })
-// ]);
-
-//  const properties = [
-//   ...fieldData,
-//   ...commercialData,
-//   ...residentialData,
-//   ...layoutData
-// ];
-
-
-
-// let property=[]
-//   for(let prop of properties)
-//   {
-// let result={}
-// if(prop.propertyType==="Commercial")
-// {
-//   result={
-//     "propertyType":prop.propertyType,
-//     "propertyTitle":prop.propertyTitle,
-//     "size":prop.propertyDetails.landDetails.sell.plotSize||prop.propertyDetails.landDetails.rent.plotSize||prop.propertyDetails.landDetails.lease.plotSize,
-//     "address":prop.propertyDetails.landDetails.address.district,
-//     "propertyId":prop._id,
-//     "price":prop.propertyDetails.landDetails.sell.totalAmount||prop.propertyDetails.landDetails.rent.totalAmount||prop.propertyDetails.landDetails.lease.totalAmount,
-//     "images":prop.propertyDetails.uploadPics
-//   }
-// }
-// else if(prop.propertyType==="Layout")
-// {
-//   result={
-//     "propertyTitle":prop.layoutDetails.layoutTitle,
-//     "propertyType":prop.propertyType,
-//     "images":prop.uploadPics,
-//     "address":prop.layoutDetails.address.district,
-//     "propertyId":prop._id,
-//     "price":prop.layoutDetails.totalAmount,
-//     "size":prop.layoutDetails.plotSize
-//   }
-// }
-// else if(prop.propertyType==="Residential")
-// {
-//  result={
-//   "propertyTitle":prop.propertyDetails.apartmentName,
-//   "propertyType":prop.propertyType,
-//   "images":prop.propPhotos,
-//   "size":prop.propertyDetails.flatSize,
-//   "propertyId":prop._id,
-//   "address":prop.address.district,
-//   "price":prop.propertyDetails.totalCost
-//  }
-
-// }
-
-// else
-// {
-//   result={
-//     "propertyTitle":prop.landDetails.title,
-//     "propertyType":prop.propertyType,
-//     "images":prop.landDetails.images,
-//     "size":prop.landDetails.size,
-//     "propertyId":prop._id,
-//     "address":prop.address.district,
-//     "price":prop.landDetails.totalPrice
-//    }
-// }
-
-
-// property.push(result)
-//   }
-
-// res.status(200).json(property)
-//   }
-//   catch(error)
-//   {
-// res.status(500).json("Internal Server Error")
-//   }
-// }
-
-// const getPropertiesFilter = async (req, res) => {
-//   try {
-//     let text = req.params.text;
-
-//     // Split the text into individual characters
-//     let chars = text.split('');
-
-//     // Build the filter criteria based on each character
-//     let filterCriteria = { status: 0 };
-
-//     // Loop through each character and apply a filter condition for each
-//     let orConditions = [];
-
-//     for (let char of chars) {
-//       let charCapitalized = char.charAt(0).toUpperCase() + char.slice(1);
-//       let charLowerCase = char.charAt(0).toLowerCase() + char.slice(1);
-
-//       // Add conditions for both capitalized and lower-case characters
-//       orConditions.push(
-//         { 'propertyDetails.landDetails.address.district': { $regex: charCapitalized, $options: 'i' } },
-//         { 'layoutDetails.address.district': { $regex: charCapitalized, $options: 'i' } },
-//         { 'address.district': { $regex: charCapitalized, $options: 'i' } },
-//         { 'propertyTitle': { $regex: charCapitalized, $options: 'i' } },
-//         { 'layoutDetails.layoutTitle': { $regex: charCapitalized, $options: 'i' } },
-//         { 'propertyDetails.apartmentName': { $regex: charCapitalized, $options: 'i' } },
-//         { 'landDetails.title': { $regex: charCapitalized, $options: 'i' } },
-//         { 'propertyDetails.landDetails.address.district': { $regex: charLowerCase, $options: 'i' } },
-//         { 'layoutDetails.address.district': { $regex: charLowerCase, $options: 'i' } },
-//         { 'address.district': { $regex: charLowerCase, $options: 'i' } },
-//         { 'propertyTitle': { $regex: charLowerCase, $options: 'i' } },
-//         { 'layoutDetails.layoutTitle': { $regex: charLowerCase, $options: 'i' } },
-//         { 'propertyDetails.apartmentName': { $regex: charLowerCase, $options: 'i' } },
-//         { 'landDetails.title': { $regex: charLowerCase, $options: 'i' } }
-//       );
-//     }
-
-//     // Apply the OR conditions to the filter criteria
-//     if (orConditions.length > 0) {
-//       filterCriteria.$or = orConditions;
-//     }
-
-//     // Execute the queries to get the data
-//     const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
-//       fieldModel.find({ ...filterCriteria }),
-//       commercialModel.find({ ...filterCriteria }),
-//       residentialModel.find({ ...filterCriteria }),
-//       layoutModel.find({ ...filterCriteria })
-//     ]);
-
-//     // Combine all the results
-//     const properties = [
-//       ...fieldData,
-//       ...commercialData,
-//       ...residentialData,
-//       ...layoutData
-//     ];
-
-//     // Prepare the response
-//     let property = [];
-//     for (let prop of properties) {
-//       let result = {};
-//       if (prop.propertyType === "Commercial") {
-//         result = {
-//           "propertyType": prop.propertyType,
-//           "propertyTitle": prop.propertyTitle,
-//           "size": prop.propertyDetails.landDetails.sell.plotSize || prop.propertyDetails.landDetails.rent.plotSize || prop.propertyDetails.landDetails.lease.plotSize,
-//           "address": prop.propertyDetails.landDetails.address.district,
-//           "propertyId": prop._id,
-//           "price": prop.propertyDetails.landDetails.sell.totalAmount || prop.propertyDetails.landDetails.rent.totalAmount || prop.propertyDetails.landDetails.lease.totalAmount,
-//           "images": prop.propertyDetails.uploadPics
-//         };
-//       } else if (prop.propertyType === "Layout") {
-//         result = {
-//           "propertyTitle": prop.layoutDetails.layoutTitle,
-//           "propertyType": prop.propertyType,
-//           "images": prop.uploadPics,
-//           "address": prop.layoutDetails.address.district,
-//           "propertyId": prop._id,
-//           "price": prop.layoutDetails.totalAmount,
-//           "size": prop.layoutDetails.plotSize
-//         };
-//       } else if (prop.propertyType === "Residential") {
-//         result = {
-//           "propertyTitle": prop.propertyDetails.apartmentName,
-//           "propertyType": prop.propertyType,
-//           "images": prop.propPhotos,
-//           "size": prop.propertyDetails.flatSize,
-//           "propertyId": prop._id,
-//           "address": prop.address.district,
-//           "price": prop.propertyDetails.totalCost
-//         };
-//       } else {
-//         result = {
-//           "propertyTitle": prop.landDetails.title,
-//           "propertyType": prop.propertyType,
-//           "images": prop.landDetails.images,
-//           "size": prop.landDetails.size,
-//           "propertyId": prop._id,
-//           "address": prop.address.district,
-//           "price": prop.landDetails.totalPrice
-//         };
-//       }
-
-//       property.push(result);
-//     }
-
-//     res.status(200).json(property);
-//   } catch (error) {
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
 
 const getPropertiesFilter = async (req, res) => {
   try {
     let text = req.params.text;
 
     let regex = new RegExp(text, 'i'); 
+    let filterCriteria = { status: 0 }; // Default filter criteria
+
+    let { page, limit } = req.query;
+
+    if (text) {
+      filterCriteria.$or = [
+        { 'propertyDetails.landDetails.address.district': { $regex: regex } },
+        { 'layoutDetails.address.district': { $regex: regex } },
+        { 'address.district': { $regex: regex } },
+        { 'propertyTitle': { $regex: regex } },
+        { 'layoutDetails.layoutTitle': { $regex: regex } },
+        { 'propertyDetails.apartmentName': { $regex: regex } },
+        { 'propertyDetails.propertyId': { $regex: regex } },
+        { 'landDetails.title': { $regex: regex } },
+        {'propertyId':{$regex: regex }},
+        // { 'propertyInterestedCount': { $regex: regex } },
+      ];
+    }
+
+    let fieldData = [];
+    let commercialData = [];
+    let residentialData = [];
+    let layoutData = [];
+
+    // Fetch the data from the models with or without pagination
+    if (page && limit) {
+      let offset = (page - 1) * limit;
+
+      [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
+        fieldModel.find({ ...filterCriteria }).skip(offset).limit(Number(limit)),
+        commercialModel.find({ ...filterCriteria }).skip(offset).limit(Number(limit)),
+        residentialModel.find({ ...filterCriteria }).skip(offset).limit(Number(limit)),
+        layoutModel.find({ ...filterCriteria }).skip(offset).limit(Number(limit)),
+      ]);
+    } else {
+      [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
+        fieldModel.find({ ...filterCriteria }),
+        commercialModel.find({ ...filterCriteria }),
+        residentialModel.find({ ...filterCriteria }),
+        layoutModel.find({ ...filterCriteria }),
+      ]);
+    }
+
+    // Combine all the results
+    const properties = [
+      ...fieldData,
+      ...commercialData,
+      ...residentialData,
+      ...layoutData,
+    ];
+
+    // Prepare the response
+    const property = properties.map((prop) => {
+      if (prop.propertyType === 'Commercial' || prop.propertyType === 'commercial') {
+        return {
+          propertyType: prop.propertyType,
+          propertyTitle: prop.propertyTitle,
+          size:
+            prop.propertyDetails.landDetails.sell?.plotSize ||
+            prop.propertyDetails.landDetails.rent?.plotSize ||
+            prop.propertyDetails.landDetails.lease?.plotSize,
+          address: prop.propertyDetails.landDetails.address.district,
+          propertyId: prop._id,
+          price:
+            prop.propertyDetails.landDetails.sell?.totalAmount ||
+            prop.propertyDetails.landDetails.rent?.totalAmount ||
+            prop.propertyDetails.landDetails.lease?.totalAmount,
+          images: prop.propertyDetails.uploadPics,
+          propertyInterestedCount: prop.propertyInterestedCount,
+          propId:prop.propertyId,
+        };
+      } else if (prop.propertyType === 'Layout' || prop.propertyType === 'layout') {
+        return {
+          propertyType: prop.propertyType,
+          propertyTitle: prop.layoutDetails.layoutTitle,
+          size: prop.layoutDetails.plotSize,
+          address: prop.layoutDetails.address.district,
+          propertyId: prop._id,
+          price: prop.layoutDetails.totalAmount,
+          images: prop.uploadPics,
+          propertyInterestedCount: prop.propertyInterestedCount,
+          propId:prop.propertyId,
+        };
+      } else if (prop.propertyType === 'Residential' || prop.propertyType === 'residential') {
+        return {
+          propertyType: prop.propertyType,
+          propertyTitle: prop.propertyDetails.apartmentName,
+          size: prop.propertyDetails.flatSize,
+          address: prop.address.district,
+          propertyId: prop._id,
+          price: prop.propertyDetails.totalCost,
+          images: prop.propPhotos,
+          propertyInterestedCount: prop.propertyInterestedCount,
+          propId:prop.propertyId,
+        };
+      } else {
+        return {
+          propertyType: prop.propertyType,
+          propertyTitle: prop.landDetails.title,
+          size: prop.landDetails.size,
+          address: prop.address.district,
+          propertyId: prop._id,
+          price: prop.landDetails.totalPrice,
+          images: prop.landDetails.images,
+          propertyInterestedCount: prop.propertyInterestedCount,
+          propId:prop.propertyId,
+        };
+      }
+    });
+
+    res.status(200).json(property);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    res.status(500).json('Internal Server Error');
+  }
+};
+
+const getPropertiesFilterInuse = async (req, res) => {
+  try {
+    let text = req.params.text;
+
+    let regex = new RegExp(text, 'i'); 
 
     let filterCriteria = { status: 0 };
+      
+    let page=req.query.page
+    let limit=req.query.limit
+
     // 
     if (text) {
       filterCriteria.$or = [
@@ -1607,17 +1510,35 @@ const getPropertiesFilter = async (req, res) => {
         { 'propertyDetails.apartmentName': { $regex: regex } },
         {'propertyDetails.propertyId':{$regex:regex}},
         { 'landDetails.title': { $regex: regex } },
-        
+        {'propertyInterestedCount':{$regex:regex}},
       ];
     }
-
+let fieldData=[]
+let commercialData=[]
+let residentialData=[]
+let layoutData=[]
     // Fetch the data from the models
-    const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
-      fieldModel.find({ ...filterCriteria }),
-      commercialModel.find({ ...filterCriteria }),
-      residentialModel.find({ ...filterCriteria }),
-      layoutModel.find({ ...filterCriteria })
-    ]);
+    if(page)
+    {
+      let offset=(page-1)*limit;
+
+        [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
+        fieldModel.find({ ...filterCriteria }).skip(offset).limit(limit),
+        commercialModel.find({ ...filterCriteria }).skip(offset).limit(limit),
+        residentialModel.find({ ...filterCriteria }).skip(offset).limit(limit),
+        layoutModel.find({ ...filterCriteria }).skip(offset).limit(limit)
+      ]);
+    }
+    else
+    {
+        [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
+        fieldModel.find({ ...filterCriteria }),
+        commercialModel.find({ ...filterCriteria }),
+        residentialModel.find({ ...filterCriteria }),
+        layoutModel.find({ ...filterCriteria })
+      ]);
+    }
+ 
 
     // Combine all the results
     const properties = [

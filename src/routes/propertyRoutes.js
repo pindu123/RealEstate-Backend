@@ -22,7 +22,8 @@ const {
   propertyBasedOnLocation,
   updatePropertyDetails,
   plansBasedProperties,
-  recentlyAddedProperties
+  recentlyAddedProperties,
+  propertyBasedOnDistrict
 } = require("../controllers/propertyController");
 
 const propertyRoutes = express.Router();
@@ -31,6 +32,8 @@ const apicache = require('apicache');
 let cache = apicache.middleware;
 
 // propertyRoutes.get('/latestprops',getLatestProps);
+
+propertyRoutes.get("/propertyByDistrict",propertyBasedOnDistrict);
 propertyRoutes.get("/recentlyAddedProperties",recentlyAddedProperties);
 propertyRoutes.put("/markassold/", updatePropertyStatus);
 propertyRoutes.get("/getpropbyid/:agentId", getPropertiesByUserId);
@@ -50,7 +53,6 @@ propertyRoutes.get('/countOfRatings/:propertyId/:propertyType',getCountOfRatings
 propertyRoutes.get('/userLocation/property',propertyBasedOnLocation);
 propertyRoutes.get("/plansBasedProperties",plansBasedProperties);
 propertyRoutes.get("/:location",cache('5 seconds'), getPropertiesByLocation); 
-
 propertyRoutes.patch("/updatePropertyDetails",updatePropertyDetails)
 
 module.exports = propertyRoutes;
