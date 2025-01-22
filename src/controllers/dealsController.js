@@ -1182,29 +1182,44 @@ const getCustomerDeals = async (req, res) => {
 
 // Helper function to fetch property data
 const fetchPropertyData = async (propertyType, propertyId) => {
-  try {
-    let property;
-    switch (propertyType) {
-      case "Layout":
-        property = await layoutModel.findById(propertyId).lean();
-        break;
-      case "Commercial":
-        property = await commercialModel.findById(propertyId).lean();
-        break;
-      case "Residential":
-        property = await residentialModel.findById(propertyId).lean();
-        break;
-      default:
-        property = await fieldModel.findById(propertyId).lean();
-    }
-    return property || null; // Return null if property not found
-  } catch (error) {
-    console.error(`Error fetching property (ID: ${propertyId}):`, error);
-    return null; // Return null if there's an error
+  switch (propertyType) {
+  case "Residential":
+  return await residentialModel.findOne({ _id: propertyId }).lean();
+  case "Agricultural land" || "Agricultural":
+  return await fieldModel.findOne({ _id: propertyId }).lean();
+  case "Agricultural":
+  return await fieldModel.findOne({ _id: propertyId }).lean();
+  
+  case "Commercial":
+  return await commercialModel.findOne({ _id: propertyId }).lean();
+  case "Layout":
+  return await layoutModel.findOne({ _id: propertyId }).lean();
+  default:
+  throw new Error(`Unknown propertyType: ${propertyType}`);
   }
-};
+  };
+  
+  
+  
+  
+  
+  
 
-
+// const fetchPropertyData = async (propertyType, propertyId) => {
+//   switch (propertyType) {
+//     case "Residential":
+//       return await residentialModel.findOne({ _id: propertyId }).lean();
+//     case "Agricultural land":
+//       return await fieldModel.findOne({ _id: propertyId }).lean();
+//     case "Commercial":
+//       return await commercialModel.findOne({ _id: propertyId }).lean();
+//     case "Layout":
+//       return await layoutModel.findOne({ _id: propertyId }).lean();
+//     default:
+//       throw new Error(`Unknown propertyType: ${propertyType}`);
+//   }
+// };
+const Fuse = require("fuse.js");
 
 const getCustomerDealsFiltered = async (req, res) => {
   try {
