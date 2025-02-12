@@ -5,6 +5,7 @@ const express = require("express");
 const path = require("path");
 const mongoose = require("mongoose");
 require("dotenv").config();
+require('./src/services/cronJob'); 
 const { google } = require("googleapis");
 // const analyticsData = google.analyticsdata("v1");
 
@@ -38,7 +39,7 @@ const apicache = require("apicache");
 const emBuildingRoutes = require("./src/routes/emBuildingRoutes");
 const emBookingRoutes = require("./src/routes/emBookingRoutes");
 const estateRoutes = require("./src/routes/estateRoutes");
-const adminRoutes = require("./src/routes/adminRoutes");
+// const adminRoutes = require("./src/routes/adminRoutes");
 const emAgentRoutes = require("./src/routes/emAgentRoutes");
 const viewsRoutes = require("./src/routes/viewsRoutes");
 const sellerRoutes = require("./src/routes/sellerRoutes");
@@ -54,6 +55,11 @@ const taskRoutes = require("./src/routes/tasksRoutes");
 const dealsRoutes = require("./src/routes/dealsRoutes");
 const meetingRoutes = require("./src/routes/meetingRoutes");
 const activityRoutes = require("./src/routes/activityRoutes");
+const marketingAgent = require("./src/routes/marketingAgentRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
+const socialMedia = require("./src/routes/socialMediaPostRoutes");
+const auctionRoutes = require("./src/routes/auctionRoutes");
+const filterRoutes = require("./src/routes/filterRoutes");
 
 let cache = apicache.middleware;
 
@@ -107,11 +113,11 @@ app.use("/estate", verifyJwt, estateRoutes);
 app.use("/admin", verifyJwt, adminRoutes);
 app.use("/emAgent", verifyJwt, emAgentRoutes);
 app.use("/views", verifyJwt, viewsRoutes);
-
+app.use("/marketingAgent",verifyJwt,marketingAgent)
 app.use("/chat", verifyJwt, chatRoutes);
 app.use("/buyer", verifyJwt, buyerRoutes);
 app.use("/seller", verifyJwt, sellerRoutes);
-
+app.use("/socialMedia",verifyJwt,socialMedia);
 app.use("/customer", verifyJwt, customerRoutes);
 app.use("/complaint", verifyJwt, complaintRoute);
 
@@ -123,6 +129,11 @@ app.use("/activity",verifyJwt,activityRoutes)
  
 app.use("/meeting",verifyJwt,meetingRoutes);
 app.use(errorHandler);
+
+
+app.use("/filterRoutes",verifyJwt,filterRoutes)
+
+app.use("/auction",auctionRoutes)
 
 app.use("/api", apiRouter);
 app.use(
