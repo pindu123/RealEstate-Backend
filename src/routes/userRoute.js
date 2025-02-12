@@ -10,6 +10,7 @@ const {
   createCSR,
   getCsr,
   updateSubscription,
+  findAnAgent,
 } = require("../controllers/userController");
 
 const userRoutes = express.Router();
@@ -23,6 +24,7 @@ userRoutes.get("/getnames/:role", namesBasedOnRole);
 userRoutes.get("/getusersbyrole/:role", getUsersByRole);
 userRoutes.post("/createCSR", createCSR);
 userRoutes.get("/myCsr",getCsr);
+userRoutes.put("/updateSubscription",updateSubscription);
 
-userRoutes.put("/updateSubscription",updateSubscription)
+
 module.exports = userRoutes;

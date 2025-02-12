@@ -346,6 +346,15 @@ const commercialSchema = new mongoose.Schema(
         },
       },
       amenities: {
+        isParkingFacility:{
+           type:Boolean,
+        },
+        security:{
+            type:Boolean,
+        },
+        powerBackup:{
+            type:Boolean,
+       },
         isElectricity: {
           type: String,
         },
@@ -394,6 +403,11 @@ const commercialSchema = new mongoose.Schema(
     },
     propertyInterestedCount: {
       type: Number,
+    },
+    propertyOnHold:{
+      type:String,
+      default:'no'
+
     },
   },
   { timestamps: true }

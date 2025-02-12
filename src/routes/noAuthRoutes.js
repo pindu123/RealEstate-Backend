@@ -1,7 +1,7 @@
 const express = require("express");
 const { userLoginController, otpForLogin, otpLogin, verifyPhno, verifyEmail, resetMail, contactUs } = require("../controllers/noAuthController");
 const { display } = require("../controllers/defaultController");
-const { createUser } = require("../controllers/userController");
+const { createUser, findAnAgent } = require("../controllers/userController");
 const {
   getAllProperties,
   resetRatings,
@@ -26,5 +26,5 @@ noAuthRouter.post("/otp",otpForLogin);
 noAuthRouter.post('/verify',otpLogin);
 noAuthRouter.put("/resetPassword", resetMail);
 noAuthRouter.post("/contactUs",contactUs);
-
+noAuthRouter.get("/findAnAgent",findAnAgent);
 module.exports = noAuthRouter;

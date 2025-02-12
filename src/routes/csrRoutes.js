@@ -19,13 +19,10 @@ const {
 const csrRoutes = express.Router();
 
 csrRoutes.get("/getUnAssignedAgents/:csrId", getUnAssignedAgents);
-
 csrRoutes.get("/getAssignedAgents/:csrId", getAssignedAgents);
 csrRoutes.get("/getAgentByPhone/:contact", getAgentByPhone);
 csrRoutes.put("/assignAgentToCSR", assignAgentToCSR);
-
 csrRoutes.get("/getPropsByCsr/:csrId", getPropsByCsr);
-
 csrRoutes.get("/getAssignedCsr/:agentId",getAssignedCsr)
 csrRoutes.post("/assignCustomer", assignCustomerToAgent);
 csrRoutes.post("/assigneProperty",assignPropertyToAgent);

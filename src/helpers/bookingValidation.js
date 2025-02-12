@@ -28,6 +28,7 @@ const userBookingSchema = Joi.object({
     return formattedValue;
   }, "formatting location"),
 
+  agentRole:Joi.string().optional()
  
 });
 
@@ -59,7 +60,8 @@ const agentBookingSchema = Joi.object({
       return formattedValue;
     }, "formatting location"),
   
-   
+    agentRole:Joi.string().optional()
+
   });
 
 

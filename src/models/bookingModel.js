@@ -40,6 +40,10 @@ const bookingSchema = new mongoose.Schema(
       default: 0,
       required: true,
     },
+
+  agentRole:{
+    type:String
+  }
   },
   { timestamps: true }
 );

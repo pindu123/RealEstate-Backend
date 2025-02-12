@@ -12,13 +12,67 @@ const Counter = require("../models/counterModel");
 const getFields = async (req, res) => {
   try {
     const userId = req.user.user.userId;
+
+    console.log(userId)
     const fields = await fieldModel
       .find({ userId: userId })
       .sort({ status: 1, updatedAt: -1 });
+
+ let resultData=[]
+
+    for (let field of fields) {
+      const id = field._id
+
+      const data = await auctionModel.find({ propertyId: id })
+
+      const reservation = await propertyReservation.find({ "propId": id })
+
+      field.auctionData = data;
+
+
+      if (reservation.length > 0) {
+        field.reservedBy = reservation[0].userId
+      }
+
+      console.log(field.reservedBy)
+
+      if (data.length === 0) {
+        field.auctionStatus = "InActive";
+
+      }
+      else {
+
+         for(let auction of data)
+          {
+            if(auction.auctionStatus==="active")
+            {
+               field.auctionStatus = auction.auctionStatus;
+              break;           
+            }
+            else
+            {
+              field.auctionStatus = auction.auctionStatus;
+
+            }
+             
+          } 
+ 
+        console.log( field.auctionStatus,data)
+        const buyerData = data[0].buyers
+        if (buyerData.length > 0) {
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+        }
+         field.auctionData.buyers = buyerData
+      }
+resultData.push({...field._doc,"reservedBy":field.reservedBy,"auctionStatus":field.auctionStatus,"auctionData":field.auctionData})
+      console.log("fields",field.reservedBy)
+    }
+
+
     if (fields.length === 0) {
       return res.status(200).json({ data: [] });
     }
-    res.status(200).send({ data: fields, count: fields.length });
+    res.status(200).send({ data: resultData, count: fields.length });
   } catch (error) {
     res.status(500).json({ message: "Error fetching fields", error });
   }
@@ -40,7 +94,7 @@ const getFields = async (req, res) => {
 //           csrId: csrData[0].assignedCsr,
 //           role,
 //           ...req.body,
- 
+
 //         };
 //       } else {
 //         const csrData = await userModel.find({ _id: userId });
@@ -74,7 +128,7 @@ const getFields = async (req, res) => {
 
 //           role,
 //           ...req.body,
- 
+
 //           userId: userData[0]._id.toString(),
 //         };
 //       } else {
@@ -84,7 +138,7 @@ const getFields = async (req, res) => {
 //           enteredBy: userId,
 //           ...req.body,
 //           userId: userData[0]._id.toString(),
- 
+
 //         };
 //       }
 //       const csrData = await userModel.find({ _id: req.user.user.userId });
@@ -101,11 +155,11 @@ const getFields = async (req, res) => {
 //     if (fieldDetailsData.address.latitude === '' || fieldDetailsData.address.latitude === undefined) {
 //       delete fieldDetailsData.address.latitude;
 //     }
-    
+
 //     if (fieldDetailsData.address.longitude === '' || fieldDetailsData.address.longitude === undefined) {
 //       delete fieldDetailsData.address.longitude;
 //     }
-    
+
 //     const validatedData = await fieldValidationSchema.validateAsync(
 //       fieldDetailsData,
 //       { abortEarly: false }
@@ -139,7 +193,7 @@ const insertFieldDetail = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity); // Ensure electricity is a string
-    
+
     let fieldDetailsData;
     let message = {};
 
@@ -148,10 +202,10 @@ const insertFieldDetail = async (req, res) => {
     if (!userData) {
       return res.status(409).json({ message: "User not found" });
     }
-    console.log(userData,'  user data')
-    console.log(userData.assignedCsr,' csr data' )
+    console.log(userData, '  user data')
+    console.log(userData.assignedCsr, ' csr data')
     if (role === 1) { // CSR role
-      const csrId=userData.assignedCsr;
+      const csrId = userData.assignedCsr;
 
       const csrData = await userModel.findById(csrId);
       console.log(csrData[0]);
@@ -239,7 +293,7 @@ const insertFieldDetail = async (req, res) => {
     console.log("Field details added successfully");
 
     // Create and save the notification
-    
+
     const notification = new notifyModel(message);
     await notification.save();
 
@@ -281,11 +335,13 @@ const generatePropertyId = async (typePrefix, model) => {
   return `${typePrefix}${lastId + 1}`;
 };
 
- const translate = require('@iamtraction/google-translate'); // Import translation library
+const translate = require('@iamtraction/google-translate'); // Import translation library
+const auctionModel = require("../models/auctionModel");
+const propertyReservation = require("../models/propertyReservation");
 
 const insertFieldDetails = async (req, res) => {
   try {
-    console.log(req.body,' fields');
+    console.log(req.body, ' fields');
     const { userId, role } = req.user.user;
     req.body.amenities.electricity = String(req.body.amenities.electricity);
 
@@ -370,19 +426,19 @@ const insertFieldDetails = async (req, res) => {
     const validatedData = await fieldValidationSchema.validateAsync(sanitizedData, { abortEarly: false });
     const fieldDetails = new fieldModel(validatedData);
     await fieldDetails.save();
-    let message1={
-      senderId:userId,
-      receiverId:0,
-      message:"A new property added ! Please checkout",
-      details:`Property type : Agriculutral of location ${req.body.address.district}`,
-      notifyType:"Customer",
+    let message1 = {
+      senderId: userId,
+      receiverId: 0,
+      message: "A new property added ! Please checkout",
+      details: `Property type : Agriculutral of location ${req.body.address.district}`,
+      notifyType: "Customer",
     }
-  
-      console.log("Notification Object:", message);
-     
-      const notification1=new notifyModel(message1);
-      
-      await notification1.save();
+
+    console.log("Notification Object:", message);
+
+    const notification1 = new notifyModel(message1);
+
+    await notification1.save();
     // Validate and save the notification object
     const notification = new notifyModel(message);
     await notification.save();
@@ -478,17 +534,17 @@ const insertFieldDetailsInUse = async (req, res) => {
 
     // Validate and save the notification object
 
-  let message1={
-    senderId:userId,
-    receiverId:0,
-    message:"A new property added ! Please checkout",
-    notifyType:"Customer"
-  }
+    let message1 = {
+      senderId: userId,
+      receiverId: 0,
+      message: "A new property added ! Please checkout",
+      notifyType: "Customer"
+    }
 
     console.log("Notification Object:", message);
     const notification = new notifyModel(message);
-    const notification1=new notifyModel(message1);
-    await notification.save(); 
+    const notification1 = new notifyModel(message1);
+    await notification.save();
     await notification1.save();
 
     res.status(201).json({
@@ -565,6 +621,40 @@ const getAllFields = async (req, res) => {
       return fieldObj;
     });
 
+
+    for (let fields of updatedFields) {
+      const id = fields._id
+
+      const data = await auctionModel.find({ propertyId: id })
+
+      const reservation = await propertyReservation.find({ "propId": id })
+
+      fields.auctionData = data[0];
+
+
+      if (reservation.length > 0) {
+        fields.reservedBy = reservation[0].userId
+      }
+
+      if (data.length === 0) {
+        fields.auctionStatus = "InActive";
+
+      }
+      else {
+
+
+        console.log(data[0].buyers)
+        const buyerData = data[0].buyers
+        if (buyerData.length > 0) {
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+        }
+        fields.auctionStatus = data[0].auctionStatus;
+        fields.auctionData.buyers = buyerData
+      }
+
+    }
+
+
     res.status(200).json({ data: updatedFields, count: updatedFields.length });
   } catch (error) {
     console.error(error);
@@ -598,14 +688,14 @@ const getByDistrict = async (req, res) => {
 
 const editFieldDetails = async (req, res) => {
   try {
-   
-    let propertyId=req.body.propertyId
-    let data={...req.body}
-      const updateFileds = await fieldModel.findByIdAndUpdate(propertyId, data , {
-      new: true, 
+
+    let propertyId = req.body.propertyId
+    let data = { ...req.body }
+    const updateFileds = await fieldModel.findByIdAndUpdate(propertyId, data, {
+      new: true,
       runValidators: true,
     });
-    
+
     res.status(200).json("Updated Successfully");
   } catch (error) {
     console.log(error);

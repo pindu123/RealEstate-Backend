@@ -19,6 +19,8 @@ const locationModel = require("../models/locationModel");
 const userModel = require("../models/userModel");
 const { AwsInstance } = require("twilio/lib/rest/accounts/v1/credential/aws");
 const dealsModel = require("../models/propertyDealsModel");
+const auctionModel = require("../models/auctionModel");
+const propertyReservation = require("../models/propertyReservation");
 
 const getPropertiesByLocation = async (req, res) => {
   try {
@@ -184,11 +186,64 @@ if (propertySize && sizeUnit) {
 
     const allProperties = [...fieldData, ...commercialProperties, ...layoutProperties, ...residentialProperties];
 
-    if (allProperties.length === 0) {
+const resultData=[]
+   
+    for(let fields of allProperties)
+      {
+        const id=fields._id
+  
+        const data=await auctionModel.find({propertyId:id})
+         
+        const reservation=await propertyReservation.find({"propId":id})
+
+
+        if(reservation.length>0)
+          {
+            fields.reservedBy=reservation[0].userId
+
+            console.log("reservererddsdf",fields.resercedBy)
+          }
+
+        fields.auctionData=data[0];
+  
+        console.log("auction",data[0])
+           if(data.length===0)
+          {
+            fields.auctionStatus= "InActive";
+  console.log("field.auctionStatus", fields.auctionStatus)
+          }
+          else{
+  
+  
+            console.log(data[0].buyers)
+        const buyerData=data[0].buyers 
+  if(buyerData.length>0)
+  {
+        buyerData.sort((a,b)=>b.bidAmount-a.bidAmount)
+  }
+            fields.auctionStatus=data[0].auctionStatus  ;
+   fields.auctionData.buyers=buyerData
+          }    
+   console.log("asd",fields.auctionStatus)
+
+          resultData.push({
+            ...fields._doc,
+            "auctionStatus":fields.auctionStatus,
+            "auctionData":fields.auctionData,
+            "reservedBy":fields.resercedBy
+          })
+       }
+  
+
+ 
+
+
+
+    if (resultData.length === 0) {
       return res.status(409).json({ message: "No properties found" });
     }
 
-    res.status(200).json(allProperties);
+    res.status(200).json(resultData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -515,6 +570,12 @@ const getAllProperties = async (req, res) => {
     let residentials = [];
     let commercials = [];
     let layouts = [];
+
+
+    let offset=req.query.offset
+
+
+    console.log("offset",offset)
     
     // Get count of documents
     const fieldsCount = await fieldModel.countDocuments();
@@ -523,16 +584,34 @@ const getAllProperties = async (req, res) => {
     const layoutCount = await layoutModel.countDocuments();
     let fieldProperties, residentialProperties, commercialProperties, layoutProperties;
 
-    // Fetch at most 8 properties for each type
+
+
+    if(offset==="1")
+    {
+     if (fieldsCount > 4) {
+      fieldProperties = await fieldModel
+        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1,  "landDetails.titleTe" :1, "propertyTypeTe":1 })
+        .sort({ createdAt: -1 }).limit(4);
+    } else {
+      fieldProperties = await fieldModel
+        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1, "landDetails.titleTe" :1, "propertyTypeTe":1 })
+        .sort({ createdAt: -1 }).limit(4);
+    }
+  }
+  else
+  {
+
     if (fieldsCount > 4) {
       fieldProperties = await fieldModel
-        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , districtTe:1, titleTe :1, propertyTypeTe:1 })
+        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1,  "landDetails.titleTe" :1, "propertyTypeTe":1 })
         .sort({ createdAt: -1 });
     } else {
       fieldProperties = await fieldModel
-        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , districtTe:1, titleTe :1, propertyTypeTe:1 })
+        .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1, "landDetails.titleTe" :1, "propertyTypeTe":1 })
         .sort({ createdAt: -1 });
     }
+
+  }
 
     // Iterate over field properties and push to the fields array
     fieldProperties.forEach((property) => {
@@ -540,29 +619,46 @@ const getAllProperties = async (req, res) => {
         propertyId: property.id,
         propId: property.propertyId,
         propertyType: property.propertyType,
-        propertyTypeTe: property.propertyTypeTe || 'NA',
+        propertyTypeTe: property.propertyTypeTe || property.propertyTypeTe,
         images: property.landDetails.images,
         price: property.landDetails.totalPrice,
         size: property.landDetails.size,
         sizeUnit: property.landDetails.sizeUnit,
         title: property.landDetails.title,
-        titleTe: property.landDetails.titleTe || 'NA',
+        titleTe: property.landDetails.titleTe ||property.landDetails.title ,
         district: property.address.district,
-        districtTe: property.address.districtTe || 'NA',
+        districtTe: property.address.districtTe || property.address.district,
         propertyInterestedCount: property.propertyInterestedCount,
       });
     });
 
-    // Fetch data from Residential properties collection
+
+    if(offset==="1")
+    {
+     if (residentialCount > 4) {
+      residentialProperties = await residentialModel
+        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1,"propertyDetails.apartmentNameTe": 1, "propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1, "address.district": 1,"address.districtTe": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    } else {
+      residentialProperties = await residentialModel
+        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1, "propertyDetails.apartmentNameTe": 1,"propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1,"address.districtTe": 1, "address.district": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    }
+  }
+  else
+  {
+   
     if (residentialCount > 4) {
       residentialProperties = await residentialModel
-        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1, "propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1, "address.district": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1,"propertyDetails.apartmentNameTe": 1, "propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1, "address.district": 1,"address.districtTe": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     } else {
       residentialProperties = await residentialModel
-        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1, "propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1, "address.district": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1, "propertyDetails.apartmentNameTe": 1,"propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1,"address.districtTe": 1, "address.district": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     }
+
+  }
 
     // Iterate over residential properties and push to the residentials array
     residentialProperties.forEach((property) => {
@@ -576,24 +672,40 @@ const getAllProperties = async (req, res) => {
         size: property.propertyDetails.flatSize,
         sizeUnit: property.propertyDetails.sizeUnit,
         title: property.propertyDetails.apartmentName,
-        sizeUnitTe: property.propertyDetails.sizeUnitTe || 'NA',
-        titleTe: property.propertyDetails.apartmentNameTe || 'NA',
+        sizeUnitTe: property.propertyDetails.sizeUnitTe || property.propertyDetails.sizeUnit,
+        titleTe: property.propertyDetails.apartmentNameTe || property.propertyDetails.apartmentName,
         district: property.address.district,
-        districtTe: property.address.districtTe || 'NA',
+        districtTe: property.address.districtTe || property.address.district,
       });
     });
 
-    // Fetch data from Commercial properties collection
+
+
+ if(offset==="1")
+ {
+
+     if (commercialCount > 4) {
+      commercialProperties = await commercialModel
+        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1,propertyTitleTe: 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    } else {
+      commercialProperties = await commercialModel
+        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1, propertyTitleTe: 1,propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    }
+  }
+  else
+  {
     if (commercialCount > 4) {
       commercialProperties = await commercialModel
-        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
+        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1,propertyTitleTe: 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     } else {
       commercialProperties = await commercialModel
-        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
+        .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1, propertyTitleTe: 1,propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     }
-
+  }
     // Iterate over commercial properties and push to the commercials array
     commercialProperties.forEach((property) => {
       let price, size;
@@ -615,30 +727,44 @@ const getAllProperties = async (req, res) => {
         propertyId: property.id,
         propId: property.propertyId,
         propertyType: property.propertyType,
-        propertyTypeTe: property.propertyTypeTe || 'NA',
+        propertyTypeTe: property.propertyTypeTe ||  property.propertyType,
         images: property.propertyDetails.uploadPics,
         price: price,
         size: size,
         sizeUnit: landDetails.sell?.sizeUnit || landDetails.lease?.sizeUnit || landDetails.rent?.sizeUnit || 'NA',
         title: property.propertyTitle,
         district: landDetails?.address?.district || 'NA',
-        titleTe: property.propertyTitleTe || 'NA',
-        districtTe: landDetails?.address?.districtTe || 'NA',
+        titleTe: property.propertyTitleTe ||property.propertyTitle,
+        districtTe: landDetails?.address?.districtTe || landDetails?.address?.district ,
         propertyInterestedCount: property.propertyInterestedCount,
       });
     });
 
-    // Fetch data from Layout properties collection
+
+if(offset==="1")
+{
     if (layoutCount > 4) {
       layoutProperties = await layoutModel
-        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1, "layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1,"layoutDetails.layoutTitleTe": 1, "layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    } else {
+      layoutProperties = await layoutModel
+        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1, "layoutDetails.layoutTitleTe": 1,"layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .sort({ createdAt: -1 }).limit(4)
+    }
+  }
+  else
+  {
+    if (layoutCount > 4) {
+      layoutProperties = await layoutModel
+        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1,"layoutDetails.layoutTitleTe": 1, "layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     } else {
       layoutProperties = await layoutModel
-        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1, "layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
+        .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1, "layoutDetails.layoutTitleTe": 1,"layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
         .sort({ createdAt: -1 });
     }
-
+  }
     // Iterate over layout properties and push to the layouts array
     layoutProperties.forEach((property) => {
       layouts.push({
@@ -955,28 +1081,24 @@ const recentlyAddedProperties = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(3)
       .exec();
-      console.log(agriculturalProperties,' agriculture')
     // Fetch recently added residential properties
     residentialProperties = await residentialModel
       .find()
       .sort({ createdAt: -1 })
       .limit(3)
       .exec();
-      console.log(agriculturalProperties,' residential')
     // Fetch recently added commercial properties
     commercialProperties = await commercialModel
       .find()
       .sort({ createdAt: -1 })
       .limit(3)
       .exec();
-      console.log(agriculturalProperties,' commercial')
     // Fetch recently added layout properties
     layoutProperties = await layoutModel
       .find()
       .sort({ createdAt: -1 })
       .limit(3)
       .exec();
-      console.log(agriculturalProperties,' layout')
     // Combine all properties
     const allProperties = [
       ...agriculturalProperties,
@@ -1026,7 +1148,6 @@ const recentlyAddedProperties = async (req, res) => {
 //       rating,
 //     };
 //     const result = await propertyRatingSchema.validateAsync(ratingsData);
-//     console.log("result", result);
 //     const newRating = new propertyRatingModel(result);
 //     await newRating.save();
 
@@ -1126,7 +1247,6 @@ const insertPropertyRatings = async (req, res) => {
       rating,
     };
     const result = await propertyRatingSchema.validateAsync(ratingsData);
-    console.log("result", result);
     const newRating = new propertyRatingModel(result);
     await newRating.save();
 
@@ -1207,7 +1327,6 @@ const insertPropertyRatings = async (req, res) => {
           success: false,
         });
       }
-      console.log(updatedProperty);
     }
 
     res.status(201).json({
@@ -1241,7 +1360,6 @@ const getPropertyRatings = async (req, res) => {
   try {
     const result = await validateId.validateAsync(req.params);
     const { propertyId } = result;
-    console.log(propertyId);
     const ratings = await propertyRatingModel.find({ propertyId: propertyId });
     if (ratings.length === 0) {
       return res.status(409).json({ message: "No ratings found" });
@@ -1309,7 +1427,6 @@ const getPropertyRatings = async (req, res) => {
 //       agentCity: agent.city,
 //       agentProfilePicture: agent.profilePicture,
 //     };
-//     console.log(properties);
 //     res.status(200).json(properties);
 //   } catch (error) {
 //     if (error.isJoi) {
@@ -1543,7 +1660,6 @@ const getPropertyRatings = async (req, res) => {
 //       agentCity: agent.city,
 //       agentProfilePicture: agent.profilePicture,
 //     };
-//     console.log(properties);
 //     res.status(200).json(properties);
     
 //   } catch (error) {
@@ -1566,10 +1682,10 @@ const getPropertiesById = async (req, res) => {
     // Validate incoming request parameters
     const result = await validateIdAndType.validateAsync(req.params);
     const { propertyType, propertyId } = result;
-
+console.log("efsdfsfdsf")
  
-    const userId = req.user?.user?.userId; 
-
+    const userId = req.user.user.userId; 
+console.log("userID",userId)
     // Check if the property is part of any deal for this user
     const deal = await dealsModel.findOne({ propertyId, customerId: userId });
 
@@ -1577,8 +1693,7 @@ const getPropertiesById = async (req, res) => {
     let interestedIn = 0; // Default value if no deal is found
 
     if (deal) {
-      // Property exists in a deal, fetch the property details based on propertyType
-      const { propertyType: dealPropertyType } = deal;
+       const { propertyType: dealPropertyType } = deal;
 
       if (dealPropertyType === "Agricultural" || dealPropertyType === "Agricultural land") {
         properties = await fieldModel.findOne({ _id: propertyId });
@@ -1594,8 +1709,7 @@ const getPropertiesById = async (req, res) => {
         interestedIn = deal.interestIn; // Use the `interestedIn` status from the deal
       }
     } else {
-      // Property is not in a deal, fetch directly by propertyType
-      if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
+       if (propertyType === "Agricultural" || propertyType === "Agricultural land") {
         properties = await fieldModel.findOne({ _id: propertyId });
       } else if (propertyType === "Residential") {
         properties = await residentialModel.findOne({ _id: propertyId });
@@ -1606,19 +1720,16 @@ const getPropertiesById = async (req, res) => {
       }
     }
 
-    // If no properties found based on propertyId
-    if (!properties) {
+     if (!properties) {
       return res.status(409).json({ message: "No properties found" });
     }
 
-    // Fetch agent details
-    const agent = await usersModel.findById(properties.userId);
+     const agent = await usersModel.findById(properties.userId);
     if (!agent) {
       return res.status(409).json({ message: "Agent not found" });
     }
 
-    // Prepare the property data with agent details and the `interestedIn` field
-    const propertyDetails = {
+     const propertyDetails = {
       ...properties._doc,
       interestedIn,
       agentName: agent.firstName + " " + agent.lastName,
@@ -1689,11 +1800,37 @@ const getPropertiesById = async (req, res) => {
     if (filteredProperties) {
       Object.assign(propertyDetails, filteredProperties._doc);
     }
+    console.log("ad")
 
+    
+    propertyDetails.auctionStatus="inActive"
+
+ 
+    console.log("ad")
+    const  reservation=await propertyReservation.find({propId:propertyId})
+    console.log(reservation.length,"asdas")
+    if(reservation.length>0)
+    {
+    propertyDetails.reservedBy=reservation[0].userId
+console.log( propertyDetails.reservedBy)
+ 
+    }
+
+    
+    const auctionData=await auctionModel.find({propertyId:propertyDetails._id,auctionStatus:"active"})
+
+
+    if(auctionData.length>0)
+    {
+      propertyDetails.auctionData=auctionData
+      propertyDetails.auctionStatus="active"
+    }
     // Sending final response
     res.status(200).json(propertyDetails);
   } catch (error) {
     // Error handling
+
+    console.log(error)
     if (error.isJoi) {
       console.log(error);
       return res.status(422).json({
@@ -1847,7 +1984,6 @@ const getLatestProps = async (req, res) => {
     residential[0].propertyType = "Residential";
     commercial[0].propertyType = "Commercial";
     layout[0].propertyType = "Layout";
-    console.log(field);
     properties.push(field[0]);
     properties.push(field[1]);
     properties.push(commercial[0]);
@@ -1884,7 +2020,6 @@ const getProperty = async (req, res) => {
     } else if (propertyId !== "@") {
       query._id = propertyId;
     }
-    console.log("query", query);
     let propertyModel;
     if (propertyType === "Agricultural") {
       propertyModel = fieldModel;
@@ -1910,7 +2045,6 @@ const getProperty = async (req, res) => {
 }
 else
 {
-  console.log("awsdaddsdadada")
       properties = await propertyModel
       .find(query)
       .sort({ status: 1, updatedAt: -1 })
@@ -1937,7 +2071,6 @@ else
 
 //api to get the highest price among all the properties
 // const maxPrice = async (req, res) => {
-//   console.log(req.params);
 //   const { type, sell, rent, lease, flat, house } = req.params;
 
 //   try {
@@ -1961,7 +2094,6 @@ else
 //         let price = 0;
 //         const propType = property.propertyDetails.type;
 //         price = property.propertyDetails.totalCost;
-//         console.log(propType, " ", price);
 //         if (!price) {
 //           price = 0;
 //         }
@@ -2038,7 +2170,6 @@ else
 //       return res.status(400).json("Invalid");
 //     }
 
-//     console.log(response);
 //     return res.status(200).json({ maxPrice: response });
 //   } catch (error) {
 //     return res.status(500).json("Internal server error");
@@ -2046,7 +2177,6 @@ else
 // };
 
 const maxPrice = async (req, res) => {
-  console.log(req.params);
   const { type, sell, rent, lease, flat, house } = req.params;
   const userId = req.user.user.userId;
   try {
@@ -2070,7 +2200,6 @@ const maxPrice = async (req, res) => {
         let price = 0;
         const propType = property.propertyDetails.type;
         price = property.propertyDetails.totalCost;
-        console.log(propType, " ", price);
         if (!price) {
           price = 0;
         }
@@ -2146,8 +2275,6 @@ const maxPrice = async (req, res) => {
     } else {
       return res.status(400).json("Invalid");
     }
-
-    console.log(response);
     return res.status(200).json({ maxPrice: response });
   } catch (error) {
     return res.status(500).json("Internal server error");
@@ -2188,7 +2315,6 @@ const maxPrice = async (req, res) => {
 //           let price = 0;
 //           const propType = property.propertyDetails.type;
 //           price = property.propertyDetails.totalCost;
-//           console.log(propType, " ", price);
 //           if (!price) {
 //             price = 0;
 //           }
@@ -2321,7 +2447,6 @@ const maxPrice = async (req, res) => {
 //         return res.status(400).json("Invalid");
 //       }
 
-//       console.log(response);
 //       if(unsold === "unsold" && sold === "@"){
 //        return res.status(200).json({ maxPrice: unsoldResponse });
 //       }
@@ -2480,7 +2605,6 @@ const getPropsByLocation = async (req, res) => {
 
   const result = await validateLocation.validateAsync(req.params);
   const { type, location } = result;
-  console.log(location);
   try {
     if (location === "All") {
       if (type === "agriculture") {
@@ -2634,18 +2758,15 @@ const getMyPropsByLocation = async (req, res) => {
 
   const result = await validateLocation.validateAsync(req.params);
   let { userId } = req.user.user;
-  console.log(userId);
   const { type, location } = result;
-  console.log(location);
   try {
     if (location === "All") {
       if (type === "agriculture") {
         const props = await fieldModel
           .find({ userId: userId })
           .sort({ status: 1, updatedAt: -1 });
-        console.log(props);
         return res.status(200).json(props);
-      } else if (type === "residential") {
+      } else if (type === "residential") { 
         const props = await residentialModel
           .find({ userId: userId })
           .sort({ status: 1, updatedAt: -1 });
@@ -2764,11 +2885,61 @@ const getMyPropsByLocation = async (req, res) => {
   properties = await model.find(query);
 
  }  
+
+
+let resultData=[]
+
+ for(let res of properties)
+  {
+    const id=res._id
+    
+    const data=await auctionModel.find({propertyId:id})
+console.log("auctionDataauctionDataauctionData",data,id)
+    res.auctionData=data[0]
+
+
+const reservation=await propertyReservation.find({"propId":id})
+
+
+    if(reservation.length>0)
+      {
+        res.reservedBy=reservation[0].userId
+      }
+
+    if(data.length===0)
+      {
+        res.auctionStatus= "InActive";
+
+      }
+      else{
+        res.auctionStatus=data[0].auctionStatus  ;
+        const buyerData=data[0].buyers 
+        if(buyerData.length>0)
+        {
+              buyerData.sort((a,b)=>b.bidAmount-a.bidAmount)
+        }
+        res.auctionData.buyers=buyerData
+      }
+
+      resultData.push({
+        ...res._doc,
+        "reservedBy":res.reservedBy,
+        "auctionData":res.auctionData,
+        "auctionStatus":res.auctionStatus
+      })
+  }
+
+
+
+
+
+
     if (properties.length === 0) {
       return res.status(404).json("No properties found");
     }
-    return res.status(200).json(properties);
+    return res.status(200).json(resultData);
   } catch (error) {
+    console.log(error)
     if (error.isJoi) {
       console.log(error);
       return res.status(422).json({
@@ -2781,6 +2952,25 @@ const getMyPropsByLocation = async (req, res) => {
       .json({ error: error, message: "Error fetching properties" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // user the currentLogged userId to get the district of the user and based on the district of the use get the property details from the property models
 // const propertyBasedOnLocation = async (req, res) => {
 //   try {
@@ -2989,7 +3179,6 @@ const propertyBasedOnLocation = async (req, res) => {
 
 // get maximum sixe among all properties
 const maximumSizeForAllProps = async (req, res) => {
-  console.log(req.params);
   const result = await validateSlider.validateAsync(req.params);
   const { type, sell, rent, lease, flat, house, sold, unsold } = result;
 
@@ -3004,7 +3193,6 @@ const maximumSizeForAllProps = async (req, res) => {
       const fields = await fieldModel.find();
       fields.forEach((field) => {
         let size = field.landDetails.size;
-        console.log(size);
         result = Math.max(result, size);
 
         if (field.status == 0) {
@@ -3032,7 +3220,6 @@ const maximumSizeForAllProps = async (req, res) => {
         let size = 0;
         const propType = property.propertyDetails.type;
         size = property.propertyDetails.flatSize;
-        console.log(propType, " ", size);
         if (!size) {
           size = 0;
         }
@@ -3165,7 +3352,6 @@ const maximumSizeForAllProps = async (req, res) => {
     } else {
       return res.status(400).json("Invalid");
     }
-    console.log(response);
     if (unsold === "unsold" && sold === "@") {
       return res.status(200).json({ maxSize: unsoldResponse });
     } else if (sold === "sold" && unsold === "@") {
@@ -3292,7 +3478,6 @@ const maxPriceForAllProps = async (req, res) => {
 
 // get maximum size for an agents prop
 const maximumSize = async (req, res) => {
-  console.log(req.params);
   const result = await validateSlider.validateAsync(req.params);
   const { type, sell, rent, lease, flat, house, sold, unsold } = result;
   const userId = req.user.user.userId;
@@ -3308,7 +3493,6 @@ const maximumSize = async (req, res) => {
       const fields = await fieldModel.find({ userId: userId });
       fields.forEach((field) => {
         let size = field.landDetails.size;
-        console.log(size);
         result = Math.max(result, size);
 
         if (field.status == 0) {
@@ -3336,7 +3520,6 @@ const maximumSize = async (req, res) => {
         let size = 0;
         const propType = property.propertyDetails.type;
         size = property.propertyDetails.flatSize;
-        console.log(propType, " ", size);
         if (!size) {
           size = 0;
         }
@@ -3725,7 +3908,6 @@ const getCountOfRatings = async (req, res) => {
 
 const propertyFilters = async (req, res) => {
   try {
-    console.log(req.query)
 
     // const { location, propertyType, propertySize, propName } = req.query;
       // Start with empty properties array
@@ -3859,7 +4041,6 @@ const propertyBasedOnDistrict = async (req, res) => {
 
     const userId = req.user.user.userId;
 
-    console.log('userId',userId);
     // Fetch user data to get the district
     const userData = await userModel.findById(userId);
     const userDistrict = userData.district;
@@ -3888,6 +4069,53 @@ const propertyBasedOnDistrict = async (req, res) => {
 };
 
 
+
+const residentialSearch=async(req,res)=>{
+  try
+  {
+res.status(200).json("abcd")
+
+console.log(req)
+ 
+// const purchaseType=req.query.purchaseType
+
+// const amenities=req.query.amenities
+
+// const furniture=req.query.furniture
+
+// const facing=req.query.facing
+
+// const bedRoom=req.query.bedRoom
+
+// console.log("Properties",req.query)
+
+// let filterQuery = {
+//   $or: [],
+// };
+
+
+// if(purchaseType)
+// {
+
+//   filterQuery.$or.push(
+//     {"propertyDetails.propertyPurpose":purchaseType},
+//   )
+// }
+
+
+// const residential=await residentialModel.find(filterQuery);
+
+// res.status(200).json(residential)
+
+  }
+  catch(error)
+  {
+    res.status(500).json("Internal Server Error")
+    console.log(error)
+  }
+}
+
+
  
 module.exports = {
   getPropertiesByLocation, //unused
@@ -3913,6 +4141,7 @@ module.exports = {
   updatePropertyDetails,
   plansBasedProperties,
   recentlyAddedProperties,
-  propertyBasedOnDistrict
+  propertyBasedOnDistrict,
+  residentialSearch
   
 };

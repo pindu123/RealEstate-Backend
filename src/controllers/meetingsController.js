@@ -3,181 +3,101 @@ const meetingsModel = require("../models/meetingsModel");
 const nodemailer = require("nodemailer");
 const userModel = require("../models/userModel");
 const customerModel = require("../models/customerModel");
+const fieldModel = require("../models/fieldModel");
+const commercialModel = require("../models/commercialModel");
+const residentialModel = require("../models/residentialModel");
+const layoutModel = require("../models/layoutModel");
 
+
+// const getAllScheduledMeetings = async (req, res) => {
+//   try {
+//     let data = [];
+//     if (req.user.user.role === 1) {
+//       data = await meetingsModel.find({ agentId: req.user.user.userId });
+//     } else if (req.user.user.role === 3 || req.user.user.role === 2) {
+//       data = await meetingsModel.find({ customerId: req.user.user.userId });
+      
+//     } else if (req.user.user.role === 5) {
+//       data = await meetingsModel.find({ csrId: req.user.user.userId });
+//     }
+
+//     let data1 = [];
+//     for (let d of data) {
+//       let scheduledBy = d.scheduledBy;
+      
+//       // Fetch the user who scheduled the meeting (scheduleByName)
+//       const scheduleDetails = await userModel.find({ _id: scheduledBy }, { password: 0 });
+
+//       // Fetch the customer details for the meeting (e.g., customer name, phone number)
+//       const customer = await userModel.findById(d.customerId);
+//       const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
+//       const phoneNumber = customer ? customer.phoneNumber : 'Unknown Number';
+
+//       const agent=await userModel.findById(d.agentId);
+//        let result = {
+//         ...d._doc,
+//         "scheduledByName": scheduleDetails[0].firstName + " " + scheduleDetails[0].lastName,
+//         "customerName": customerName,
+//         "agentName":agent.firstName+ " "+agent.lastName,
+//         "phoneNumber": phoneNumber
+//       };
+
+//       data1.push(result);
+//     }
+
+//     if (data1.length > 0) {
+//       res.status(200).json({ data: data1 });
+//     } else {
+//       res.status(404).json({ message: "No Scheduled Meetings", data: data1 });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
 
 const getAllScheduledMeetings = async (req, res) => {
   try {
-    let data = [];
-    if (req.user.user.role === 1) {
-      data = await meetingsModel.find({ agentId: req.user.user.userId });
-    } else if (req.user.user.role === 3 || req.user.user.role === 2) {
-      data = await meetingsModel.find({ customerId: req.user.user.userId });
-    } else if (req.user.user.role === 5) {
-      data = await meetingsModel.find({ csrId: req.user.user.userId });
+    const { role, userId } = req.user.user;
+    let query = {};
+
+    // Role-based query
+    if (role === 1) query = { agentId: userId };
+    else if (role === 3 || role === 2) query = { customerId: userId };
+    else if (role === 5) query = { csrId: userId };
+
+    const meetings = await meetingsModel.find(query);
+
+    if (!meetings.length) {
+      return res.status(404).json({ message: "No Scheduled Meetings", data: [] });
     }
 
-    let data1 = [];
-    for (let d of data) {
-      let scheduledBy = d.scheduledBy;
-      
-      // Fetch the user who scheduled the meeting (scheduleByName)
-      const scheduleDetails = await userModel.find({ _id: scheduledBy }, { password: 0 });
+    // Fetch related data using Promise.all for efficiency
+    const enrichedMeetings = await Promise.all(
+      meetings.map(async (meeting) => {
+        const [scheduler, customer, agent] = await Promise.all([
+          userModel.findById(meeting.scheduledBy).select("firstName lastName phoneNumber"),
+          userModel.findById(meeting.customerId).select("firstName lastName phoneNumber"),
+          userModel.findById(meeting.agentId).select("firstName lastName phoneNumber")
+        ]);
 
-      // Fetch the customer details for the meeting (e.g., customer name, phone number)
-      const customer = await userModel.findById(d.customerId);
-      const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
-      const phoneNumber = customer ? customer.phoneNumber : 'Unknown Number';
+        return {
+          ...meeting._doc,
+          scheduledByName: scheduler ? `${scheduler.firstName} ${scheduler.lastName}` : "Unknown",
+          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "Unknown Customer",
+          agentName: agent ? `${agent.firstName} ${agent.lastName}` : "Unknown Agent",
+          phoneNumber: customer ? customer.phoneNumber : "Unknown Number"
+        };
+      })
+    );
 
-      const agent=await userModel.findById(d.agentId);
-       let result = {
-        ...d._doc,
-        "scheduledByName": scheduleDetails[0].firstName + " " + scheduleDetails[0].lastName,
-        "customerName": customerName,
-        "agentName":agent.firstName+ " "+agent.lastName,
-        "phoneNumber": phoneNumber
-      };
-
-      data1.push(result);
-    }
-
-    if (data1.length > 0) {
-      res.status(200).json({ data: data1 });
-    } else {
-      res.status(404).json({ message: "No Scheduled Meetings", data: data1 });
-    }
+    res.status(200).json({ data: enrichedMeetings });
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching meetings:", error.message);
     res.status(500).json("Internal Server Error");
   }
 };
 
-
-
-
-
-
-
-
-// const scheduleMeeting = async (req, res) => {
-//   try {
-//   const {
-//   meetingTitle,
-//   meetingType,
-//   propertyName,
-//   customerMail,
-//   meetingInfo,
-//   meetingStartTime,
-//   meetingEndTime,
-//   scheduledBy,
-//   agentId,
-//   dealingId,
-//   propertyId,
-//   } = req.body;
-
-//   if (!meetingTitle || !meetingType || !propertyName || !customerMail) {
-//   return res.status(400).json({ error: "All required fields must be provided." });
-//   }
-
-//   // Check if the agent is available
-//   const overlappingMeeting = await meetingsModel.findOne({
-//   agentId,
-//   $or: [
-//   {
-//   meetingStartTime: { $lt: new Date(meetingEndTime), $gte: new Date(meetingStartTime) }
-//   },
-//   {
-//   meetingEndTime: { $gt: new Date(meetingStartTime), $lte: new Date(meetingEndTime) }
-//   },
-//   {
-//   meetingStartTime: { $lte: new Date(meetingStartTime) },
-//   meetingEndTime: { $gte: new Date(meetingEndTime) }
-//   }
-//   ]
-//   });
-
-//   if (overlappingMeeting) {
-//   return res.status(400).json({
-//   error: "The agent is not available during the selected time period.",
-//   conflictingMeeting: overlappingMeeting,
-//   });
-//   }
-
-//   // Create the new meeting
-//   const newMeeting = new meetingsModel({
-//   meetingTitle,
-//   meetingType,
-//   propertyName,
-//   customerMail,
-//   meetingInfo,
-//   meetingStartTime,
-//   meetingEndTime,
-//   scheduledBy,
-//   agentId,
-//   dealingId,
-//   propertyId,
-//   });
-
-//   const savedMeeting = await newMeeting.save();
-
-//   // Send a response
-//   res.status(201).json({ message: "Meeting created successfully.", data: savedMeeting });
-//   } catch (error) {
-//   console.error("Error creating meeting:", error);
-//   res.status(500).json({ error: "Internal Server Error" });
-//   }
-//   };
-
-// const scheduleMeeting = async (req, res) => {
-//   try {
-//     const {
-//       meetingTitle,
-//       meetingType,
-//       propertyName,
-//       customerMail,
-//       meetingInfo,
-//       meetingStartTime,
-//       meetingEndTime,
-//       scheduledBy,
-//       agentId,
-//       dealingId,
-//       propertyId,
-//       customerId,
-//       location
-
-//     } = req.body;
-//     console.log(req.body)
-
-//     if ( !propertyName || !customerMail) {
-//       return res
-//         .status(400)
-//         .json({ error: "All required fields must be provided." });
-//     }
-
-//     const newMeeting = new meetingsModel({
-//       propertyName,
-//       customerMail,
-//       meetingInfo,
-//       meetingStartTime,
-//       meetingEndTime,
-//       scheduledBy,
-//       agentId,
-//       dealingId,
-//       propertyId,
-//       customerId,
-//       location
-//     });
-
-//     const savedMeeting = await newMeeting.save();
-
-//     res
-//       .status(201)
-//       .json({ message: "Meeting created successfully.", data: savedMeeting });
-//   } catch (error) {
-//     console.error("Error creating meeting:", error);
-//     res.status(500).json({ error: "Internal Server Error" });
-//   }
-// };
-// // reschedule meeting
 
 
 
@@ -452,6 +372,111 @@ const rescheduleMeeting = async (req, res) => {
 };
 
 
+const currentWeekMeetings = async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const startOfWeek = new Date(currentDate);
+    const endOfWeek = new Date(currentDate);
+    const currentDay = currentDate.getDay();
+
+    // Calculate start and end of the current week
+    startOfWeek.setDate(currentDate.getDate() - currentDay);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    endOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const userId = req.user.user.userId;
+
+    const role=req.user.user.role 
+
+    let meetings=[]
+
+    if(role===1)
+    {
+      meetings = await meetingsModel
+      .find({
+        agentId: userId,
+        meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek },
+      }) .sort({ meetingStartTime: 1 })
+      .lean()
+    }
+
+
+   if(role===3)
+   {
+    meetings = await meetingsModel
+    .find({
+      customerId: userId,
+      meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek },
+    }) .sort({ meetingStartTime: 1 })
+    .lean()
+   }
+
+let meetingDetails
+ 
+
+    if (!meetings.length) {
+      return res.status(404).json({ message: "No Scheduled Meetings This Week", data: [] });
+    }
+
+    // Fetch customer details in parallel
+    if(role===1)
+    {
+      meetingDetails = await Promise.all(
+      meetings.map(async (meeting) => {
+        const customer = await userModel
+          .findById(meeting.customerId)
+          .select("firstName lastName phoneNumber")
+          .lean();
+
+        return {
+          ...meeting,
+          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "Unknown Customer",
+          phoneNumber: customer ? customer.phoneNumber : "Unknown Number",
+        };
+      })
+    );
+  }
+
+  if(role===3)
+    {
+
+      
+      meetingDetails = await Promise.all(
+      meetings.map(async (meeting) => {
+
+        let agent
+        if(meeting.scheduledBy===meeting.customerId)
+        {
+            agent = await userModel
+          .findById(meeting.agentId, { password: 0 })
+          .lean();
+        }
+        else
+        {
+            agent = await userModel
+          .findById(meeting.scheduledBy, { password: 0 })
+          .lean();
+        }
+   
+        return {
+          ...meeting,
+           agent:agent
+        };
+      })
+    );
+  }
+
+  
+
+    res.status(200).json({ data: meetingDetails });
+  } catch (error) {
+    console.error("Error fetching current week meetings:", error);
+    res.status(500).json("Internal Server Error");
+  }
+};
+
 // const currentWeekMeetings = async (req, res) => {
 //   try {
 //     const currentDate = new Date();
@@ -470,17 +495,19 @@ const rescheduleMeeting = async (req, res) => {
 //     const meetings = await meetingsModel.find({
 //       agentId: agentId,
 //       meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
-//     });
+//     }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
 
+//     // Manually fetching customer names
 //     const meetingDetails = [];
 
 //     for (const meeting of meetings) {
-//       const customer = await customerModel.findById(meeting.customerId);
+//       const customer = await userModel.findById(meeting.customerId);
 //       const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
-      
+//       console.log("customerName",customer)
 //       meetingDetails.push({
 //         ...meeting.toObject(),
-//         customerName
+//         customerName,
+//         phoneNumber:customer.phoneNumber
 //       });
 //     }
 
@@ -495,154 +522,71 @@ const rescheduleMeeting = async (req, res) => {
 //   }
 // };
 
-// const currentDayMeetings = async (req, res) => {
-//   try {
-//     const meetings = await meetingsModel.find({
-//       agentId: req.user.user.userId,
-//     });
-
-//     const currentDay = [];
-//     const currentDate = new Date();
-//     const formattedDate = currentDate.toISOString().split("T")[0];
-
-//     for (const meeting of meetings) {
-//       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
-
-//       // If the meeting is today, add it to the currentDay array
-//       if (startTime === formattedDate) {
-//         const customer = await customerModel.findById(meeting.customerId);
-//         const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
-
-//         currentDay.push({
-//           ...meeting.toObject(),
-//           customerName
-//         });
-//       }
-//     }
-
-//     if (currentDay.length > 0) {
-//       res.status(200).json(currentDay);
-//     } else {
-//       res.status(409).json("No Scheduled Meetings Today");
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
-
-const currentWeekMeetings = async (req, res) => {
-  try {
-    const currentDate = new Date();
-    const startOfWeek = new Date(currentDate);
-    const endOfWeek = new Date(currentDate);
-    const currentDay = currentDate.getDay();
-
-    startOfWeek.setDate(currentDate.getDate() - currentDay);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    endOfWeek.setDate(currentDate.getDate() + (6 - currentDay));
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    const agentId = req.user.user.userId;
-
-    const meetings = await meetingsModel.find({
-      agentId: agentId,
-      meetingStartTime: { $gte: startOfWeek, $lte: endOfWeek }
-    }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
-
-    // Manually fetching customer names
-    const meetingDetails = [];
-
-    for (const meeting of meetings) {
-      const customer = await userModel.findById(meeting.customerId);
-      const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
-      console.log("customerName",customer)
-      meetingDetails.push({
-        ...meeting.toObject(),
-        customerName,
-        phoneNumber:customer.phoneNumber
-      });
-    }
-
-    if (meetingDetails.length > 0) {
-      res.status(200).json(meetingDetails);
-    } else {
-      res.status(409).json("No Scheduled Meetings This Week");
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json("Internal Server Error");
-  }
-};
-
-// const currentDayMeetings = async (req, res) => {
-//   try {
-//     const meetings = await meetingsModel.find({
-//       agentId: req.user.user.userId,
-//     }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
-
-//     const currentDay = [];
-//     const currentDate = new Date();
-//     const formattedDate = currentDate.toISOString().split("T")[0];
-
-//     for (const meeting of meetings) {
-//       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
-
-//       // If the meeting is today, add it to the currentDay array
-//       if (startTime === formattedDate) {
-//         const customer = await customerModel.findById(meeting.customerId);
-//         const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer';
-
-//         currentDay.push({
-//           ...meeting.toObject(),
-//           customerName,
-//           phoneNumber:customer.phoneNumber||'NA'
-//         });
-//       }
-//     }
-
-//     if (currentDay.length > 0) {
-//       res.status(200).json(currentDay);
-//     } else {
-//       res.status(409).json("No Scheduled Meetings Today");
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
 
 const currentDayMeetings = async (req, res) => {
   try {
-    const meetings = await meetingsModel.find({
-      agentId: req.user.user.userId,
-    }).sort({ meetingStartTime: 1 }); // Sorting by meetingStartTime in ascending order
+    const userId = req.user.user.userId;
+    const role = req.user.user.role;
 
+    let meetings
+    if(role===1)
+    {
+      meetings = await meetingsModel
+      .find({
+        agentId:userId, 
+      })
+      .sort({ meetingStartTime: 1 }); 
+    }
+
+    if(role===3)
+    {
+      meetings=await meetingsModel.find({
+        customerId:userId
+      }).sort({ meetingStartTime: 1 }); 
+
+    }
     const currentDay = [];
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
 
-    for (const meeting of meetings) {
+    // Fetch details in parallel
+    const detailsPromises = meetings.map(async (meeting) => {
       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
 
       // If the meeting is today, add it to the currentDay array
       if (startTime === formattedDate) {
-        const customer = await userModel.findById(meeting.customerId);
-        
-        // Check if customer is not null
-        if (customer) {
-          const customerName = `${customer.firstName} ${customer.lastName}`;
-          const phoneNumber = customer.phoneNumber || 'NA';
-          
-          currentDay.push({
-            ...meeting.toObject(),
-            customerName,
-            phoneNumber
-          });
+        const customer = await userModel.findById(meeting.customerId).select("firstName lastName phoneNumber").lean();
+        let result = {
+          ...meeting.toObject(),
+          customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown Customer',
+          phoneNumber: customer ? customer.phoneNumber : 'NA',
+        };
+
+        if (role === 3) { // If role is 3, get agent's details
+          let agent
+          if(meeting.scheduledBy===meeting.customerId)
+          {
+            agent = await userModel
+            .findById(meeting.agentId,{ password: 0 })
+             .lean();
+          }
+          else
+          {
+            agent = await userModel
+            .findById(meeting.scheduledBy, { password: 0 })
+             .lean();
+          }
+             result.agent=agent
+          // result.agentName = agent ? `${agent.firstName} ${agent.lastName}` : 'Unknown Agent';
+          // result.agentPhoneNumber = agent ? agent.phoneNumber : 'NA';
         }
+
+        currentDay.push(result);
       }
-    }
+    });
+
+    // Wait for all the promises to resolve
+    await Promise.all(detailsPromises);
 
     if (currentDay.length > 0) {
       res.status(200).json(currentDay);
@@ -654,6 +598,7 @@ const currentDayMeetings = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
+
 
 const meetingOnDate = async (req, res) => {
   try {

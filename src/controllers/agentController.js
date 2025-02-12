@@ -473,7 +473,7 @@ const getAgentsbyDistrict = async (req, res) => {
 
 const getAgentSales = async (req, res) => {
   try {
-    const agentData = await userModel.find({ role: 1 });
+    const agentData = await userModel.find({ role: 1 }, { password: 0 });
     let stats = [];
 
     for (const agent of agentData) {
@@ -560,7 +560,7 @@ const getAgentByDistrict = async (req, res) => {
   try {
     let district = req.params.district;
 
-    const data = await userModel.find({ district, role: 1 });
+    const data = await userModel.find({ district, role: 1 }, { password: 0 });
 
     if (data) {
       res.status(200).json(data);
@@ -577,7 +577,7 @@ const getCsrByDistrict = async (req, res) => {
     const data = await userModel.find({
       district: req.params.district,
       role: 5,
-    });
+    }, { password: 0 });
     if (data) {
       res.status(200).json(data);
     } else {
@@ -598,7 +598,7 @@ const getAllCsr = async (req, res) => {
     );
     let result = [];
     for (let csr of data) {
-      const agentsData = await userModel.find({ assignedCsr: csr._id });
+      const agentsData = await userModel.find({ assignedCsr: csr._id }, { password: 0 });
 
       csr.totalAgents = agentsData.length;
       result.push({ csr, totalAgents: agentsData.length });
@@ -626,7 +626,7 @@ const getAllAgents = async (req, res) => {
       if (agent.assignedCsr !== "0") {
         csrData = await userModel.find({
           _id: agent.assignedCsr,
-        });
+        }, { password: 0 });
       }
       if (csrData.length > 0) {
         agent.assignedCsr = csrData[0].email; // Replace assignedCsr with the CSR's email
@@ -665,7 +665,7 @@ const getCSRAssignedToAgent = async (req, res) => {
     if (!assignedCsrId) {
       return res.status(404).json("No CSR assigned to this agent.");
     }
-    const csr = await userModel.findOne({ _id: assignedCsrId, role: 5 });
+    const csr = await userModel.findOne({ _id: assignedCsrId, role: 5 }, { password: 0 });
 
     if (!csr) {
       return res

@@ -5,22 +5,76 @@ const twilio = require("twilio");
 const nodemailer = require("nodemailer");
 
 const axios = require("axios");
-// not in use
+// Not In use 
+// const createCustomer = async (req, res) => {
+//   try {
+    
+//     const customers = req.body;
+//     const addedByRole=req.user.user.userId;
+//     const addedBy=req.user.user.role;
+//     for (let customerData of customers) {
+//       customerData.addedBy;
+//       customerData.addedByRole;
+//       await customerSchema.validateAsync(customerData);
+//       const customer = new customerModel(customerData);
+//       await customer.save();
+//     }
+//     res.status(201).json("Customer Entered Successfully");
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
+
 const createCustomer = async (req, res) => {
   try {
-    const customers = req.body;
-    for (let customerData of customers) {
-      await customerSchema.validateAsync(customerData);
-      const customer = new customerModel(customerData);
-      await customer.save();
+    const customers = req.body; // Assuming this is an array of customers
+    const addedByRole = req.user.user.role;
+    const addedBy = req.user.user.userId;
+
+    if (!Array.isArray(customers)) {
+      return res.status(400).json({ error: "Customers should be an array" });
     }
-    res.status(201).json("Customer Entered Successfully");
+console.log("customers",customers)
+    const processedCustomers = []; 
+
+    for (let customerData of customers) {
+      try {
+        customerData.addedBy = addedBy;
+        customerData.addedByRole = addedByRole;
+        await customerSchema.validateAsync(customerData);
+        console.log("asdasd")
+        const customer = new customerModel(customerData);
+        console.log("asdasdqw3e231")
+
+        await customer.save();
+        processedCustomers.push(customer);
+      } catch (validationError) {
+        console.error(`Failed to process customer: ${JSON.stringify(customerData)}`);
+        console.error(validationError.message);
+      }
+    }
+
+    console.log(processedCustomers)
+    if (processedCustomers.length === 0) {
+      return res.status(400).json({ error: "No valid customers were processed" });
+    }
+
+    res.status(201).json({
+      message: "Customers created successfully",
+      processedCount: processedCustomers.length,
+      processedCustomers,
+    });
   } catch (error) {
-    console.log(error);
-    res.status(500).json("Internal Server Error");
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-const getCustomers = async (req, res) => {
+
+
+// not in use
+//getSurveyData
+const getCustomer = async (req, res) => {
   try {
     const customerData = await customerModel.find();
 
@@ -30,18 +84,81 @@ const getCustomers = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-// updated based on customer changed flow
-const getCustomer = async (req, res) => {
+
+
+// role based get
+const getCustomers = async (req, res) => {
   try {
-   
-    const customerData = await userModel.find({ role: 3 }).select('-password').sort({ createdAt: -1 });
+    const { role, userId } = req.user.user;
+    const { agentId } = req.query; 
+    let customerData = [];
+
+    if (role === 5) {
+      if (!agentId) {
+        // If no agentId is passed, fetch deals for the logged-in user's userId
+        const deals = await dealsModel.find({ csrId: userId }, "customerId").lean();
+        if (!deals || deals.length === 0) {
+          return res.status(404).json({
+            message: "No deals found for the current CSR",
+          });
+        }
+
+        // Extract unique customerIds from the deals
+        const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+
+        // Fetch customer details from userModel where role is 3 and _id matches customerIds
+        customerData = await userModel
+          .find({ _id: { $in: customerIds }, role: 3 })
+          .select("-password")
+          .sort({ createdAt: -1 });
+      } else {
+        // If agentId is provided, fetch deals for the specified agentId
+        const deals = await dealsModel.find({ agentId }, "customerId").lean();
+        const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+
+        // Fetch customer details from userModel where role is 3 and _id matches customerIds
+        customerData = await userModel
+          .find({ _id: { $in: customerIds }, role: 3 })
+          .select("-password")
+          .sort({ createdAt: -1 });
+      }
+    } else if (role === 1) {
+      // Role 1: Agent - Fetch customers based on the logged-in user's userId
+      const deals = await dealsModel.find({ agentId: userId }, "customerId").lean();
+      const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+
+      // Fetch customer details from userModel where role is 3 and _id matches customerIds
+      customerData = await userModel
+        .find({ _id: { $in: customerIds }, role: 3 })
+        .select("-password")
+        .sort({ createdAt: -1 });
+    } else {
+      customerData = await userModel
+        .find({ role: 3 })
+        .select("-password")
+        .sort({ createdAt: -1 });
+    }
 
     res.status(200).json(customerData);
   } catch (error) {
-    console.log(error);
+    console.error("Error fetching customer data:", error);
     res.status(500).json("Internal Server Error");
   }
 };
+
+
+
+// const getCustomer = async (req, res) => {
+//   try {
+    
+//     const customerData = await userModel.find({ role: 3 }).select('-password').sort({ createdAt: -1 });
+
+//     res.status(200).json(customerData);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json("Internal Server Error");
+//   }
+// };
 
 // mobile
 const customerBasedOnAddedBy = async (req, res) => {
@@ -447,4 +564,5 @@ module.exports = {
   sendWhatsAppWithPDF,
   generatePropertyPDF,
   customerBasedOnAddedBy,
+  getCustomers,
 };

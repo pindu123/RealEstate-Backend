@@ -4,6 +4,7 @@ const {
   getCommercials,
   getAllCommercials,
   editCommDetails,
+  getProperties,
 } = require("../controllers/commercialController");
 
 const commercialRoutes = express.Router();
@@ -17,4 +18,7 @@ commercialRoutes.get("/getcommercial", getCommercials);
 commercialRoutes.get("/getallcommercials", getAllCommercials);
 
 commercialRoutes.patch("/editCommDetails",editCommDetails)
+
+
+commercialRoutes.get("/getProperties/:type",getProperties);
 module.exports = commercialRoutes;

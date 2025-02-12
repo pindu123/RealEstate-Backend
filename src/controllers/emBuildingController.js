@@ -92,7 +92,7 @@ console.log(buildings);
           console.log(building.userId);
           
           // Await the result of findOne
-          const user = await userModel.findOne({ _id: building.userId });
+          const user = await userModel.findOne({ _id: building.userId }, { password: 0 });
           if (!user) {
             console.log('User not found for userId:', building.userId);
             return null; // Handle this case appropriately if needed

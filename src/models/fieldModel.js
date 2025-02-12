@@ -195,7 +195,7 @@ const fieldSchema = new mongoose.Schema(
     },
     enteredBy: {
       type: String,
-      required: true,  // Required as per the method logic
+      required: false,  
     },
     role: {
       type: Number,
@@ -403,8 +403,9 @@ const fieldSchema = new mongoose.Schema(
     propertyInterestedCount:{
       type:Number,
     },
-    propertyInterestedCount:{
-      type:Number
+    propertyOnHold:{
+      type:String,
+      default:'no'
     }
   },
   { timestamps: true }

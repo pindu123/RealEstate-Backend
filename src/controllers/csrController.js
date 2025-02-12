@@ -2860,6 +2860,7 @@ const assignCustomerToAgent = async (req, res) => {
   try {
     const { assignedTo, customers, assignedBy, assignedDate } = req.body;
 
+    console.log("req.body",req.body    )
     // Validate the required fields
     if (
       !assignedTo ||
@@ -2879,6 +2880,8 @@ const assignCustomerToAgent = async (req, res) => {
       assignedTo,
       assignedDate,
     });
+
+    console.log(existingAssignment)
 
     if (existingAssignment) {
       // Check if existingAssignment.customers is defined and an array
@@ -2924,6 +2927,7 @@ const assignCustomerToAgent = async (req, res) => {
       customers,
     });
 
+    console.log("newAssignment",newAssignment)
     await newAssignment.save();
 
     res.status(201).json({
@@ -2939,25 +2943,51 @@ const assignCustomerToAgent = async (req, res) => {
   }
 };
 
+
 const assignPropertyToAgent = async (req, res) => {
   try {
     const { assignedTo, propertyIds, assignedBy, assignedDate } = req.body;
+
+    // Validate required fields
     if (
       !assignedTo ||
       !Array.isArray(propertyIds) ||
       propertyIds.length === 0 ||
-      !assignedBy
+      !assignedBy ||
+      !assignedDate
     ) {
       return res.status(400).json({
         message:
-          "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
+          "Required fields: assignedTo, assignedBy, assignedDate, propertyIds (array of IDs)",
       });
     }
+
+    // Convert assignedDate to the start of the day (to standardize comparisons)
+    const startOfDay = new Date(assignedDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // Check if any property in the list is already assigned to the same agent on the same date
+    const conflictingAssignments = await propertyAssignmentModel.findOne({
+      assignedTo,
+      assignedDate: { $gte: startOfDay, $lte: endOfDay },
+      propertyIds: { $in: propertyIds },
+    });
+
+    if (conflictingAssignments) {
+      return res.status(400).json({
+        message: "Some properties are already assigned to this agent on the same date.",
+        conflictingAssignments,
+      });
+    }
+
+    // Create a new assignment if no conflicts exist
     const newAssignment = new propertyAssignmentModel({
       propertyIds,
       assignedBy,
       assignedTo,
-      assignedDate,
+      assignedDate: startOfDay, 
     });
 
     await newAssignment.save();
@@ -2967,13 +2997,49 @@ const assignPropertyToAgent = async (req, res) => {
       data: newAssignment,
     });
   } catch (error) {
-    console.error("Error assigning Properties to agent:", error);
+    console.error("Error assigning properties to agent:", error);
     res.status(500).json({
-      message: "An error occurred while assigning Properties to the agent",
+      message: "An error occurred while assigning properties to the agent",
       error: error.message,
     });
   }
 };
+
+// const assignPropertyToAgent = async (req, res) => {
+//   try {
+//     const { assignedTo, propertyIds, assignedBy, assignedDate } = req.body;
+//     if (
+//       !assignedTo ||
+//       !Array.isArray(propertyIds) ||
+//       propertyIds.length === 0 ||
+//       !assignedBy
+//     ) {
+//       return res.status(400).json({
+//         message:
+//           "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
+//       });
+//     }
+//     const newAssignment = new propertyAssignmentModel({
+//       propertyIds,
+//       assignedBy,
+//       assignedTo,
+//       assignedDate,
+//     });
+
+//     await newAssignment.save();
+
+//     res.status(201).json({
+//       message: "Properties successfully assigned to the agent",
+//       data: newAssignment,
+//     });
+//   } catch (error) {
+//     console.error("Error assigning Properties to agent:", error);
+//     res.status(500).json({
+//       message: "An error occurred while assigning Properties to the agent",
+//       error: error.message,
+//     });
+//   }
+// };
 
 module.exports = {
   getUnAssignedAgents,

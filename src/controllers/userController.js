@@ -1319,6 +1319,223 @@ function generatePassword(firstName, lastName) {
 }
 
 
+// to find an agent by customer 
+// const findAnAgent= async (req,res)=>{
+//    // const role=req.user.user.role;
+//    try{
+//     // if(role===3|| role===1){
+//     //   const agentData=await userModel.find({role:1},{password:0});
+//     //   if(agentData){
+//     //     return res.status(200).json({"message":" Agent details fetched ",data:agentData})
+//     //   }
+//     // }
+//     const agentData=await userModel.find({role:1},{password:0});
+//     let agentDetail;
+//     for( agentDetail of agentData){
+//       const agentId=agentDetail._id;
+//       const agentDeals= dealsModel.find({agentId:agentId},{'sellingStatus':'sold'}).countDocuments;
+//       agentData.soldPropertiesCount=agentDeals.length
+//     }
+   
+//     if(agentData){
+//       return res.status(200).json({"message":" Agent details fetched ",data:agentData})
+//     }
+
+//    }catch(error){
+//          return res.status(500).json({"message":"Internal Server Error","error":error})
+//    }
+    
+// }
+
+
+
+//a queryParam text will be passed with key 'text' partial search including name and location (district, village,state,mandal) minimum 3 char search 
+
+const findAnAgents = async (req, res) => {
+  try {
+    const { text } = req.query;
+
+    // Validate the query parameter
+    if (text && text.length < 3) {
+      return res.status(400).json({ message: "Search text must be at least 3 characters long" });
+    }
+
+    // Prepare the search condition for partial matching
+    const searchCondition = text
+      ? {
+          $or: [
+            { firstName: { $regex: text, $options: "i" } },
+            { lastName: { $regex: text, $options: "i" } },
+            { $and: [
+                { firstName: { $regex: text, $options: "i" } },
+                { lastName: { $regex: text, $options: "i" } }
+              ]
+            },
+            { "location.district": { $regex: text, $options: "i" } },
+            { "location.village": { $regex: text, $options: "i" } },
+            { "location.state": { $regex: text, $options: "i" } },
+            { "location.mandal": { $regex: text, $options: "i" } },
+          ],
+        }
+      : {};
+
+    // Fetch agents based on role and search conditions
+    const agentData = await userModel
+      .find({ role: 1, ...searchCondition }, { password: 0 })
+      .lean();
+
+    if (!agentData.length) {
+      return res.status(409).json({ message: "No agents found" });
+    }
+
+    // Get a list of agent IDs
+    const agentIds = agentData.map((agent) => agent._id);
+
+    // Use aggregation to calculate the count of sold deals for each agent
+    const soldPropertiesCounts = await dealsModel.aggregate([
+      { $match: { agentId: { $in: agentIds }, sellingStatus: "sold" } },
+      { $group: { _id: "$agentId", soldCount: { $sum: 1 } } },
+    ]);
+
+    // Map the sold counts back to the agents
+    const soldCountMap = soldPropertiesCounts.reduce((acc, { _id, soldCount }) => {
+      acc[_id.toString()] = soldCount;
+      return acc;
+    }, {});
+
+    // Add the soldPropertiesCount field to each agent
+    const result = agentData.map((agent) => ({
+      ...agent,
+      soldPropertiesCount: soldCountMap[agent._id.toString()] || 0,
+    }));
+
+    return res.status(200).json({ message: "Agent details fetched", data: result });
+  } catch (error) {
+    console.error("Error in findAnAgent:", error);
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+const findAnAgent = async (req, res) => {
+  try {
+    const { text } = req.query;
+
+    // Validate the query parameter
+    if (text && text.length < 3) {
+      return res.status(400).json({ message: "Search text must be at least 3 characters long" });
+    }
+
+    // Prepare the search condition for partial matching
+    let searchCondition = {};
+
+    if (text) {
+      // Split text into firstName and lastName
+      const nameParts = text.trim().split(/\s+/);
+
+      if (nameParts.length === 1) {
+        // Only one part (e.g., "Jaswanth")
+        searchCondition = {
+          $or: [
+            { firstName: { $regex: nameParts[0], $options: "i" } },
+            { lastName: { $regex: nameParts[0], $options: "i" } },
+            { district: { $regex: text, $options: "i" } },
+            { village: { $regex: text, $options: "i" } },
+            { city: { $regex: text, $options: "i" } },
+            { state: { $regex: text, $options: "i" } },
+            { mandal: { $regex: text, $options: "i" } },
+          ],
+        };
+      } else if (nameParts.length > 1) {
+        // Multiple parts (e.g., "Jaswanth Kumar")
+        const [firstName, lastName] = nameParts;
+        searchCondition = {
+          $or: [
+            { firstName: { $regex: firstName, $options: "i" } },
+            { lastName: { $regex: lastName, $options: "i" } },
+            { district: { $regex: text, $options: "i" } },
+            { village: { $regex: text, $options: "i" } },
+            { city: { $regex: text, $options: "i" } },
+            { state: { $regex: text, $options: "i" } },
+            { mandal: { $regex: text, $options: "i" } },
+          ],
+        };
+      }
+    }
+
+    // Fetch agents based on role and search conditions
+    const agentData = await userModel
+      .find({ role: 1, ...searchCondition }, { password: 0 })
+      .lean();
+
+    if (!agentData.length) {
+      return res.status(409).json({ message: "No agents found" });
+    }
+
+    // Get a list of agent IDs
+    const agentIds = agentData.map((agent) => agent._id);
+
+    // Use aggregation to calculate the count of sold deals for each agent
+    const soldPropertiesCounts = await dealsModel.aggregate([
+      { $match: { agentId: { $in: agentIds }, sellingStatus: "sold" } },
+      { $group: { _id: "$agentId", soldCount: { $sum: 1 } } },
+    ]);
+
+    // Map the sold counts back to the agents
+    const soldCountMap = soldPropertiesCounts.reduce((acc, { _id, soldCount }) => {
+      acc[_id.toString()] = soldCount;
+      return acc;
+    }, {});
+
+    // Add the soldPropertiesCount field to each agent
+    const result = agentData.map((agent) => ({
+      ...agent,
+      soldPropertiesCount: soldCountMap[agent._id.toString()] || 0,
+    }));
+
+    return res.status(200).json({ message: "Agent details fetched", data: result });
+  } catch (error) {
+    console.error("Error in findAnAgent:", error);
+    return res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+};
+
+
+// const findAnAgent = async (req, res) => {
+//   try {
+//     const agentData = await userModel.find({ role: 1 }, { password: 0 }).lean();
+
+//     if (!agentData.length) {
+//       return res.status(409).json({ message: "No agents found" });
+//     }
+
+//     // Get a list of agent IDs
+//     const agentIds = agentData.map(agent => agent._id);
+
+//     // Use aggregation to calculate the count of sold deals for each agent
+//     const soldPropertiesCounts = await dealsModel.aggregate([
+//       { $match: { agentId: { $in: agentIds }, sellingStatus: "sold" } },
+//       { $group: { _id: "$agentId", soldCount: { $sum: 1 } } }
+//     ]);
+
+//     // Map the sold counts back to the agents
+//     const soldCountMap = soldPropertiesCounts.reduce((acc, { _id, soldCount }) => {
+//       acc[_id.toString()] = soldCount;
+//       return acc;
+//     }, {});
+
+//     // Add the soldPropertiesCount field to each agent
+//     const result = agentData.map(agent => ({
+//       ...agent,
+//       soldPropertiesCount: soldCountMap[agent._id.toString()] || 0
+//     }));
+
+//     return res.status(200).json({ message: "Agent details fetched", data: result });
+//   } catch (error) {
+//     console.error("Error in findAnAgent:", error);
+//     return res.status(500).json({ message: "Internal Server Error", error: error.message });
+//   }
+// };
+
+
 
 
 const updateSubscription=async(req,res)=>{
@@ -1364,6 +1581,6 @@ module.exports = {
   createCSR,
   updateUserProfile,
   getCsr,//mobile app
-
+  findAnAgent,
   updateSubscription
 };

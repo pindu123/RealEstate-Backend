@@ -236,6 +236,7 @@ const fieldValidationSchema = Joi.object({
   }).pattern(/Te$/, Joi.string().optional()),
   propertyInterestedCount:Joi.number().optional(),
   propertyId: Joi.string().optional(),
+  propertyOnHold:Joi.string().optional(),
 }).pattern(/Te$/, Joi.alternatives().try(Joi.string(), Joi.object(), Joi.array(), Joi.boolean(), Joi.number()));
 
 module.exports = { fieldValidationSchema };

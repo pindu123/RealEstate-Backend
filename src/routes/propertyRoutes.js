@@ -23,7 +23,8 @@ const {
   updatePropertyDetails,
   plansBasedProperties,
   recentlyAddedProperties,
-  propertyBasedOnDistrict
+  propertyBasedOnDistrict,
+  residentialSearch
 } = require("../controllers/propertyController");
 
 const propertyRoutes = express.Router();
@@ -39,7 +40,7 @@ propertyRoutes.put("/markassold/", updatePropertyStatus);
 propertyRoutes.get("/getpropbyid/:agentId", getPropertiesByUserId);
 propertyRoutes.get("/getproprating/:propertyId",cache('5 seconds'), getPropertyRatings);
 propertyRoutes.post("/insertproprating", insertPropertyRatings);
-propertyRoutes.get("/getpropbyid/:propertyType/:propertyId",cache('5 seconds'), getPropertiesById);
+propertyRoutes.get("/getpropbyid/:propertyType/:propertyId" , getPropertiesById);
 propertyRoutes.get("/getpropbytype/:type",cache('5 seconds'), getPropertiesByType);
 propertyRoutes.get("/getprop/:propertyType/:userId/:propertyId",getProperty);
 propertyRoutes.get('/maxPrice/:type/:sell/:rent/:lease/:flat/:house',cache('5 seconds'),maxPrice);
@@ -55,4 +56,5 @@ propertyRoutes.get("/plansBasedProperties",plansBasedProperties);
 propertyRoutes.get("/:location",cache('5 seconds'), getPropertiesByLocation); 
 propertyRoutes.patch("/updatePropertyDetails",updatePropertyDetails)
 
-module.exports = propertyRoutes;
+
+ module.exports = propertyRoutes;

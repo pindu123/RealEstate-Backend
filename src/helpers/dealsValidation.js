@@ -16,6 +16,7 @@ const dealsSchema = Joi.object({
   expectedPrice:Joi.string().optional(),
   addedBy:Joi.string().optional(),
   addedByRole:Joi.number().optional(),
+  agentRole:Joi.string().optional()
 });
 
 module.exports = dealsSchema;

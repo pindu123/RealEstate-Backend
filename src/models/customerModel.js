@@ -15,18 +15,24 @@ const customerSchema = new mongoose.Schema(
       type: String,
       unique: true,
       match: /^[0-9]{10}$/,
-      required: true,
+      required: false,
+    },
+    whatsAppNumber: {
+      type: String,
+      unique: true,
+      match: /^[0-9]{10}$/,
+      required: false,
     },
     email: {
       type: String,
       trim: true,
       unique: true,
       match: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      required: true,
+      required: false,
     },
-    // pinCode: {
-    //   type: Number,
-    // },
+    pinCode: {
+      type: Number,
+    },
     city: {
       type: String,
     },
@@ -38,40 +44,42 @@ const customerSchema = new mongoose.Schema(
       type: String,
       default: "India",
     },
-    // password: {
-    //   type: String,
-    //   required: false,
-    // },
+   
     district: {
       type: String,
-      required: true,
+      required: false,
     },
     mandal: {
       type: String,
-      required: true,
+      required: false,
     },
     village: {
       type: String,
-      required: true,
+      required: false,
     },
     occupation: {
       type: String,
     },
 
-    income: { type: String, required: false },
+    budget: { type: String, required: false },
     interestedIn:{
       type:String
     },
-    // addedBy:{
-    //   type:String,
-    // },
-    // addedByRole:{
-    // type:Number
-    // }
+    description:{
+      type:String,
+    },
+    addedBy:{
+      type:String,
+    },
+    addedByRole:{
+    type:Number
+    },
+    customerRole:{
+      type:String,
+    }
   },
   { timestamps: true }
 );
-
 const customerModel = mongoose.model("customers", customerSchema);
 
 module.exports = customerModel;

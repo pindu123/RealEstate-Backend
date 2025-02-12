@@ -82,12 +82,15 @@ const totalViews = async (req, res) => {
 //no. of views from the same buyer for the same property
 const viewsFromABuyer = async (req, res) => {
   try {
+    
     const { propertyId } = req.params;
     const views = await viewsModel.find({ propertyId }).sort({ updatedAt: -1 });
     const result = await Promise.all(
       views.map(async (view) => {
         const user = await userModel.findOne({ _id: view.userId });
         const buyerName = user.firstName + " " + user.lastName;
+        const phone=user.phoneNumber;
+        const email=user.email;
         const profilePicture=user.profilePicture;
         return {
           buyerName: buyerName,
@@ -95,6 +98,8 @@ const viewsFromABuyer = async (req, res) => {
           viewsCount: view.viewsCount,
           createdAt: view.createdAt,
           updatedAt: view.updatedAt,
+          phone:phone,
+          email:email,
         };
       })
     );
@@ -323,23 +328,65 @@ const totalViews1 = async (req, res) => {
   {
  const data=await residentialModel.findById(propertyId);
  intrestedCount=data.propertyInterestedCount;
+ console.log("intrestedCount",data)
  }
  else if(propertyType==="Commercial")
   {
  const data=await commercialModel.findById(propertyId);
   intrestedCount=data.propertyInterestedCount;
+  console.log("intrestedCount",data)
+
   }
  else if(propertyType==="Layout")
  {
  const data=await layoutModel.findById(propertyId);
   intrestedCount=data.propertyInterestedCount;
+  console.log("intrestedCount",data)
+
  }
  else
  {
  const data=await fieldModel.findById(propertyId);
   intrestedCount=data.propertyInterestedCount;
+  console.log("intrestedCount",data._id,data.propertyInterestedCount)
+
  }
  
+ let viewrs=[]
+ 
+  console.log("views",views)
+  for(let view of views)
+  {
+    console.log("view1232443432",view)
+    const user=await userModel.find({_id:view.userId})
+console.log("user",user)
+if(user.length>0)
+{
+  viewrs.push(user)
+}
+
+   // if(!viewrs.includes(view.userId))
+    // {
+    //   views.push(view.userId)
+    // }
+  }
+
+ 
+
+
+  let uniqueViews = [];
+  let userIds = new Set();  // Set to track unique userIds
+  
+  for (let view of views) {
+    // If the userId is not in the Set, add it and push the view to uniqueViews
+    if (!userIds.has(view.userId)) {
+      userIds.add(view.userId);  // Add userId to the Set
+      uniqueViews.push(view);     // Add the view to the uniqueViews array
+    }
+  }
+
+
+  console.log("viewrs.length",uniqueViews.length,viewrs.length)
  
  
  let count = 0;
@@ -347,7 +394,7 @@ const totalViews1 = async (req, res) => {
   count = count + view.viewsCount;
   });
   console.log(count);
-  res.status(200).json({"viewCount":count,"buyerCount":intrestedCount||0});
+  res.status(200).json({"viewCount":count,"buyerCount":intrestedCount||0,"viewrsCount":uniqueViews.length});
   } catch (error) {
   console.log(error,'view error');
   res.status(500).json("Internal server error");

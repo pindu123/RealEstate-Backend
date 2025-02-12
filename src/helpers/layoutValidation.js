@@ -1,21 +1,144 @@
-const Joi = require("joi");
 
-const capitalizeWords = (value) => {
-  if (typeof value === "string") {
-    return value
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
-  }
-  return value;
-};
+
+// const capitalizeWords = (value) => {
+//   if (typeof value === "string") {
+//     return value
+//       .split(" ")
+//       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+//       .join(" ");
+//   }
+//   return value;
+// };
 
 //Joi schema for layout details validation
+
+// in use
+
+
+// const layoutValidationSchema = Joi.object({
+//   userId: Joi.string().optional(),
+//   enteredBy: Joi.string().optional(),
+//   propertyId:Joi.string().optional(),
+//   role: Joi.number().optional(),
+//   propertyType: Joi.string().default("Layout"),
+//   rating: Joi.number().default(0),
+//   ratingCount: Joi.number().default(0),
+//   status: Joi.number().default(0),
+//   csrId: Joi.string().optional(),
+
+//   agentDetails: Joi.object({ userId: Joi.string().optional() }).optional(),
+
+//   ownerDetails: Joi.object({
+//     ownerName: Joi.string()
+//       .required()
+//       .custom((value) => {
+//         return capitalizeWords(value);
+//       }, "Capitalization for OwnerName"),
+//     ownerContact: Joi.string()
+//       .length(10)
+//       .pattern(/[6-9]{1}[0-9]{9}/)
+//       .required()
+//       .messages({
+//         "string.pattern.base": "Phone number must be a valid 10-digit number.",
+//       }),
+//     ownerEmail: Joi.string().email().optional().allow("").lowercase(),
+//   }).required(),
+//   layoutDetails: Joi.object({
+//     reraRegistered: Joi.boolean().required(),
+//     dtcpApproved: Joi.boolean().required(),
+//     tlpApproved: Joi.boolean().required(),
+//     flpApproved: Joi.boolean().required(),
+//     layoutTitle: Joi.string()
+//       .required()
+//       .custom((value) => {
+//         return capitalizeWords(value);
+//       }, "Capitalization for layoutTitle"),
+//     description: Joi.string().optional(),
+//     plotCount: Joi.number().required().min(0),
+//     availablePlots: Joi.number().required().min(0).max(Joi.ref("plotCount")),
+//     plotSize: Joi.number().required().min(0.1),
+//     sizeUnit: Joi.string().required(),
+//     plotPrice: Joi.number().required().min(0),
+//     priceUnit: Joi.string().required(),
+//     totalAmount: Joi.number().required(),
+//     address: Joi.object({
+//       //
+//       pinCode: Joi.string()
+//         .pattern(/^[0-9]{6}$/) // Must be exactly 6 digits
+//         .optional() // Makes the field optional
+//         .allow(null) // Allows null as a valid value
+//         .messages({
+//           "string.pattern.base": "Pin code must be a valid 6-digit number.",
+//         }),
+//       country: Joi.string()
+//         .default("India")
+//         .required()
+//         .custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for country"),
+//       state: Joi.string()
+//         .default("Andhra Pradesh")
+//         .required()
+//         .custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for state"),
+//       district: Joi.string()
+//         .required()
+//         .custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for district"),
+//       mandal: Joi.string()
+//         .required()
+//         .custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for mandal"),
+//       village: Joi.string()
+//         .required()
+//         .custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for village"),
+
+//       latitude: Joi.string().optional(),
+//       longitude: Joi.string().optional(),
+//       landMark: Joi.string().optional(),
+//       currentLocation:Joi.string().optional()
+//     }).required(),
+//   }).required(),
+//   amenities: Joi.object({
+//     underGroundWater: Joi.boolean().required(),
+//     drainageSystem: Joi.boolean().required(),
+//     electricityFacility: Joi.string().optional(),
+//     swimmingPool: Joi.boolean().required(),
+//     playZone: Joi.boolean().required(),
+//     gym: Joi.boolean().required(),
+//     conventionHall: Joi.boolean().required(),
+//     roadType:Joi.string().optional(),
+//     distanceFromRoad: Joi.string().optional(),
+
+//     medical: Joi.number().optional().min(0),
+//     educational: Joi.number().optional().min(0),
+//     extraAmenities: Joi.array()
+//       .items(
+//         Joi.string().custom((value) => {
+//           return capitalizeWords(value);
+//         }, "Capitalization for extra amenities")
+//       )
+//       .optional(),
+//   }).optional(),
+
+//   uploadPics: Joi.array().items(Joi.string()).optional(),
+//   videos:Joi.array().items(Joi.any()).optional(),
+//   propertyInterestedCount:Joi.number().optional()
+// });
+const Joi = require("joi");
+
+// Helper function to capitalize words
+const capitalizeWords = (str) => str.replace(/\b\w/g, (char) => char.toUpperCase());
 
 const layoutValidationSchema = Joi.object({
   userId: Joi.string().optional(),
   enteredBy: Joi.string().optional(),
-  propertyId:Joi.string().optional(),
+  propertyId: Joi.string().optional(),
   role: Joi.number().optional(),
   propertyType: Joi.string().default("Layout"),
   rating: Joi.number().default(0),
@@ -28,9 +151,7 @@ const layoutValidationSchema = Joi.object({
   ownerDetails: Joi.object({
     ownerName: Joi.string()
       .required()
-      .custom((value) => {
-        return capitalizeWords(value);
-      }, "Capitalization for OwnerName"),
+      .custom((value) => capitalizeWords(value), "Capitalization for OwnerName"),
     ownerContact: Joi.string()
       .length(10)
       .pattern(/[6-9]{1}[0-9]{9}/)
@@ -40,6 +161,7 @@ const layoutValidationSchema = Joi.object({
       }),
     ownerEmail: Joi.string().email().optional().allow("").lowercase(),
   }).required(),
+
   layoutDetails: Joi.object({
     reraRegistered: Joi.boolean().required(),
     dtcpApproved: Joi.boolean().required(),
@@ -47,60 +169,69 @@ const layoutValidationSchema = Joi.object({
     flpApproved: Joi.boolean().required(),
     layoutTitle: Joi.string()
       .required()
-      .custom((value) => {
-        return capitalizeWords(value);
-      }, "Capitalization for layoutTitle"),
+      .custom((value) => capitalizeWords(value), "Capitalization for LayoutTitle"),
     description: Joi.string().optional(),
     plotCount: Joi.number().required().min(0),
     availablePlots: Joi.number().required().min(0).max(Joi.ref("plotCount")),
-    plotSize: Joi.number().required().min(0.1),
-    sizeUnit: Joi.string().required(),
-    plotPrice: Joi.number().required().min(0),
-    priceUnit: Joi.string().required(),
-    totalAmount: Joi.number().required(),
+        plotSize: Joi.number().required().min(0.1),
+        sizeUnit: Joi.string().required(),
+        sizeUnitTe: Joi.string().optional(),
+        plotPrice: Joi.number().required().min(0),
+        priceUnit: Joi.string().required(),
+        totalAmount: Joi.number().required(),
+    plots: Joi.array()
+      .items(
+        Joi.object({
+          plotId: Joi.number().optional(), // Optional because it's generated automatically
+          plotSize: Joi.number().required().min(0.1),
+          sizeUnit: Joi.string().required(),
+          sizeUnitTe: Joi.string().optional(),
+          plotAmount: Joi.number().optional().min(0),
+        })
+      )
+      .required()
+      .custom((plots, helpers) => {
+        // Ensure the number of plots matches `plotCount`
+        if (plots.length !== helpers.state.ancestors[0].plotCount) {
+          return helpers.message(
+            `Number of plots (${plots.length}) does not match the plotCount (${helpers.state.ancestors[0].plotCount}).`
+          );
+        }
+        return plots;
+      }),
+
     address: Joi.object({
-      //
       pinCode: Joi.string()
-        .pattern(/^[0-9]{6}$/) // Must be exactly 6 digits
-        .optional() // Makes the field optional
-        .allow(null) // Allows null as a valid value
+        .pattern(/^[0-9]{6}$/)
+        .optional()
+        .allow(null)
         .messages({
           "string.pattern.base": "Pin code must be a valid 6-digit number.",
         }),
       country: Joi.string()
         .default("India")
         .required()
-        .custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for country"),
+        .custom((value) => capitalizeWords(value), "Capitalization for Country"),
       state: Joi.string()
         .default("Andhra Pradesh")
         .required()
-        .custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for state"),
+        .custom((value) => capitalizeWords(value), "Capitalization for State"),
       district: Joi.string()
         .required()
-        .custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for district"),
+        .custom((value) => capitalizeWords(value), "Capitalization for District"),
       mandal: Joi.string()
         .required()
-        .custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for mandal"),
+        .custom((value) => capitalizeWords(value), "Capitalization for Mandal"),
       village: Joi.string()
         .required()
-        .custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for village"),
-
+        .custom((value) => capitalizeWords(value), "Capitalization for Village"),
       latitude: Joi.string().optional(),
       longitude: Joi.string().optional(),
       landMark: Joi.string().optional(),
-      currentLocation:Joi.string().optional()
+      currentLocation: Joi.string().optional(),
     }).required(),
   }).required(),
+
   amenities: Joi.object({
     underGroundWater: Joi.boolean().required(),
     drainageSystem: Joi.boolean().required(),
@@ -109,23 +240,20 @@ const layoutValidationSchema = Joi.object({
     playZone: Joi.boolean().required(),
     gym: Joi.boolean().required(),
     conventionHall: Joi.boolean().required(),
-    roadType:Joi.string().optional(),
+    roadType: Joi.string().optional(),
     distanceFromRoad: Joi.string().optional(),
-
     medical: Joi.number().optional().min(0),
     educational: Joi.number().optional().min(0),
     extraAmenities: Joi.array()
       .items(
-        Joi.string().custom((value) => {
-          return capitalizeWords(value);
-        }, "Capitalization for extra amenities")
+        Joi.string().custom((value) => capitalizeWords(value), "Capitalization for Extra Amenities")
       )
       .optional(),
   }).optional(),
 
   uploadPics: Joi.array().items(Joi.string()).optional(),
-  videos:Joi.array().items(Joi.any()).optional(),
-  propertyInterestedCount:Joi.number().optional()
+  videos: Joi.array().items(Joi.any()).optional(),
+  propertyInterestedCount: Joi.number().optional(),
 });
 
 // const layoutValidationSchema = Joi.object({

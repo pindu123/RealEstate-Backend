@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const commercialModel = require("../models/commercialModel");
 
 // Function to capitalize the first letter of each word
 const capitalizeWords = (value) => {
@@ -170,7 +171,7 @@ const commercialSchema = Joi.object({
   propertyType: Joi.string().required(),
   propertyTypeTe: Joi.string().optional(), // Telugu translation
   propertyInterestedCount: Joi.number().optional(),
-
+  propertyOnHold:Joi.string().optional(),
   propertyTitle: Joi.string()
     .required()
     .custom((value) => capitalizeWords(value), "Capitalization for propertyTitle"),
@@ -253,6 +254,9 @@ const commercialSchema = Joi.object({
       descriptionTe: Joi.string().optional(), // Telugu translation
     }).required(),
     amenities: Joi.object({
+      powerBackup:Joi.boolean().optional(),
+      isParkingFacility:Joi.boolean().optional(),
+      security:Joi.boolean().optional(),
       isElectricity: Joi.string().optional(),
       isElectricityTe: Joi.string().optional(), // Telugu translation
       isWaterFacility: Joi.boolean().optional(),
@@ -268,7 +272,9 @@ const commercialSchema = Joi.object({
     uploadPics: Joi.array().items(Joi.string()).optional(),
     videos: Joi.array().items(Joi.string().allow(null)).optional(),
   }).required(),
-});
+}); 
 
+
+ 
 
 module.exports = { commercialSchema };

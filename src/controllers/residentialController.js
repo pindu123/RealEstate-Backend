@@ -4,6 +4,7 @@ const wishlistModel = require("../models/wishlistModel");
 const { residentialSchema } = require("../helpers/residentialValidation");
 const userModel = require("../models/userModel");
 const notifyModel = require("../models/notificationModel");
+const propertyReservation = require("../models/propertyReservation");
 
 const createResidentials = async (req, res) => {
   try {
@@ -263,6 +264,7 @@ const createResidentialInUse = async (req, res) => {
 };
  
 const translate = require('@iamtraction/google-translate'); // Import translation library
+const auctionModel = require("../models/auctionModel");
 
 //translationCheck
 // const createResidential = async (req, res) => {
@@ -368,7 +370,7 @@ const translate = require('@iamtraction/google-translate'); // Import translatio
 const createResidential = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
-
+console.log("adsdfd",req.body)
     req.body.amenities = {
       ...req.body.amenities,
       electricityFacility: String(req.body.amenities.electricityFacility),
@@ -377,7 +379,7 @@ const createResidential = async (req, res) => {
     };
 
     console.log("Request Body:", req.body);
-
+console.log("flat",req.body.flat)
     // Generate propertyId
     const propertyId = await generatePropertyId("PR", residentialModel);
 
@@ -464,6 +466,7 @@ const createResidential = async (req, res) => {
       success: true,
     });
   } catch (error) {
+    console.log(error)
     if (error.isJoi) {
       return res.status(422).json({
         status: "error",
@@ -659,12 +662,68 @@ let properties=[]
     }
      
 
+
+let resultData=[]
+
+    for(let res of properties)
+      {
+        const id=res._id
+        const data=await auctionModel.find({propertyId:id})
+  
+        res.auctionData=data
+
+
+    const reservation=await propertyReservation.find({"propId":id})
+
+
+        if(reservation.length>0)
+          {
+            res.reservedBy=reservation[0].userId
+          }
+
+        if(data.length===0)
+          {
+            res.auctionStatus= "InActive";
+  
+          }
+          else{
+
+
+            for (let auction of data) {
+              if (auction.auctionStatus === "active") {
+                res.auctionStatus = auction.auctionStatus;
+                break;
+              }
+              else {
+                res.auctionStatus = auction.auctionStatus;
+    
+              }
+    
+            }
+
+             const buyerData=data[0].buyers 
+            if(buyerData.length>0)
+            {
+                  buyerData.sort((a,b)=>b.bidAmount-a.bidAmount)
+            }
+            res.auctionData.buyers=buyerData
+          }
+
+          resultData.push({
+            ...res._doc,
+            "reservedBy":res.reservedBy,
+            "auctionStatus":res.auctionStatus,
+            "auctionData":res.auctionData
+          })
+      }
+
+
     if (properties.length === 0) {
       return res.status(200).json([]);
     }
 
     // Send the found properties as the response
-    res.status(200).json(properties);
+    res.status(200).json(resultData);
   } catch (error) {
     // Log detailed error information
     console.error("Error Details:", error);
@@ -760,6 +819,40 @@ else
         ratingStatus: rating ? rating.status : 0,
       };
     });
+
+
+
+    for(let res of response)
+      {
+        const id=res._id
+        const data=await auctionModel.find({propertyId:id})
+  
+        res.auctionData=data[0]
+
+
+    const reservation=await propertyReservation.find({"propId":id})
+
+
+        if(reservation.length>0)
+          {
+            fields.reservedBy=reservation[0].userId
+          }
+
+        if(data.length===0)
+          {
+            res.auctionStatus= "InActive";
+  
+          }
+          else{
+            res.auctionStatus=data[0].auctionStatus  ;
+            const buyerData=data[0].buyers 
+            if(buyerData.length>0)
+            {
+                  buyerData.sort((a,b)=>b.bidAmount-a.bidAmount)
+            }
+            res.auctionData.buyers=buyerData
+          }
+      }
 
     // Send the combined data as the response
     res.status(200).json(response);

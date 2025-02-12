@@ -47,6 +47,9 @@ const dealsSchema = new mongoose.Schema(
     },
     addedByRole:{
       type:Number,
+    },
+    agentRole:{
+      type:String, 
     }
   },
   { timestamps: true }

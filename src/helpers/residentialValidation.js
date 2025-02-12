@@ -120,7 +120,7 @@ const capitalizeWords = (value) => {
 //     educational: Joi.number().min(0).required(),
 //     grocery: Joi.number().min(0).required(),
 //     gymFacility: Joi.boolean().required(),
- 
+
 //   }).optional(),
 
 //   propPhotos: Joi.array().items(Joi.string()).optional(),
@@ -148,7 +148,7 @@ const capitalizeWords = (value) => {
 //       }, "Capitalization for extra amenities")
 //     ).optional(),
 //   }).required(),
- 
+
 // });
 
 
@@ -157,10 +157,10 @@ const residentialSchema = Joi.object({
   propertyId: Joi.string().optional(),
   enteredBy: Joi.string().optional(),
   propertyInterestedCount: Joi.number().optional(),
-  propertyTypeTe:Joi.string(),
+  propertyTypeTe: Joi.string(),
   propertyType: Joi.string().required(),
   agentDetails: Joi.object({ userId: Joi.string().optional() }).optional(),
-
+  propertyOnHold: Joi.string().optional(),
   rating: Joi.number().default(0),
   ratingCount: Joi.number().default(0),
   status: Joi.number().default(0),
@@ -175,7 +175,7 @@ const residentialSchema = Joi.object({
       .messages({
         "string.pattern.base": "Owner name can only contain alphabets and spaces.",
       }),
-      ownerNameTe:Joi.string().optional(0),
+    ownerNameTe: Joi.string().optional(0),
     ownerEmail: Joi.string()
       .email()
       .optional()
@@ -193,7 +193,7 @@ const residentialSchema = Joi.object({
         "string.pattern.base": "Contact number must start with 6-9 and be 10 digits long.",
       }),
   }).required(),
-  
+
 
   propertyDetails: Joi.object({
     type: Joi.string(),
@@ -202,22 +202,26 @@ const residentialSchema = Joi.object({
       .custom((value) => {
         return capitalizeWords(value);
       }, "Capitalization for apartmentName"),
-      typeTe:Joi.string().optional(),
+    typeTe: Joi.string().optional(),
     flatNumber: Joi.string().required(),
 
     apartmentLayout: Joi.string().required(),
-    
+    flatCount: Joi.number().optional(),
+    availableFlats: Joi.number().optional(),
     flatSize: Joi.number().required(),
     sizeUnit: Joi.string().required(),
-
     flatCost: Joi.number().required().min(0),
     priceUnit: Joi.string().required(),
 
     totalCost: Joi.number().required().min(0),
 
-    flatFacing: Joi.string().required(),
+    flatFacing: Joi.string().optional(),
 
-    furnitured: Joi.string().required(),
+    furnitured: Joi.string().optional(),
+
+
+
+propertyPurposeTe:Joi.string(),
 
     propDesc: Joi.string().optional(),
     apartmentNameTe: Joi.string().optional(),
@@ -226,8 +230,22 @@ const residentialSchema = Joi.object({
     flatFacingTe: Joi.string().optional(),
     furnituredTe: Joi.string().optional(),
     propDescTe: Joi.string().optional().optional(),
+    propertyPurpose:Joi.string().optional(),
+    flat: Joi.array().items(Joi.object({
+      flatNumber: Joi.number(),
+      flatFacing: Joi.string(),
+      bedroomCount: Joi.number(),
+      floorNumber: Joi.number(),
+      furnitured:
+        Joi.string(),
+      flatSize: Joi.number(),
+      flatSizeUnit: Joi.string(),
+      balconyCount: Joi.number(),
+      flatCost: Joi.number(),
+      propertyLayout:Joi.string()
+    })).optional(),
   }).required(),
- 
+
   address: Joi.object({
     pinCode: Joi.string()
       .pattern(/^[0-9]{6}$/)
@@ -236,23 +254,23 @@ const residentialSchema = Joi.object({
       .messages({
         "string.pattern.base": "Pin code must be a valid 6-digit number.",
       }),
-    countryTe:Joi.string().optional(),
+    countryTe: Joi.string().optional(),
     country: Joi.string().default("India").required(),
     state: Joi.string().default("Andhra Pradesh").required(),
-    stateTe:Joi.string().optional(),
+    stateTe: Joi.string().optional(),
     district: Joi.string()
       .required()
       .custom((value) => {
         return capitalizeWords(value);
       }, "formatting district"),
-    districtTe:Joi.string().optional(),
-    mandalTe:Joi.string().optional(),
+    districtTe: Joi.string().optional(),
+    mandalTe: Joi.string().optional(),
     mandal: Joi.string()
       .required()
       .custom((value) => {
         return capitalizeWords(value);
       }, "formatting mandal"),
-      villageTe:Joi.string().optional(),
+    villageTe: Joi.string().optional(),
     village: Joi.string()
       .required()
       .custom((value) => {
@@ -262,19 +280,22 @@ const residentialSchema = Joi.object({
     latitude: Joi.string().optional(),
     longitude: Joi.string().optional(),
     landMark: Joi.string().optional(),
-    landMarkTe:Joi.string().optional(),
+    landMarkTe: Joi.string().optional(),
     currentLocation: Joi.string().optional(),
   }).required(),
 
   amenities: Joi.object({
+    nearBy: Joi.string().optional(),
     powerSupply: Joi.string().required(),
-    powerSupplyTe:Joi.string().optional(),
+    powerSupplyTe: Joi.string().optional(),
     waterFacility: Joi.boolean().required(),
     electricityFacility: Joi.string().optional(),
-    electricityFacilityTe:Joi.string().optional(),
+    electricityFacilityTe: Joi.string().optional(),
     roadType: Joi.string().optional(),
-    roadTypeTe:Joi.string().optional(),
+    roadTypeTe: Joi.string().optional(),
     distanceFromRoad: Joi.string().optional(),
+    distanceFromRoadTe: Joi.string().optional(),
+
     elevator: Joi.boolean().required(),
     watchman: Joi.boolean().required(),
     cctv: Joi.boolean().required(),
