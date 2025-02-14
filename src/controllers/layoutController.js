@@ -482,7 +482,7 @@ const getLayouts = async (req, res) => {
 
       res.auctionData = data
 
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id ,reservationStatus:true,"userId":userId})
 
 
       if (reservation.length > 0) {
@@ -604,7 +604,7 @@ const getAllLayouts = async (req, res) => {
 
       res.auctionData = data[0]
 
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id,"reservationStatus":true,"userId":userId })
 
 
       if (reservation.length > 0) {

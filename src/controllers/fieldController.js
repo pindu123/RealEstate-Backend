@@ -25,7 +25,7 @@ const getFields = async (req, res) => {
 
       const data = await auctionModel.find({ propertyId: id })
 
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id,reservationStatus:true,userId:userId })
 
       field.auctionData = data;
 
@@ -627,7 +627,7 @@ const getAllFields = async (req, res) => {
 
       const data = await auctionModel.find({ propertyId: id })
 
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id ,reservationStatus:true,userId:userId})
 
       fields.auctionData = data[0];
 

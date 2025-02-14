@@ -6,7 +6,7 @@ const Joi = require("joi");
 const userBookingSchema = Joi.object({
   userId: Joi.string().required(),
 
-  role: Joi.number().valid(2, 3).required(),
+  role: Joi.number().valid(1,2, 3).required(),
 
   agentId: Joi.string().required(),
 
@@ -67,7 +67,7 @@ const agentBookingSchema = Joi.object({
 
   // validating role and status for getting the bookings in agent page
   const validateRoleAndStatus = Joi.object({
-    role: Joi.number().valid(2,3).required(),
+    role: Joi.number().valid(1,2,3).required(),
     status: Joi.number().valid(-1,0,1,2,3).required()
   })
 
@@ -85,7 +85,7 @@ const validateIds = Joi.object({
 
 //validating data for filters
 const validateFilterData= Joi.object({
-    role: Joi.number().valid(2,3).required(),
+    role: Joi.number().valid(1,2,3).required(),
     location: Joi.string().required(),
     status: Joi.number().valid(-1,1,2,3,0).required()
 

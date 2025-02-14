@@ -673,7 +673,7 @@ let resultData=[]
         res.auctionData=data
 
 
-    const reservation=await propertyReservation.find({"propId":id})
+    const reservation=await propertyReservation.find({"propId":id,"reservationStatus":true,"userId":userId})
 
 
         if(reservation.length>0)
@@ -830,12 +830,12 @@ else
         res.auctionData=data[0]
 
 
-    const reservation=await propertyReservation.find({"propId":id})
+    const reservation=await propertyReservation.find({"propId":id,"reservationStatus":true,"userId":userId})
 
-
+console.log("reservation",reservation)
         if(reservation.length>0)
           {
-            fields.reservedBy=reservation[0].userId
+            res.reservedBy=reservation[0].userId
           }
 
         if(data.length===0)

@@ -2861,8 +2861,7 @@ const assignCustomerToAgent = async (req, res) => {
     const { assignedTo, customers, assignedBy, assignedDate } = req.body;
 
     console.log("req.body",req.body    )
-    // Validate the required fields
-    if (
+     if (
       !assignedTo ||
       !Array.isArray(customers) ||
       customers.length === 0 ||

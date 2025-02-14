@@ -25,6 +25,7 @@ const {
   unReserveProperty,
   getAgentDealings2,
   getDeals1,
+  customerInterest,
 } = require("../controllers/dealsController");
 const {
   ModuleDataManagementInstance,
@@ -75,5 +76,8 @@ dealsRoutes.get("/getAgentDealings2/:agentRole",  getAgentDealings2)
 
 
 dealsRoutes.get("/getDeals1",getDeals1)
+
+
+dealsRoutes.get("/customerInterest/:propertyId",customerInterest)
 
 module.exports = dealsRoutes;

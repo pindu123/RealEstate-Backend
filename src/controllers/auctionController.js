@@ -116,7 +116,7 @@ const closeAuction = async (req, res) => {
         const status=req.body.status
         
 
-       const auctionStatus= await auctionModel.findByIdAndUpdate({ _id: auctionId }, { auctionStatus: "InActive" })
+       const auctionStatus= await auctionModel.findByIdAndUpdate({ _id: auctionId }, { auctionStatus: status})
 
         res.status(200).json({ "message": "Auction Closed Successfully" })
     }

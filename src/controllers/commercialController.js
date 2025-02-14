@@ -150,6 +150,7 @@ const generatePropertyId = async (typePrefix, model) => {
  */
 const translate = require('@iamtraction/google-translate'); // Import translation library
 const auctionModel = require("../models/auctionModel");
+const { UserBindingInstance } = require("twilio/lib/rest/ipMessaging/v2/service/user/userBinding");
 
 
 const createCommercial = async (req, res) => {
@@ -436,7 +437,7 @@ const getCommercials = async (req, res) => {
       const id = comm._id
       const data = await auctionModel.find({ propertyId: id })
 
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id,"reservationStatus":true,"userId":userId })
 
       if (reservation.length > 0) {
         comm.reservedBy = reservation[0].userId
@@ -558,7 +559,7 @@ const getAllCommercials = async (req, res) => {
     for (let comm of updatedCommercials) {
       const id = comm._id
       const data = await auctionModel.find({ propertyId: id })
-      const reservation = await propertyReservation.find({ "propId": id })
+      const reservation = await propertyReservation.find({ "propId": id ,"reservationStatus":true,"userId":userId})
 
 
       if (reservation.length > 0) {

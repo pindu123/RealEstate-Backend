@@ -194,7 +194,7 @@ const resultData=[]
   
         const data=await auctionModel.find({propertyId:id})
          
-        const reservation=await propertyReservation.find({"propId":id})
+        const reservation=await propertyReservation.find({"propId":id,"reservationStatus":true,userId:userId})
 
 
         if(reservation.length>0)
@@ -591,11 +591,11 @@ const getAllProperties = async (req, res) => {
      if (fieldsCount > 4) {
       fieldProperties = await fieldModel
         .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1,  "landDetails.titleTe" :1, "propertyTypeTe":1 })
-        .sort({ createdAt: -1 }).limit(4);
+        .sort({ createdAt: -1 }).limit(2);
     } else {
       fieldProperties = await fieldModel
         .find({}, { "landDetails.images": 1, "address.district": 1, "landDetails.title": 1, "landDetails.size": 1, "landDetails.totalPrice": 1, "landDetails.sizeUnit": 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 , "address.districtTe":1, "landDetails.titleTe" :1, "propertyTypeTe":1 })
-        .sort({ createdAt: -1 }).limit(4);
+        .sort({ createdAt: -1 }).limit(2);
     }
   }
   else
@@ -638,11 +638,11 @@ const getAllProperties = async (req, res) => {
      if (residentialCount > 4) {
       residentialProperties = await residentialModel
         .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1,"propertyDetails.apartmentNameTe": 1, "propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1, "address.district": 1,"address.districtTe": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     } else {
       residentialProperties = await residentialModel
         .find({}, { propPhotos: 1, "propertyDetails.apartmentName": 1, "propertyDetails.apartmentNameTe": 1,"propertyDetails.flatCost": 1, "propertyDetails.flatSize": 1,"address.districtTe": 1, "address.district": 1, "propertyDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     }
   }
   else
@@ -687,11 +687,11 @@ const getAllProperties = async (req, res) => {
      if (commercialCount > 4) {
       commercialProperties = await commercialModel
         .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1,propertyTitleTe: 1, propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     } else {
       commercialProperties = await commercialModel
         .find({}, { "propertyDetails.landDetails": 1, "propertyDetails.uploadPics": 1, propertyTitle: 1, propertyTitleTe: 1,propertyType: 1, propertyInterestedCount: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     }
   }
   else
@@ -746,11 +746,11 @@ if(offset==="1")
     if (layoutCount > 4) {
       layoutProperties = await layoutModel
         .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1,"layoutDetails.layoutTitleTe": 1, "layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     } else {
       layoutProperties = await layoutModel
         .find({}, { uploadPics: 1, "layoutDetails.layoutTitle": 1, "layoutDetails.layoutTitleTe": 1,"layoutDetails.plotSize": 1, "layoutDetails.totalAmount": 1, "layoutDetails.address.district": 1,"layoutDetails.address.districtTe": 1, "layoutDetails.sizeUnit": 1, propertyInterestedCount: 1, propertyType: 1, propertyId: 1 })
-        .sort({ createdAt: -1 }).limit(4)
+        .sort({ createdAt: -1 }).limit(2)
     }
   }
   else
@@ -1807,8 +1807,8 @@ console.log("userID",userId)
 
  
     console.log("ad")
-    const  reservation=await propertyReservation.find({propId:propertyId})
-    console.log(reservation.length,"asdas")
+    const  reservation=await propertyReservation.find({propId:propertyId,reservationStatus:true,userId:userId})
+    console.log(propertyId,reservation,reservation.length,"asdas")
     if(reservation.length>0)
     {
     propertyDetails.reservedBy=reservation[0].userId
@@ -2898,7 +2898,7 @@ console.log("auctionDataauctionDataauctionData",data,id)
     res.auctionData=data[0]
 
 
-const reservation=await propertyReservation.find({"propId":id})
+const reservation=await propertyReservation.find({"propId":id,"reservationStatus":true,"userId":userId})
 
 
     if(reservation.length>0)

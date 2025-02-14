@@ -255,7 +255,7 @@ const createDeal = async (req, res) => {
     const role = req.user.user.role;
 
 
-    console.log("Request bodyyy",req.body)
+    console.log("Request bodyyy", req.body)
     let csrId;
     if (role === 1 || role === 3) {
       const agentDetail = await userModel.findById(userId);
@@ -304,7 +304,6 @@ const createDeal = async (req, res) => {
         });
       }
 
-      // Determine customer ID
       let customerId = userId;
       if (role !== 3) {
         if (req.body.customerId) {
@@ -4175,7 +4174,7 @@ const getPropertyOnHold = async (req, res) => {
 
     // Fetch reserved properties for the user
     const reservedProperties = await propertyReservation.find(
-      { userId },
+      { userId},
       { propId: 1, propertyType: 1, reservationStatus: 1 }
     );
 
@@ -4256,7 +4255,7 @@ const getPropertyOnHolds = async (req, res) => {
 
   try {
     if (role === 3 || role === 1) { // Role 3: Customer, Role 1: Agent
-      const reservedProperties = await propertyReservation.find({ userId });
+      const reservedProperties = await propertyReservation.find({ userId,reservationStatus:true });
 
       const properties = await Promise.all(
         reservedProperties.map(async (reservedProperty) => {
@@ -4321,12 +4320,19 @@ const getPropertyOnHolds = async (req, res) => {
 
 const unReserveProperty = async (req, res) => {
   try {
+    const userId=req.user.user.userId
     const propertyId = req.body.propertyId
 
     const propertyType = req.body.propertyType
+
+console.log("req.body",req.body)
+
+     
+  const status1=await propertyReservation.findOneAndUpdate({"propId":propertyId,userId:userId},{"reservationStatus":false})
     let status
     if (propertyType === "Commercial") {
       status = await commercialModel.findByIdAndUpdate({ _id: propertyId }, { "propertyOnHold": "no" })
+
     }
     else if (propertyType === "Layout") {
       status = await layoutModel.findByIdAndUpdate({ _id: propertyId }, { "propertyOnHold": "no" })
@@ -4340,11 +4346,13 @@ const unReserveProperty = async (req, res) => {
       status = await fieldModel.findByIdAndUpdate({ _id: propertyId }, { "propertyOnHold": "no" })
 
     }
-    if (status) {
+console.log("status",status)
+
+    if (status&&status1) {
       res.status(200).json({ "message": "Property UnReserved Successfully" })
     }
     else {
-      res.status(400).json({ "message": "Failed" })
+      res.status(409).json({ "message": "Failed" })
     }
   }
   catch (error) {
@@ -4496,7 +4504,7 @@ const getAgentDealings2 = async (req, res) => {
       else {
         agentDeals = await dealsModel.find({ addedBy: userId, dealStatus: "open" })
 
-       }
+      }
 
     }
 
@@ -4504,75 +4512,73 @@ const getAgentDealings2 = async (req, res) => {
     let resultData = []
 
     for (let deal of agentDeals) {
-      if(role===1)
-      {
-      const customerData = await userModel.find({ _id: deal.customerId }, { password: 0 })
+      if (role === 1) {
+        const customerData = await userModel.find({ _id: deal.customerId }, { password: 0 })
 
 
-      const propertyType = deal.propertyType?.toLowerCase();
+        const propertyType = deal.propertyType?.toLowerCase();
 
 
-      console.log("propertyType", propertyType)
-      let propertyData = [];
-      switch (propertyType) {
-        case 'commercial':
-          propertyData = await commercialModel.findById(deal.propertyId);
-          break;
-        case 'layout':
-          propertyData = await layoutModel.findById(deal.propertyId);
-          break;
-        case 'agricultural land':
-          propertyData = await fieldModel.findById(deal.propertyId);
-          break;
-        case 'residential':
-        case 'flat':
-        case 'house':
-          propertyData = await residentialModel.findById(deal.propertyId);
-          break;
+        console.log("propertyType", propertyType)
+        let propertyData = [];
+        switch (propertyType) {
+          case 'commercial':
+            propertyData = await commercialModel.findById(deal.propertyId);
+            break;
+          case 'layout':
+            propertyData = await layoutModel.findById(deal.propertyId);
+            break;
+          case 'agricultural land':
+            propertyData = await fieldModel.findById(deal.propertyId);
+            break;
+          case 'residential':
+          case 'flat':
+          case 'house':
+            propertyData = await residentialModel.findById(deal.propertyId);
+            break;
+        }
+
+        console.log("property type", propertyData)
+        resultData.push({
+          ...deal._doc,
+          "customer": customerData[0],
+          "property": propertyData
+        })
       }
-
-      console.log("property type", propertyData)
-      resultData.push({
-        ...deal._doc,
-        "customer": customerData[0],
-        "property": propertyData
-      })
-    }
-    if(role===3)
-    {
-      const agentData=await userModel.find({_id:deal.agentId})
-
-     
-
-      const propertyType = deal.propertyType?.toLowerCase();
+      if (role === 3) {
+        const agentData = await userModel.find({ _id: deal.agentId })
 
 
-      console.log("propertyType", propertyType)
-      let propertyData = [];
-      switch (propertyType) {
-        case 'commercial':
-          propertyData = await commercialModel.findById(deal.propertyId);
-          break;
-        case 'layout':
-          propertyData = await layoutModel.findById(deal.propertyId);
-          break;
-        case 'agricultural land':
-          propertyData = await fieldModel.findById(deal.propertyId);
-          break;
-        case 'residential':
-        case 'flat':
-        case 'house':
-          propertyData = await residentialModel.findById(deal.propertyId);
-          break;
+
+        const propertyType = deal.propertyType?.toLowerCase();
+
+
+        console.log("propertyType", propertyType)
+        let propertyData = [];
+        switch (propertyType) {
+          case 'commercial':
+            propertyData = await commercialModel.findById(deal.propertyId);
+            break;
+          case 'layout':
+            propertyData = await layoutModel.findById(deal.propertyId);
+            break;
+          case 'agricultural land':
+            propertyData = await fieldModel.findById(deal.propertyId);
+            break;
+          case 'residential':
+          case 'flat':
+          case 'house':
+            propertyData = await residentialModel.findById(deal.propertyId);
+            break;
+        }
+
+        console.log("property type", propertyData)
+        resultData.push({
+          ...deal._doc,
+          "agentData": agentData[0],
+          "property": propertyData
+        })
       }
-
-      console.log("property type", propertyData)
-      resultData.push({
-        ...deal._doc,
-        "agentData": agentData[0],
-        "property": propertyData
-      }) 
-    }
 
     }
 
@@ -4760,7 +4766,30 @@ const getDeals1 = async (req, res) => {
 
 
 
+const customerInterest=async(req,res)=>{
+  try
+  {
+  const userId=req.user.user.userId
+  const propertyId=req.params.propertyId
 
+  const dealData=await dealsModel.find({customerId:userId,propertyId:propertyId})
+
+  if(dealData.length===0)
+  {
+    res.status(409).json({data:dealData,message:"No Data Found"})
+  }
+  else
+  {
+    res.status(200).json({data:dealData})
+  }
+
+  }
+  catch(error)
+  {
+    res.status(500).json({"message":"Internal Server Error"})
+    console.log(error)
+  }
+}
 
 
 
@@ -4791,5 +4820,6 @@ module.exports = {
   getPropertyOnHold,
   unReserveProperty,
   getDeals1,
-  getAgentDealings2
+  getAgentDealings2,
+  customerInterest
 };
