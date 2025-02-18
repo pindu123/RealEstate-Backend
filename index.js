@@ -153,7 +153,8 @@ mongoose
     useNewUrlParser: true,
 
     useUnifiedTopology: true,
-
+    serverSelectionTimeoutMS: 300000,
+    socketTimeoutMS: 45000,
     tlsAllowInvalidCertificates: true,
   })
   .then(() => {
