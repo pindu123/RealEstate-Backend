@@ -455,11 +455,12 @@ const getCommercials = async (req, res) => {
         for (let auction of data) {
           if (auction.auctionStatus === "active") {
             comm.auctionStatus = auction.auctionStatus;
+            comm.auctionType=auction.auctionType
             break;
           }
           else {
             comm.auctionStatus = auction.auctionStatus;
-
+            comm.auctionType=auction.auctionType
           }
 
         }
@@ -565,14 +566,29 @@ const getAllCommercials = async (req, res) => {
       if (reservation.length > 0) {
         comm.reservedBy = reservation[0].userId
       }
-      comm.auctionData = data[0]
+      comm.auctionData = data
       if (data.length === 0) {
         comm.auctionStatus = "InActive";
 
       }
       else {
-        comm.auctionStatus = data[0].auctionStatus;
-        const buyerData = data[0].buyers
+for(let auction of data)
+{
+  if(auction.auctionType==="active"|| auction.auctionType==="Active")
+  {
+    comm.auctionStatus=auction.auctionStatus
+   comm.auctionType=auction.auctionType
+  break;
+  }
+  else
+  {
+    comm.auctionType=auction.auctionType
+    comm.auctionStatus=auction.auctionStatus
+
+  }
+}
+
+         const buyerData = data[0].buyers
         if (buyerData.length > 0) {
           buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
         }
@@ -605,9 +621,22 @@ const editCommDetails = async (req, res) => {
 const getProperties = async (req, res) => {
   try {
     const type = req.params.type
+    const {page,limit}=req.query
+ 
+    let commercialData
+    if(page&&limit)
+    {
+      let offset=(page-1)*limit
+        commercialData = await commercialModel.find().skip(offset).limit(limit)
 
-    const commercialData = await commercialModel.find();
+    }
+    else
+    {
+        commercialData = await commercialModel.find();
 
+    }
+ 
+ 
     let resultData = []
 
     for (let comm of commercialData) {
@@ -628,8 +657,11 @@ const getProperties = async (req, res) => {
     if (resultData.length === 0) {
       res.status(400).json({ "message": "No Data Found" })
     }
+    else
+    {
 
     res.status(200).json({ "data": resultData })
+    }
 
   }
   catch (error) {

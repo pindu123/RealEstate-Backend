@@ -827,7 +827,7 @@ else
         const id=res._id
         const data=await auctionModel.find({propertyId:id})
   
-        res.auctionData=data[0]
+        res.auctionData=data
 
 
     const reservation=await propertyReservation.find({"propId":id,"reservationStatus":true,"userId":userId})
@@ -844,8 +844,19 @@ console.log("reservation",reservation)
   
           }
           else{
-            res.auctionStatus=data[0].auctionStatus  ;
-            const buyerData=data[0].buyers 
+
+             for(let auction of data)
+             {
+              res.auctionStatus=auction.auctionStatus
+              res.auctionType=auction.auctionType
+
+              if(auction.auctionType==="active" || auction.auctionType==="Active")
+              {
+                break;
+              }
+             }
+
+             const buyerData=data[0].buyers 
             if(buyerData.length>0)
             {
                   buyerData.sort((a,b)=>b.bidAmount-a.bidAmount)

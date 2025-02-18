@@ -232,7 +232,7 @@ Bhumi.India Bazar`,
 //uncomment this if above has any problem
 const scheduleMeeting = async (req, res) => {
   try {
-  
+  console.log("secheduled",req.body)
    let {
        
        propertyName,
@@ -548,12 +548,16 @@ const currentDayMeetings = async (req, res) => {
     const currentDay = [];
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
-
-    // Fetch details in parallel
+ 
+    console.log("formatted date",formattedDate,meetings.length,userId)
+     
     const detailsPromises = meetings.map(async (meeting) => {
+
+    
       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
 
-      // If the meeting is today, add it to the currentDay array
+       console.log("formattedDate",formattedDate,meeting.meetingStartTime ,startTime)
+
       if (startTime === formattedDate) {
         const customer = await userModel.findById(meeting.customerId).select("firstName lastName phoneNumber").lean();
         let result = {

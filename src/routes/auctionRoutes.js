@@ -1,5 +1,5 @@
 const express=require('express')
-const { postAuction, bidByBuyer, getBidsOfAuction, closeAuction, getAllAuctions, getTodayAuctions, getFutureAuctions, getAuctionDetailsofProperty, auctionById } = require('../controllers/auctionController')
+const { postAuction, bidByBuyer, getBidsOfAuction, closeAuction, getAllAuctions, getTodayAuctions, getFutureAuctions, getAuctionDetailsofProperty, auctionById, getWinnerData, registerPushToken } = require('../controllers/auctionController')
 
 const auctionRoutes=express.Router()
 
@@ -22,4 +22,7 @@ auctionRoutes.get("/getAuctionDetailsProperty/:propertyId",getAuctionDetailsofPr
 
 auctionRoutes.get("/auctionById/:auctionId",auctionById)
 
+auctionRoutes.get("/getWinnerData",getWinnerData)
+
+auctionRoutes.post("/registerPushToken",registerPushToken)
 module.exports=auctionRoutes

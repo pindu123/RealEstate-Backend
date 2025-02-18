@@ -3,20 +3,22 @@ const commercialModel = require("../models/commercialModel")
 const fieldModel = require("../models/fieldModel")
 const layoutModel = require("../models/layoutModel")
 const residentialModel = require("../models/residentialModel")
+const nodemailer = require("nodemailer");
+const userModel = require("../models/userModel")
+const pushNotification = require("../models/pushNotification")
 
 const postAuction = async (req, res) => {
     try {
         const data = req.body
 
-        const propertyId=data.propertyId
+        const propertyId = data.propertyId
 
 
-        const auctions=await auctionModel.find({propertyId:propertyId,auctionStatus:"active"});
+        const auctions = await auctionModel.find({ propertyId: propertyId, auctionStatus: "active" });
 
-        console.log("auctions",auctions)
-        if(auctions.length>0)
-        {
-            return res.status(400).json({"message":"Already the property is in auction"})
+        console.log("auctions", auctions)
+        if (auctions.length > 0) {
+            return res.status(400).json({ "message": "Already the property is in auction" })
         }
 
         console.log(data)
@@ -43,18 +45,17 @@ const bidByBuyer = async (req, res) => {
 
         let buyers = auctionData[0].buyers
 
-        const date=new Date()
+        const date = new Date()
         // for (let buyer of buyers) {
         //     if (buyer.buyerId === bid.buyerId) {
         //         return res.status(400).json({ "message": "You have already placed a bid in this auction." })
         //     }
         // }
 
-          if(date<auctionData[0].startDate)
-          {
+        if (date < auctionData[0].startDate) {
             console.log("erere",)
-            res.status(400).json({"message":"Auction Not Started Yet"})
-          }
+            res.status(400).json({ "message": "Auction Not Started Yet" })
+        }
 
         buyers.push(bid)
 
@@ -112,11 +113,11 @@ const getBidsOfAuction = async (req, res) => {
 const closeAuction = async (req, res) => {
     try {
         const auctionId = req.body.auctionId
-        
-        const status=req.body.status
-        
 
-       const auctionStatus= await auctionModel.findByIdAndUpdate({ _id: auctionId }, { auctionStatus: status})
+        const status = req.body.status
+
+
+        const auctionStatus = await auctionModel.findByIdAndUpdate({ _id: auctionId }, { auctionStatus: status })
 
         res.status(200).json({ "message": "Auction Closed Successfully" })
     }
@@ -130,7 +131,7 @@ const closeAuction = async (req, res) => {
 
 const getAllAuctions = async (req, res) => {
     try {
-        const auctionData = await auctionModel.find({ $or:[{auctionStatus: "active"},{auctionStatus: "closed"}] });
+        const auctionData = await auctionModel.find({ $or: [{ auctionStatus: "active" }, { auctionStatus: "closed" }] });
 
 
         let resultData = []
@@ -179,12 +180,13 @@ const getTodayAuctions = async (req, res) => {
     try {
         const currentTime = new Date();
 
-        const auctionData = await auctionModel.find({ startDate: { $lte: currentTime }, endDate: { $gt: currentTime },auctionStatus:"active"})
+        const auctionData = await auctionModel.find({ startDate: { $lte: currentTime }, endDate: { $gt: currentTime }, auctionStatus: "active" })
 
         if (auctionData.length === 0) {
             return res.status(409).json({ "message": "No Auction Found" })
         }
 
+        auctionWinner("679c923ebda9afb73db55205")
 
         let resultData = []
         for (let auction of auctionData) {
@@ -213,7 +215,10 @@ const getTodayAuctions = async (req, res) => {
             })
 
         }
+
         res.status(200).json({ "data": resultData })
+
+
     }
     catch (error) {
         res.status(500).json({ "message": "Internal Server Error" })
@@ -253,106 +258,351 @@ const getFutureAuctions = async (req, res) => {
 
 const getAuctionDetailsofProperty = async (req, res) => {
     try {
-const propertyId=req.params.propertyId
+        const propertyId = req.params.propertyId
 
-const auctionData=await auctionModel.find({"propertyId":propertyId})
+        const auctionData = await auctionModel.find({ "propertyId": propertyId })
 
-const reslutData=[]
+        const reslutData = []
 
-if(auctionData.length>0)
-{
-let prop
-const fieldData = await fieldModel.find({ _id: propertyId })
-const commData = await commercialModel.find({ _id: propertyId })
+        if (auctionData.length > 0) {
+            let prop
+            const fieldData = await fieldModel.find({ _id: propertyId })
+            const commData = await commercialModel.find({ _id: propertyId })
 
-const residential = await residentialModel.find({ _id: propertyId })
+            const residential = await residentialModel.find({ _id: propertyId })
 
-const layout = await layoutModel.find({ _id: propertyId })
+            const layout = await layoutModel.find({ _id: propertyId })
 
-if (fieldData.length > 0) {
-    prop = fieldData
-}
-if (commData.length > 0) {
-    prop = commData
-} if (residential.length > 0) {
-    prop = residential
-} if (layout.length > 0) {
-    prop = layout
-}
-
+            if (fieldData.length > 0) {
+                prop = fieldData
+            }
+            if (commData.length > 0) {
+                prop = commData
+            } if (residential.length > 0) {
+                prop = residential
+            } if (layout.length > 0) {
+                prop = layout
+            }
 
 
 
-let maxBid = 0
-let maxBidData = {}
- let buyerData = auctionData[0].buyers;
- console.log(buyerData,auctionData)
 
-for (let buyer of buyerData) {
+            let maxBid = 0
+            let maxBidData = {}
+            let buyerData = auctionData[0].buyers;
+            console.log(buyerData, auctionData)
 
-    if (buyer.bidAmount > maxBid) {
-        maxBid = buyer.bidAmount
-        maxBidData = buyer
-    }
-}
+            for (let buyer of buyerData) {
+
+                if (buyer.bidAmount > maxBid) {
+                    maxBid = buyer.bidAmount
+                    maxBidData = buyer
+                }
+            }
 
 
-// let auctionDetails = {
-//     auctionData,
-//     maximumBid: maxBidData
-// }
+            // let auctionDetails = {
+            //     auctionData,
+            //     maximumBid: maxBidData
+            // }
 
-reslutData.push({
-    ...auctionData[0]._doc,
-    "property":prop[0],
-    maximumBid: maxBidData
+            reslutData.push({
+                ...auctionData[0]._doc,
+                "property": prop[0],
+                maximumBid: maxBidData
 
-})
-}
+            })
+        }
 
-if(reslutData.length===0)
-{
-  return  res.status(400).json({"message":"No Auctions Found"})
-}
+        if (reslutData.length === 0) {
+            return res.status(400).json({ "message": "No Auctions Found" })
+        }
 
-res.status(200).json({"data":reslutData})
- 
+        res.status(200).json({ "data": reslutData })
+
 
 
     }
     catch (error) {
         console.log(error)
-res.status(500).json({"message":"Internal Server Error"})
+        res.status(500).json({ "message": "Internal Server Error" })
     }
 }
 
 
 
-const auctionById=async(req,res)=>{
-    try
-    {
-const auctionId=req.params.auctionId
+const auctionById = async (req, res) => {
+    try {
+        const auctionId = req.params.auctionId
 
-const auctionData=await auctionModel.find({_id:auctionById})
+        const auctionData = await auctionModel.find({ _id: auctionById })
 
 
-if(auctionData.length===0)
-{
-    res.status(409).josn({"message":"No Data Found","data":auctionData[0]})
-}
-else
-{
-    res.status(200).json({"data":auctionData[0]})
-}
+        if (auctionData.length === 0) {
+            res.status(409).josn({ "message": "No Data Found", "data": auctionData[0] })
+        }
+        else {
+            res.status(200).json({ "data": auctionData[0] })
+        }
 
     }
-    catch(error)
-    {
-console.log(error)
-res.status(500).json({"message":"Internal Server Error"})
+    catch (error) {
+        console.log(error)
+        res.status(500).json({ "message": "Internal Server Error" })
     }
 }
 
+
+const auctionWinner = async (auctionId) => {
+    console.log("auctionnnnnnnnn", auctionId)
+
+    const auctionData = await auctionModel.find({ _id: auctionId })
+
+    let maxBidAmount = 0
+    let winnerId
+    let winnerData
+
+    if (auctionData.length > 0) {
+        const bidData = auctionData[0].buyers
+
+
+
+        for (let bid of bidData) {
+            if (bid.bidAmount > maxBidAmount) {
+                maxBidAmount = bid.bidAmount
+                winnerId = bid.buyerId
+                winnerData = bid
+            }
+        }
+
+
+        const status = await auctionModel.findByIdAndUpdate({ _id: auctionId }, { auctionWinner: winnerId, winnerData: winnerData })
+
+        if (status) {
+
+            for (let bids of bidData) {
+                sendAuctionWinnerDetails(winnerId, bids.buyerId)
+
+            }
+            console.log("winner decided", status)
+
+        }
+        else {
+            console.log("abcd")
+        }
+
+    }
+    else {
+        console.log("No Auction")
+    }
+
+}
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+
+
+const sendAuctionWinnerDetails = async (
+    winnerMail,
+    contactId,
+) => {
+    console.log("mails")
+    const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: EMAIL_USER,
+            pass: EMAIL_PASS,
+        },
+    });
+
+    const contact = await userModel.find({ _id: contactId }, { password: 0 })
+
+    let htmlContent
+    console.log(winnerMail, contactId, winnerMail === contactId)
+    if (winnerMail === contactId) {
+        htmlContent = `<div style="text-align: center; font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+      <h1 style="color:rgb(46, 139, 139);">Congratulations ${contact[0].firstName} ${contact[0].lastName}!</h1>
+      <h2 style="color: #555;">You are the winner of the auction!</h2>
+      <h3 style="color: #888;">You will be contacted shortly for the next steps in the process.</h3>
+      <p style="color: #333;">Thank you for participating in the auction, and we look forward to working with you!</p>
+      <footer style="margin-top: 20px; font-size: 14px; color: #aaa;">
+        <p>Best regards,<br>Your Auction Team</p>
+      </footer>
+    </div>`
+    }
+    else {
+        htmlContent = `<div style="text-align: center; font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+      <h1 style="color:rgb(74, 138, 158);">Thank you for participating, ${contact[0].firstName} ${contact[0].lastName}!</h1>
+      <h2 style="color: #555;">Unfortunately, you did not win the auction this time.</h2>
+      <h3 style="color: #888;">We appreciate your interest and participation!</h3>
+      <p style="color: #333;">Stay tuned for future auctions and best of luck next time!</p>
+      <footer style="margin-top: 20px; font-size: 14px; color: #aaa;">
+        <p>Best regards,<br>Your Auction Team</p>
+      </footer>
+    </div>`
+    }
+
+    const contactValue = contact[0].email
+
+    const mailOptions = {
+        from: EMAIL_USER,
+        to: contactValue,
+        subject: "Auction Winner Details",
+        html: `<html><body>${htmlContent}</body></html>`, // HTML content with inline images
+    };
+
+    await transporter.sendMail(mailOptions);
+};
+
+
+
+
+const getWinnerData = async (req, res) => {
+    try {
+
+        const userId = req.user.user.userId;
+
+        const auctionData = await auctionModel.find({ auctionWinner: userId })
+
+        let result = []
+
+        if (auctionData.length === 0) {
+            res.status(409).json({ "message": "No won Auctions", "status": false })
+        }
+        else {
+            for (let auction of auctionData) {
+                let propertyDetails
+
+
+                propertyDetails = await fieldModel.find({ _id: auction.propertyId })
+                if (propertyDetails.length === 0) {
+                    propertyDetails = await commercialModel.find({ _id: auction.propertyId })
+                }
+                if (propertyDetails.length === 0) {
+                    propertyDetails = await layoutModel.find({ _id: auction.propertyId })
+                }
+                if (propertyDetails.length === 0) {
+                    propertyDetails = await residentialModel.find({ _id: auction.propertyId })
+                }
+
+                console.log("propertyDetails", auction, propertyDetails)
+
+                let propertyName
+                let propertyImage
+                if (propertyDetails[0].propertyType === "Agricultural land") {
+
+                    propertyName = propertyDetails[0].landDetails.title
+                    propertyImage = propertyDetails[0].landDetails.images
+                }
+                else if (propertyDetails[0].propertyType === "Layout") {
+                    propertyName = propertyDetails[0].layoutDetails.layoutTitle
+                    propertyImage = propertyDetails[0].uploadPics
+                }
+                else if (propertyDetails[0].propertyType === "Residential") {
+                    propertyName = propertyDetails[0].propertyDetails.apartmentName
+                    propertyImage = propertyDetails[0].propPhotos
+                }
+                else {
+                    propertyName = propertyDetails[0].propertyTitle
+
+                    propertyImage = propertyDetails[0].uploadPics
+                }
+
+
+
+                result.push({
+                    "auctionData": auction,
+                    "propertyName": propertyName,
+                    "propertyImage": propertyImage
+                })
+            }
+
+
+
+            res.status(200).json({ data: result, status: true })
+
+
+        }
+
+
+
+
+    }
+    catch (error) {
+        console.log(error)
+
+        res.status(500).json({ "message": "Internal Server Error" })
+    }
+}
+
+const registerPushToken = async (req, res) => {
+    try {
+        console.log("req.body", req.body)
+        const userId = req.user.user.userId
+
+        const pushToken = req.body.pushToken
+
+
+        const data = {
+            "userId": userId,
+            "pushToken": pushToken
+        }
+
+        const pushModel = new pushNotification(data)
+
+        await pushModel.save()
+
+        res.status(200).json({ "message": "Token Registered Successfully" })
+    }
+    catch (error) {
+        console.log(error)
+
+        res.status(500).json({ "message": "Internal Server Error" })
+
+    }
+}
+
+// const auctionNotification=async(req,res)=>{
+//     try
+//     {
+
+//     }
+//     catch(error)
+//     {
+
+//     }
+// }
+
+
+
+
+const AuctionPushNotification = async (message) => {
+    try {
+
+console.log("message",message)
+        const buyersData = await userModel.find({ role: 3 })
+
+        for (let buyer of buyersData) {
+            const tokensData=await pushNotification.find({userId:buyer._id})
+            console.log("tokensData",tokensData)
+
+            if(tokensData.length>0)
+            {
+            console.log("tokensData",tokensData)
+            await axios.post('https://exp.host/--/api/v2/push/send', {
+                to: tokensData[0].pushToken,
+                sound: 'default',
+                title: 'Auction Reminder',
+                body: message,
+            });
+        }
+
+        }
+
+      
+    } catch (error) {
+        console.error('Error sending notification:', error);
+    }
+};
 
 module.exports = {
     postAuction,
@@ -363,5 +613,9 @@ module.exports = {
     getTodayAuctions,
     getFutureAuctions,
     getAuctionDetailsofProperty,
-    auctionById
+    auctionById,
+    auctionWinner,
+    getWinnerData,
+    registerPushToken,
+    AuctionPushNotification
 }

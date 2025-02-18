@@ -76,7 +76,21 @@ console.log("customers",customers)
 //getSurveyData
 const getCustomer = async (req, res) => {
   try {
-    const customerData = await customerModel.find();
+
+    const {page,limit}=req.query
+let customerData
+
+    if(page&&limit)
+    {
+
+      let offset=(page-1)*limit
+        customerData = await customerModel.find().skip(offset).limit(limit)
+
+    }
+    else
+    {
+      customerData = await customerModel.find();
+    }
 
     res.status(200).json(customerData);
   } catch (error) {
@@ -91,7 +105,69 @@ const getCustomers = async (req, res) => {
   try {
     const { role, userId } = req.user.user;
     const { agentId } = req.query; 
+
+
+    const page=req.query.page
+    const limit=req.query.limit
+
     let customerData = [];
+
+    let offset
+
+    if(page && limit)
+    {
+      offset=(page-1)*limit
+
+
+      if (role === 5) {
+        if (!agentId) {
+          // If no agentId is passed, fetch deals for the logged-in user's userId
+          const deals = await dealsModel.find({ csrId: userId }, "customerId").lean();
+          if (!deals || deals.length === 0) {
+            return res.status(404).json({
+              message: "No deals found for the current CSR",
+            });
+          }
+  
+          // Extract unique customerIds from the deals
+          const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+  
+          // Fetch customer details from userModel where role is 3 and _id matches customerIds
+          customerData = await userModel
+            .find({ _id: { $in: customerIds }, role: 3 })
+            .select("-password").skip(offset).limit(limit)
+            .sort({ createdAt: -1 }) 
+        } else {
+          // If agentId is provided, fetch deals for the specified agentId
+          const deals = await dealsModel.find({ agentId }, "customerId").lean();
+          const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+  
+          // Fetch customer details from userModel where role is 3 and _id matches customerIds
+          customerData = await userModel
+            .find({ _id: { $in: customerIds }, role: 3 })
+            .select("-password").skip(offset).limit(limit)
+            .sort({ createdAt: -1 }) 
+        }
+      } else if (role === 1) {
+        // Role 1: Agent - Fetch customers based on the logged-in user's userId
+        const deals = await dealsModel.find({ agentId: userId }, "customerId").lean();
+        const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
+  
+        // Fetch customer details from userModel where role is 3 and _id matches customerIds
+        customerData = await userModel
+          .find({ _id: { $in: customerIds }, role: 3 })
+          .select("-password").skip(offset).limit(limit)
+          .sort({ createdAt: -1 })
+      } else {
+        customerData = await userModel
+          .find({ role: 3 })
+          .select("-password").skip(offset).limit(limit)
+          .sort({ createdAt: -1 }) 
+      }
+
+    }
+    else
+    {
 
     if (role === 5) {
       if (!agentId) {
@@ -138,6 +214,7 @@ const getCustomers = async (req, res) => {
         .select("-password")
         .sort({ createdAt: -1 });
     }
+  }
 
     res.status(200).json(customerData);
   } catch (error) {

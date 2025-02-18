@@ -133,7 +133,7 @@ app.use(errorHandler);
 
 app.use("/filterRoutes",verifyJwt,filterRoutes)
 
-app.use("/auction",auctionRoutes)
+app.use("/auction",verifyJwt,auctionRoutes)
 
 app.use("/api", apiRouter);
 app.use(
@@ -146,6 +146,7 @@ app.get("/", (req, res) => {
   console.log("API is working");
   res.send("Welcome to my API!");
 });
+
 
 mongoose
   .connect(process.env.MONGODB_URI, {

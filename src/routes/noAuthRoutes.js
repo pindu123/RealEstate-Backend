@@ -6,6 +6,7 @@ const {
   getAllProperties,
   resetRatings,
   getLatestProps,
+  getAllProperties1,
 } = require("../controllers/propertyController");
 const { getByDistrict } = require("../controllers/fieldController");
 
@@ -27,4 +28,6 @@ noAuthRouter.post('/verify',otpLogin);
 noAuthRouter.put("/resetPassword", resetMail);
 noAuthRouter.post("/contactUs",contactUs);
 noAuthRouter.get("/findAnAgent",findAnAgent);
+
+noAuthRouter.get("/getAllProperties1",getAllProperties1);
 module.exports = noAuthRouter;

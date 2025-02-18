@@ -47,11 +47,14 @@ const getFields = async (req, res) => {
             if(auction.auctionStatus==="active")
             {
                field.auctionStatus = auction.auctionStatus;
+               field.auctionType=auction.auctionType
               break;           
             }
             else
             {
               field.auctionStatus = auction.auctionStatus;
+              field.auctionType=auction.auctionType
+
 
             }
              
@@ -64,7 +67,7 @@ const getFields = async (req, res) => {
         }
          field.auctionData.buyers = buyerData
       }
-resultData.push({...field._doc,"reservedBy":field.reservedBy,"auctionStatus":field.auctionStatus,"auctionData":field.auctionData})
+resultData.push({...field._doc,"reservedBy":field.reservedBy,"auctionStatus":field.auctionStatus,"auctionData":field.auctionData,"auctionType":field.auctionType})
       console.log("fields",field.reservedBy)
     }
 
@@ -629,29 +632,58 @@ const getAllFields = async (req, res) => {
 
       const reservation = await propertyReservation.find({ "propId": id ,reservationStatus:true,userId:userId})
 
-      fields.auctionData = data[0];
+      fields.auctionData = data;
 
 
       if (reservation.length > 0) {
         fields.reservedBy = reservation[0].userId
       }
 
+      // if (data.length === 0) {
+      //   fields.auctionStatus = "InActive";
+
+      // }
+      // else {
+
+
+      //   console.log(data[0].buyers)
+      //   const buyerData = data[0].buyers
+      //   if (buyerData.length > 0) {
+      //     buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+      //   }
+      //   fields.auctionStatus = data[0].auctionStatus;
+      //   fields.auctionData.buyers = buyerData
+      // }
+
+      // console.log("data.lengtgh",data.length,id)
       if (data.length === 0) {
         fields.auctionStatus = "InActive";
 
       }
       else {
-
-
-        console.log(data[0].buyers)
+          for(let auction of data)
+          {
+            if(auction.auctionStatus==="active")
+            {
+               fields.auctionStatus = auction.auctionStatus;
+               fields.auctionType=auction.auctionType
+              break;           
+            }
+            else
+            {
+              fields.auctionStatus = auction.auctionStatus;
+              fields.auctionType=auction.auctionType
+            }
+             
+          } 
+ 
+        console.log( fields.auctionStatus,data)
         const buyerData = data[0].buyers
         if (buyerData.length > 0) {
           buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
         }
-        fields.auctionStatus = data[0].auctionStatus;
-        fields.auctionData.buyers = buyerData
+         fields.auctionData.buyers = buyerData
       }
-
     }
 
 

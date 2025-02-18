@@ -495,6 +495,7 @@ const getLayouts = async (req, res) => {
       else {
 
         for (let auction of data) {
+          res.auctionType=auction.auctionType
           if (auction.auctionStatus === "active") {
             res.auctionStatus = auction.auctionStatus;
             break;
@@ -602,7 +603,7 @@ const getAllLayouts = async (req, res) => {
       const id = res._id
       const data = await auctionModel.find({ propertyId: id })
 
-      res.auctionData = data[0]
+      res.auctionData = data
 
       const reservation = await propertyReservation.find({ "propId": id,"reservationStatus":true,"userId":userId })
 
@@ -615,8 +616,18 @@ const getAllLayouts = async (req, res) => {
 
       }
       else {
-        res.auctionStatus = data[0].auctionStatus;
-        const buyerData = data[0].buyers
+
+        for(let auction of data)
+        {
+          res.auctionType=auction.auctionType
+          res.auctionStatus=auction.auctionStatus
+          if(auction.auctionStatus==="active" || auction.auctionStatus==="Active")
+          {
+            break;
+          }
+        }
+
+         const buyerData = data[0].buyers
         if (buyerData.length > 0) {
           buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
         }

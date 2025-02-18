@@ -8,6 +8,29 @@ const auctionSchema = new mongoose.Schema({
       type: String,
       required: true
    },
+   auctionWinner:{
+        type:String
+   },
+   winnerData:{
+      bidAmount:{
+         type:String
+               },
+         buyerName:{
+            type:String
+         },
+          buyerId:{
+            type:String
+          },
+          bidTime: {
+            type: Date,
+          },
+         transactionId: {
+            type:String
+         },
+         reservationAmount:{
+            type:String
+         }
+   },
    startDate: {
       type: Date,
     },

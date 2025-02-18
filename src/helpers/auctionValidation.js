@@ -15,4 +15,6 @@ const auctionValidation = joi.object({
      startTime: joi.string(),
      endTime: joi.string(),
      auctionType: joi.string(),
+     auctionWinner:joi.string(),
+     winnerData:joi.object()
 })

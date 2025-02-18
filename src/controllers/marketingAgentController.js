@@ -308,12 +308,28 @@ const getMarketingAgents = async (req, res) => {
   try {
     const role = req.user.user.role;
     const addedBy = req.user.user.userId;
+
+     const {page,limit}=req.query
+
     let marketingAgentData;
+
+    if(page&&limit)
+    {
+      let offset=(page-1)*limit
+      if (role === 0) {
+        marketingAgentData = await userModel.find().skip(offset).limit(limit)
+      } else if (role === 5) {
+        marketingAgentData = await userModel.find({ addedBy: addedBy }).skip(offset).limit(limit)
+      }
+    }
+else
+{
     if (role === 0) {
       marketingAgentData = await userModel.find();
     } else if (role === 5) {
       marketingAgentData = await userModel.find({ addedBy: addedBy });
     }
+  }
     if (!marketingAgentData) {
       return res.status(409).json({ message: "No Marketing Agent Data Found" });
     }
@@ -1102,10 +1118,17 @@ const updateCustomerStatus = async (req, res) => {
       const assignedId = req.params.userId;
       const role = req.params.role;
       
+      const {page,limit}=req.query
+
       console.log('Role:', role);
       console.log('Assigned ID:', assignedId);
+
+
   
       let filterField;
+
+    
+
       if (role === '5') {
         filterField = 'assignedBy';
       } else if (role === '6') {
@@ -1132,12 +1155,23 @@ const updateCustomerStatus = async (req, res) => {
   
       console.log('Start of Day (UTC):', startOfDay.toISOString());
       console.log('End of Day (UTC):', endOfDay.toISOString());
+  let assignments
+      if(page&&limit)
+        {
+          let offset=(page-1)*limit
+            assignments = await CustomerAssignment.find({
+            [filterField]: assignedId,
+            assignedDate: { $gte: startOfDay.getTime(), $lte: endOfDay.getTime() },
+          }).skip(offset).limit(limit)
+        }
+        else
+        {
+            assignments = await CustomerAssignment.find({
+            [filterField]: assignedId,
+            assignedDate: { $gte: startOfDay.getTime(), $lte: endOfDay.getTime() },
+          })
+        }
   
-      // Fetch customer assignments based on the assigned ID and assignedDate range
-      const assignments = await CustomerAssignment.find({
-        [filterField]: assignedId,
-        assignedDate: { $gte: startOfDay.getTime(), $lte: endOfDay.getTime() },
-      });
   
       console.log('Assignments fetched:', assignments);
   
