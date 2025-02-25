@@ -158,7 +158,7 @@ mongoose
    })
   .then(() => {
     console.log("DB Connected");
-    app.listen(3000, () => {
+    app.listen(3001, () => {
       console.log("Server started on port 3000");
     });
   })
@@ -188,7 +188,7 @@ const io = socketIo(server, {
   },
   reconnectionAttempts: 5,  
   reconnectionDelay: 1000,  
-  timeout: 5000,  
+  timeout: 5001,  
 });
 
 
@@ -249,6 +249,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(5000, () => {
+server.listen(5001, () => {
   console.log("Server is running on port 5000");
 });
