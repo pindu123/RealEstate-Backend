@@ -2697,16 +2697,16 @@ if(page)
 
   let offset=(page-1)*limit
       fieldData = await fieldModel
-      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit/4)
       .sort({ createdAt: -1 });
       comData = await commercialModel
-      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit/4)
       .sort({ createdAt: -1 });
       layoutData = await layoutModel
-      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit/4)
       .sort({ createdAt: -1 });
       resData = await residentialModel
-      .find({ csrId: req.params.csrId }).skip(offset).limit(limit)
+      .find({ csrId: req.params.csrId }).skip(offset).limit(limit/4)
       .sort({ createdAt: -1 });
 }
 else
