@@ -1,5 +1,3 @@
-
-
 const bookingModel = require("../models/bookingModel");
 const userModel = require("../models/userModel");
 const residentialModel = require("../models/residentialModel");
@@ -45,12 +43,13 @@ const createBooking = async (req, res) => {
     await booking.save();
     res.status(200).send({ message: "Booked Successfully", success: true });
   } catch (error) {
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     console.error("Error Details:", error);
     res
       .status(400)
@@ -61,7 +60,7 @@ const createBooking = async (req, res) => {
 //api for an agent to book appointment
 const createAgentBooking = async (req, res) => {
   try {
-    const {role} = req.user.user;  //, firstName, lastName, email, phoneNumber, profilePicture } =     
+    const { role } = req.user.user; //, firstName, lastName, email, phoneNumber, profilePicture } =
     const agentId = req.user.user.userId;
     console.log(agentId);
     const details = {
@@ -79,12 +78,13 @@ const createAgentBooking = async (req, res) => {
     await booking.save();
     res.status(200).send({ message: "Booked Successfully", success: true });
   } catch (error) {
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     console.error("Error Details:", error);
     res
       .status(400)
@@ -109,23 +109,25 @@ const getUserBookings = async (req, res) => {
       return res.status(404).json({ message: "No bookings found" });
     }
 
-
     const updatedbookings = await Promise.all(
       bookings.map(async (booking) => {
         // Fetch user details based on userId
-        const user = await userModel.findById(booking.userId, 'firstName lastName email phoneNumber profilePicture');
-     
+        const user = await userModel.findById(
+          booking.userId,
+          "firstName lastName email phoneNumber profilePicture"
+        );
+
         let propertyModel;
         let projection = {};
         let propertyType = booking.propertyType;
         let propertyId = booking.propertyId;
-        
+
         if (propertyType === "Agricultural land") {
           propertyModel = fieldModel;
           projection = { "landDetails.title": 1 }; // Include the field
         } else if (propertyType === "Commercial") {
           propertyModel = commercialModel;
-          projection = { "propertyTitle": 1 }; // Include the field
+          projection = { propertyTitle: 1 }; // Include the field
         } else if (propertyType === "Residential") {
           propertyModel = residentialModel;
           projection = { "propertyDetails.apartmentName": 1 }; // Include the field
@@ -133,19 +135,32 @@ const getUserBookings = async (req, res) => {
           propertyModel = layoutModel;
           projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
         } else {
-          return res.status(400).json({ message: "Invalid property type", success: false });
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
         }
-        
-        const property = await propertyModel.findById(propertyId, projection).exec();
-        
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
+
         let title;
-        if (propertyType === "Agricultural land" && property?.landDetails?.title) {
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
           title = property.landDetails.title;
         } else if (propertyType === "Commercial" && property?.propertyTitle) {
           title = property.propertyTitle;
-        } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
           title = property.propertyDetails.apartmentName;
-        } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
           title = property.layoutDetails.layoutTitle;
         }
         // Add the user details to the rating result
@@ -153,15 +168,14 @@ const getUserBookings = async (req, res) => {
           ...booking.toObject(), // Convert Mongoose document to plain object
           firstName: user.firstName,
           lastName: user.lastName,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            profilePicture: user.profilePicture,
-            propertyName: title,
-            propertyId: propertyId
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture,
+          propertyName: title,
+          propertyId: propertyId,
         };
       })
     );
-
 
     res.status(200).json(updatedbookings);
   } catch (error) {
@@ -174,20 +188,46 @@ const getUserBookings = async (req, res) => {
 const getUserBookingsByStatus = async (req, res) => {
   try {
     const agentId = req.user.user.userId; // Extract agentId from the token
-    const result= await validateRoleAndStatus.validateAsync(req.params);
+    const result = await validateRoleAndStatus.validateAsync(req.params);
     const { role, status } = result; // role of buyer or seller
-    //  if status is 3, all bookings will be displayed irrespective of status
+
+    const { page, limit } = req.query;
+
     let bookings;
     if (parseInt(status) === 3) {
-      bookings = await bookingModel
-        .find({ role: role, agentId: agentId })
-        .sort({ _id: -1 });
+      if (page && limit) {
+        let offset = (page - 1) * limit;
+
+        bookings = await bookingModel
+          .find({ role: role, agentId: agentId })
+          .sort({ _id: -1 })
+          .skip(offset)
+          .limit(limit);
+      } else {
+        bookings = await bookingModel
+          .find({ role: role, agentId: agentId })
+          .sort({ _id: -1 });
+      }
     } else {
-      bookings = await bookingModel.find({
-        role: role,
-        agentId: agentId,
-        status: status,
-      }).sort({ _id: -1 });
+      if (page && limit) {
+        let offset = (page - 1) * limit;
+
+        bookings = await bookingModel
+          .find({
+            role: role,
+            agentId: agentId,
+            status: status,
+          })
+          .sort({ _id: -1 }).skip(offset).limit(limit)
+      } else {
+        bookings = await bookingModel
+          .find({
+            role: role,
+            agentId: agentId,
+            status: status,
+          })
+          .sort({ _id: -1 });
+      }
     }
     if (bookings.length === 0) {
       return res.status(404).json({ message: "No bookings found" });
@@ -196,19 +236,22 @@ const getUserBookingsByStatus = async (req, res) => {
     const updatedbookings = await Promise.all(
       bookings.map(async (booking) => {
         // Fetch user details based on userId
-        const user = await userModel.findById(booking.userId, 'firstName lastName email phoneNumber profilePicture');
+        const user = await userModel.findById(
+          booking.userId,
+          "firstName lastName email phoneNumber profilePicture"
+        );
         console.log(booking.propertyType);
         let propertyModel;
         let projection = {};
         let propertyType = booking.propertyType;
         let propertyId = booking.propertyId;
-        
+
         if (propertyType === "Agricultural land") {
           propertyModel = fieldModel;
           projection = { "landDetails.title": 1 }; // Include the field
         } else if (propertyType === "Commercial") {
           propertyModel = commercialModel;
-          projection = { "propertyTitle": 1 }; // Include the field
+          projection = { propertyTitle: 1 }; // Include the field
         } else if (propertyType === "Residential") {
           propertyModel = residentialModel;
           projection = { "propertyDetails.apartmentName": 1 }; // Include the field
@@ -216,18 +259,31 @@ const getUserBookingsByStatus = async (req, res) => {
           propertyModel = layoutModel;
           projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
         } else {
-          return res.status(400).json({ message: "Invalid property type", success: false });
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
         }
-        
-        const property = await propertyModel.findById(propertyId, projection).exec();
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
         let title;
-        if (propertyType === "Agricultural land" && property?.landDetails?.title) {
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
           title = property.landDetails.title;
         } else if (propertyType === "Commercial" && property?.propertyTitle) {
           title = property.propertyTitle;
-        } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
           title = property.propertyDetails.apartmentName;
-        } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
           title = property.layoutDetails.layoutTitle;
         }
         // Add the user details to the rating result
@@ -235,23 +291,23 @@ const getUserBookingsByStatus = async (req, res) => {
           ...booking.toObject(), // Convert Mongoose document to plain object
           firstName: user.firstName,
           lastName: user.lastName,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            profilePicture: user.profilePicture,
-            propertyName: title,
-            propertyId: propertyId
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture,
+          propertyName: title,
+          propertyId: propertyId,
         };
-    
       })
     );
     res.status(200).json(updatedbookings);
   } catch (error) {
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -290,7 +346,9 @@ const getAgentBookings = async (req, res) => {
   try {
     const userId = req.user.user.userId; // Extract userId from the token
     const role = 1; //role 1
-    const bookings = await bookingModel.find({ role: role, userId: userId }).sort({ _id: -1 });
+    const bookings = await bookingModel
+      .find({ role: role, userId: userId })
+      .sort({ _id: -1 });
     if (bookings.length === 0) {
       return res.status(404).json({ message: "No bookings found" });
     }
@@ -298,53 +356,68 @@ const getAgentBookings = async (req, res) => {
     const updatedbookings = await Promise.all(
       bookings.map(async (booking) => {
         // Fetch user details based on userId
-        const user = await userModel.findById(booking.agentId, 'firstName lastName email phoneNumber profilePicture');
-        
-            let propertyModel;
-            let projection = {};
-            let propertyType = booking.propertyType;
-            let propertyId = booking.propertyId;
-            
-            if (propertyType === "Agricultural land") {
-              propertyModel = fieldModel;
-              projection = { "landDetails.title": 1 }; // Include the field
-            } else if (propertyType === "Commercial") {
-              propertyModel = commercialModel;
-              projection = { "propertyTitle": 1 }; // Include the field
-            } else if (propertyType === "Residential") {
-              propertyModel = residentialModel;
-              projection = { "propertyDetails.apartmentName": 1 }; // Include the field
-            } else if (propertyType === "Layout") {
-              propertyModel = layoutModel;
-              projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
-            } else {
-              return res.status(400).json({ message: "Invalid property type", success: false });
-            }
-            
-            const property = await propertyModel.findById(propertyId, projection).exec();
-            
-            let title;
-            if (propertyType === "Agricultural land" && property?.landDetails?.title) {
-              title = property.landDetails.title;
-            } else if (propertyType === "Commercial" && property?.propertyTitle) {
-              title = property.propertyTitle;
-            } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
-              title = property.propertyDetails.apartmentName;
-            } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
-              title = property.layoutDetails.layoutTitle;
-            }
-            // Add the user details to the rating result
-            return {
-              ...booking.toObject(), // Convert Mongoose document to plain object
-              firstName: user.firstName,
-              lastName: user.lastName,
-                email: user.email,
-                phoneNumber: user.phoneNumber,
-                profilePicture: user.profilePicture,
-                propertyName: title,
-                propertyId: propertyId
-            };
-      
+        const user = await userModel.findById(
+          booking.agentId,
+          "firstName lastName email phoneNumber profilePicture"
+        );
+
+        let propertyModel;
+        let projection = {};
+        let propertyType = booking.propertyType;
+        let propertyId = booking.propertyId;
+
+        if (propertyType === "Agricultural land") {
+          propertyModel = fieldModel;
+          projection = { "landDetails.title": 1 }; // Include the field
+        } else if (propertyType === "Commercial") {
+          propertyModel = commercialModel;
+          projection = { propertyTitle: 1 }; // Include the field
+        } else if (propertyType === "Residential") {
+          propertyModel = residentialModel;
+          projection = { "propertyDetails.apartmentName": 1 }; // Include the field
+        } else if (propertyType === "Layout") {
+          propertyModel = layoutModel;
+          projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
+        } else {
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
+        }
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
+
+        let title;
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
+          title = property.landDetails.title;
+        } else if (propertyType === "Commercial" && property?.propertyTitle) {
+          title = property.propertyTitle;
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
+          title = property.propertyDetails.apartmentName;
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
+          title = property.layoutDetails.layoutTitle;
+        }
+        // Add the user details to the rating result
+        return {
+          ...booking.toObject(), // Convert Mongoose document to plain object
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture,
+          propertyName: title,
+          propertyId: propertyId,
+        };
       })
     );
     res.status(200).json(updatedbookings);
@@ -356,7 +429,7 @@ const getAgentBookings = async (req, res) => {
 //update booking status
 const updateBookingStatus = async (req, res) => {
   try {
-    const result= await validateBookingIdStatus.validateAsync(req.params);
+    const result = await validateBookingIdStatus.validateAsync(req.params);
     const bookingId = result.bookingId; // Get bookingId from request parameters
     const status = result.status; // Get status from request body
     // Ensure status is either 0 or 1
@@ -381,12 +454,13 @@ const updateBookingStatus = async (req, res) => {
       .json({ message: "Booking status updated successfully", resultData });
   } catch (error) {
     // Handle any errors
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: "Error updating booking status", error });
   }
 };
@@ -421,8 +495,8 @@ const updateStatus = async (req, res) => {
 //get booking details of agent- accepting and rebooking with a user
 const getBookingByUserAndAgent = async (req, res) => {
   try {
-    const result= await validateIds.validateAsync(req.params);
-    console.log("result",result);
+    const result = await validateIds.validateAsync(req.params);
+    console.log("result", result);
     const { userId, agentId } = result; // Extract userId and agentId from path parameters
     // Query to find booking where userId, agentId match and role = 1
     const booking = await bookingModel
@@ -441,12 +515,13 @@ const getBookingByUserAndAgent = async (req, res) => {
     res.status(200).json({ message: "Booking found", booking });
   } catch (error) {
     // Handle errors
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: "Error fetching booking", error });
   }
 };
@@ -454,7 +529,7 @@ const getBookingByUserAndAgent = async (req, res) => {
 //get booking details of buyer- accepting and rebooking with an agent
 const rebookingWithAgent = async (req, res) => {
   try {
-    const result= await validateIds.validateAsync(req,params);
+    const result = await validateIds.validateAsync(req, params);
     const { userId, agentId } = result; // Extract userId and agentId from path parameters
 
     // Query to find booking where userId, agentId match and role = 1
@@ -468,27 +543,31 @@ const rebookingWithAgent = async (req, res) => {
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
-// Fetch user details based on userId
-const user = await userModel.findById(booking.userId, 'firstName lastName email phoneNumber profilePicture');      
-// Add the user details to the rating result
-booking =  {
-  ...booking.toObject(), // Convert Mongoose document to plain object
-  firstName: user.firstName,
-  lastName: user.lastName,
-    email: user.email,
-    phoneNumber: user.phoneNumber,
-    profilePicture: user.profilePicture
-};
+    // Fetch user details based on userId
+    const user = await userModel.findById(
+      booking.userId,
+      "firstName lastName email phoneNumber profilePicture"
+    );
+    // Add the user details to the rating result
+    booking = {
+      ...booking.toObject(), // Convert Mongoose document to plain object
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+    };
     // Return the found booking
     res.status(200).json({ message: "Booking found", booking });
   } catch (error) {
     // Handle errors
     console.log(error);
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: "Error fetching booking", error });
   }
 };
@@ -520,7 +599,7 @@ const deleteappointment = async (req, res) => {
 
     // Return a success message
     res.status(200).json({
-      message: "Booking deleted"
+      message: "Booking deleted",
     });
   } catch (error) {
     // Handle any errors
@@ -574,7 +653,7 @@ const deleteappointment = async (req, res) => {
 const getByFilters = async (req, res) => {
   try {
     const agentId = req.user.user.userId; // Extract agentId from the token
-    const result= await validateFilterData.validateAsync(req.params);
+    const result = await validateFilterData.validateAsync(req.params);
     const { role, location, status } = result; // Role of buyer or seller
 
     let query = {
@@ -598,19 +677,22 @@ const getByFilters = async (req, res) => {
     const updatedbookings = await Promise.all(
       bookings.map(async (booking) => {
         // Fetch user details based on userId
-        const user = await userModel.findById(booking.userId, 'firstName lastName email phoneNumber profilePicture');
-        
+        const user = await userModel.findById(
+          booking.userId,
+          "firstName lastName email phoneNumber profilePicture"
+        );
+
         let propertyModel;
         let projection = {};
         let propertyType = booking.propertyType;
         let propertyId = booking.propertyId;
-        
+
         if (propertyType === "Agricultural land") {
           propertyModel = fieldModel;
           projection = { "landDetails.title": 1 }; // Include the field
         } else if (propertyType === "Commercial") {
           propertyModel = commercialModel;
-          projection = { "propertyTitle": 1 }; // Include the field
+          projection = { propertyTitle: 1 }; // Include the field
         } else if (propertyType === "Residential") {
           propertyModel = residentialModel;
           projection = { "propertyDetails.apartmentName": 1 }; // Include the field
@@ -618,19 +700,32 @@ const getByFilters = async (req, res) => {
           propertyModel = layoutModel;
           projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
         } else {
-          return res.status(400).json({ message: "Invalid property type", success: false });
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
         }
-        
-        const property = await propertyModel.findById(propertyId, projection).exec();
-        
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
+
         let title;
-        if (propertyType === "Agricultural land" && property?.landDetails?.title) {
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
           title = property.landDetails.title;
         } else if (propertyType === "Commercial" && property?.propertyTitle) {
           title = property.propertyTitle;
-        } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
           title = property.propertyDetails.apartmentName;
-        } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
           title = property.layoutDetails.layoutTitle;
         }
         // Add the user details to the rating result
@@ -638,25 +733,24 @@ const getByFilters = async (req, res) => {
           ...booking.toObject(), // Convert Mongoose document to plain object
           firstName: user.firstName,
           lastName: user.lastName,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-            profilePicture: user.profilePicture,
-            propertyName: title,
-            propertyId: propertyId
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture,
+          propertyName: title,
+          propertyId: propertyId,
         };
       })
     );
 
-
     res.status(200).json(updatedbookings);
-
   } catch (error) {
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -724,7 +818,8 @@ const getBuyerBookings = async (req, res) => {
   try {
     const userId = req.user.user.userId; // Extract userId from the token
     const role = 3; // Role for buyer
-    const fields = "agentId date timing location status createdAt updatedAt propertyId propertyType";
+    const fields =
+      "agentId date timing location status createdAt updatedAt propertyId propertyType";
 
     // Fetch the bookings for the given user and role
     const bookings = await bookingModel
@@ -790,18 +885,17 @@ const getBuyerBookings = async (req, res) => {
         //   }
         // }
 
-
         let propertyModel;
         let projection = {};
         let propertyType = booking.propertyType;
         let propertyId = booking.propertyId;
-        
+
         if (propertyType === "Agricultural land") {
           propertyModel = fieldModel;
           projection = { "landDetails.title": 1 }; // Include the field
         } else if (propertyType === "Commercial") {
           propertyModel = commercialModel;
-          projection = { "propertyTitle": 1 }; // Include the field
+          projection = { propertyTitle: 1 }; // Include the field
         } else if (propertyType === "Residential") {
           propertyModel = residentialModel;
           projection = { "propertyDetails.apartmentName": 1 }; // Include the field
@@ -809,19 +903,32 @@ const getBuyerBookings = async (req, res) => {
           propertyModel = layoutModel;
           projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
         } else {
-          return res.status(400).json({ message: "Invalid property type", success: false });
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
         }
-        
-        const property = await propertyModel.findById(propertyId, projection).exec();
-        
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
+
         let title;
-        if (propertyType === "Agricultural land" && property?.landDetails?.title) {
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
           title = property.landDetails.title;
         } else if (propertyType === "Commercial" && property?.propertyTitle) {
           title = property.propertyTitle;
-        } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
           title = property.propertyDetails.apartmentName;
-        } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
           title = property.layoutDetails.layoutTitle;
         }
 
@@ -833,7 +940,7 @@ const getBuyerBookings = async (req, res) => {
           phoneNumber: agentDetails.phoneNumber,
           email: agentDetails.email,
           profilePicture: agentDetails.profilePicture,
-          propertyName: title
+          propertyName: title,
         };
       })
     );
@@ -842,7 +949,7 @@ const getBuyerBookings = async (req, res) => {
     res.status(200).json(updatedBookings);
   } catch (error) {
     res.status(500).json({ message: error.message });
-    console.log(error)
+    console.log(error);
   }
 };
 
@@ -851,15 +958,15 @@ const getBuyerReqForAgent = async (req, res) => {
   const userId = req.user.user.userId;
   const role = 3;
   try {
-    const result= await validateId.validateAsync(req.params);
+    const result = await validateId.validateAsync(req.params);
     const { agentId } = result;
-    const fields = "date timing location status createdAt updatedAt propertyId propertyType";
-    const requests = await bookingModel.find(
-      { userId: userId, role: role, agentId: agentId },
-      fields
-    ).sort({ _id: -1 });
+    const fields =
+      "date timing location status createdAt updatedAt propertyId propertyType";
+    const requests = await bookingModel
+      .find({ userId: userId, role: role, agentId: agentId }, fields)
+      .sort({ _id: -1 });
     if (requests.length === 0) {
-     return res.status(404).json("No bookings found");
+      return res.status(404).json("No bookings found");
     }
 
     const newBookings = await Promise.all(
@@ -895,13 +1002,13 @@ const getBuyerReqForAgent = async (req, res) => {
         let projection = {};
         let propertyType = booking.propertyType;
         let propertyId = booking.propertyId;
-        
+
         if (propertyType === "Agricultural land") {
           propertyModel = fieldModel;
           projection = { "landDetails.title": 1 }; // Include the field
         } else if (propertyType === "Commercial") {
           propertyModel = commercialModel;
-          projection = { "propertyTitle": 1 }; // Include the field
+          projection = { propertyTitle: 1 }; // Include the field
         } else if (propertyType === "Residential") {
           propertyModel = residentialModel;
           projection = { "propertyDetails.apartmentName": 1 }; // Include the field
@@ -909,118 +1016,136 @@ const getBuyerReqForAgent = async (req, res) => {
           propertyModel = layoutModel;
           projection = { "layoutDetails.layoutTitle": 1 }; // Include the field
         } else {
-          return res.status(400).json({ message: "Invalid property type", success: false });
+          return res
+            .status(400)
+            .json({ message: "Invalid property type", success: false });
         }
-        
-        const property = await propertyModel.findById(propertyId, projection).exec();
-        
+
+        const property = await propertyModel
+          .findById(propertyId, projection)
+          .exec();
+
         let title;
-        if (propertyType === "Agricultural land" && property?.landDetails?.title) {
+        if (
+          propertyType === "Agricultural land" &&
+          property?.landDetails?.title
+        ) {
           title = property.landDetails.title;
         } else if (propertyType === "Commercial" && property?.propertyTitle) {
           title = property.propertyTitle;
-        } else if (propertyType === "Residential" && property?.propertyDetails?.apartmentName) {
+        } else if (
+          propertyType === "Residential" &&
+          property?.propertyDetails?.apartmentName
+        ) {
           title = property.propertyDetails.apartmentName;
-        } else if (propertyType === "Layout" && property?.layoutDetails?.layoutTitle) {
+        } else if (
+          propertyType === "Layout" &&
+          property?.layoutDetails?.layoutTitle
+        ) {
           title = property.layoutDetails.layoutTitle;
         }
 
         return {
           ...booking._doc,
-          propertyName: title
+          propertyName: title,
         };
       })
     );
 
     res.status(200).json(newBookings);
   } catch (error) {
-    if (error.isJoi === true){
+    if (error.isJoi === true) {
       console.log(error);
       return res.status(422).json({
         status: "error",
         message: error.details.map((detail) => detail.message).join(", "),
-      });}
+      });
+    }
     res.status(500).json({ message: "Error fetching details", error: error });
   }
 };
 
 //no. of requests for a particular property
-const totalReqsForProp = async(req,res)=>{
-  try{
-const {propertyId} = req.params;
-const reqsCount = await bookingModel.countDocuments({propertyId,role:3});
-res.status(200).json(reqsCount);
-  }
-  catch(error){
-res.status(500).json("Internal server error");
-  }
-}
-
-
-const reqsCountFromABuyer = async(req,res)=>{
-  try{
-const {propertyId} = req.params;
-const bookings = await bookingModel.find({propertyId,role:3}).sort({updatedAt:-1,_id:-1});
-let users = [];
-const result = await Promise.all(
-  bookings.map(async (booking)=>{
-    if(!users.includes(booking.userId)){
-      users.push(booking.userId);
-    }else{
-      return null;
-    }
-   
-    const user = await userModel.findOne({_id:booking.userId});
-    const buyerName = user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
-    const bookCount = await bookingModel.countDocuments({propertyId,userId:booking.userId,role:3});
-    return{
-      buyerId:booking.userId,
-      buyerName: buyerName,
-      bookingsCount: bookCount,
-      createdAt: booking.createdAt,
-      updatedAt:booking.updatedAt
-    }
-  })
-)
-let finalresult = [];
-result.forEach((res1)=>{
-  if(res1 !== null){
-finalresult.push(res1);
-  }
-})
-res.status(200).json(finalresult);
-  }
-  catch(error){
+const totalReqsForProp = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const reqsCount = await bookingModel.countDocuments({
+      propertyId,
+      role: 3,
+    });
+    res.status(200).json(reqsCount);
+  } catch (error) {
     res.status(500).json("Internal server error");
   }
-}
+};
 
+const reqsCountFromABuyer = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const bookings = await bookingModel
+      .find({ propertyId, role: 3 })
+      .sort({ updatedAt: -1, _id: -1 });
+    let users = [];
+    const result = await Promise.all(
+      bookings.map(async (booking) => {
+        if (!users.includes(booking.userId)) {
+          users.push(booking.userId);
+        } else {
+          return null;
+        }
 
-const getCurrentAppointments=async(req,res)=>{
-  try
-  {
-     let currentDate=new Date()
+        const user = await userModel.findOne({ _id: booking.userId });
+        const buyerName = user
+          ? `${user.firstName} ${user.lastName}`
+          : "Unknown User";
+        const bookCount = await bookingModel.countDocuments({
+          propertyId,
+          userId: booking.userId,
+          role: 3,
+        });
+        return {
+          buyerId: booking.userId,
+          buyerName: buyerName,
+          bookingsCount: bookCount,
+          createdAt: booking.createdAt,
+          updatedAt: booking.updatedAt,
+        };
+      })
+    );
+    let finalresult = [];
+    result.forEach((res1) => {
+      if (res1 !== null) {
+        finalresult.push(res1);
+      }
+    });
+    res.status(200).json(finalresult);
+  } catch (error) {
+    res.status(500).json("Internal server error");
+  }
+};
+
+const getCurrentAppointments = async (req, res) => {
+  try {
+    let currentDate = new Date();
     //  const formattedDate=currentDate.toISOString().split('T')[0]
 
-    let agentId=req.user.user.userId
-    
-    const appointments=await bookingModel.find({agentId:agentId,date:currentDate})
-     
-if(appointments.length>0)
-{
-res.status(200).json(appointments)
-}
-else
-{
-res.status(404).json("No Appointments")
-}
-  }
-  catch(error)
-  {
+    let agentId = req.user.user.userId;
+
+    const appointments = await bookingModel.find({
+      agentId: agentId,
+      date: currentDate,
+    });
+
+    if (appointments.length > 0) {
+      res.status(200).json(appointments);
+    } else {
+      res.status(404).json("No Appointments");
+    }
+  } catch (error) {
     console.log(error);
- res.status(500).json("Internal Server Error")
+    res.status(500).json("Internal Server Error");
   }
-}
+};
 
 module.exports = {
   //buyer
@@ -1049,6 +1174,5 @@ module.exports = {
   totalReqsForProp,
   reqsCountFromABuyer,
 
-  
-  getCurrentAppointments
+  getCurrentAppointments,
 }; // Export as an object

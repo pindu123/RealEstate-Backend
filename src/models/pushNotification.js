@@ -1,3 +1,4 @@
+const { number } = require('joi');
 const mongoose = require('mongoose');
 
 const pushModel = new mongoose.Schema(
@@ -5,6 +6,10 @@ const pushModel = new mongoose.Schema(
         userId: {
             type: String,
             required: true,
+        },
+        role:{
+            type:Number,
+            required:true
         },
         pushToken: {
             type: String,

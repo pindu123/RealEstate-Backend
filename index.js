@@ -147,16 +147,15 @@ app.get("/", (req, res) => {
   res.send("Welcome to my API!");
 });
 
-
 mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
 
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 300000,
-    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 300000,   
+    socketTimeoutMS: 45000,   
     tlsAllowInvalidCertificates: true,
-  })
+   })
   .then(() => {
     console.log("DB Connected");
     app.listen(3000, () => {
@@ -169,14 +168,29 @@ mongoose
 
 const server = http.createServer(app);
 
+// const io = socketIo(server, {
+//   cors: {
+//     origin: "*",  
+//     methods: ["GET", "POST"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//     credentials: true,
+//   },
+// });
+
+
+
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Or specify your front-end URL (e.g., "http://localhost:3000")
+    origin: "*",  
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   },
+  reconnectionAttempts: 5,  
+  reconnectionDelay: 1000,  
+  timeout: 5000,  
 });
+
 
 const userSockets = {};
 
@@ -209,14 +223,12 @@ io.on("connection", (socket) => {
       //   }
       // }
       console.log("abc", userSockets, receiverId);
-      // If the receiver is online, send the message directly to them
-      if (userSockets[receiverId]) {
+       if (userSockets[receiverId]) {
         io.to(userSockets[receiverId]).emit("receive_message", result);
         console.log(`Message sent to user ${receiverId}`);
       } else {
         console.log(`Receiver ${receiverId} is offline, message not delivered`);
-        //   store the message in the database for later retrieval
-        socket.emit("error", {
+         socket.emit("error", {
           message: "Receiver is offline. Message queued for delivery.",
         });
       }
@@ -226,8 +238,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Clean up when a user disconnects
-  socket.on("disconnect", () => {
+   socket.on("disconnect", () => {
     for (const [userId, socketId] of Object.entries(userSockets)) {
       if (socketId === socket.id) {
         delete userSockets[userId];

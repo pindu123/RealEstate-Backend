@@ -166,6 +166,9 @@ const insertLayoutDetails = async (req, res) => {
     await notification1.save();
     console.log("Notifications saved successfully.");
 
+    AgentpushNotification("New Property!",`A Layout ${req.body.layoutDetails.layoutTitle} is added`,3)
+
+
     res.status(201).json({
       message: "Layout details added successfully",
       success: true,

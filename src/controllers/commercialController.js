@@ -265,6 +265,9 @@ const createCommercial = async (req, res) => {
     await notification.save();
     await notification1.save();
 
+    AgentpushNotification("New Property!",`A commercial property ${req.body.propertyTitle} is added`,3)
+
+
     res.status(201).json({
       message: "Commercial property added successfully",
       success: true,

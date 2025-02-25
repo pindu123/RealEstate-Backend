@@ -17,7 +17,7 @@ const {
   getBuyerReqForAgent,
   totalReqsForProp,
   reqsCountFromABuyer,
-  getCurrentAppointments
+  getCurrentAppointments,
 } = require("../controllers/bookingController"); // Import as an object
 
 const bookingRoutes = express.Router();
@@ -46,10 +46,8 @@ bookingRoutes.put(
 
 bookingRoutes.delete("/delete/:id", deleteappointment);
 
-bookingRoutes.get('/totalReqsForProp/:propertyId',totalReqsForProp);
-bookingRoutes.get('/reqsCountFromABuyer/:propertyId',reqsCountFromABuyer);
+bookingRoutes.get("/totalReqsForProp/:propertyId", totalReqsForProp);
+bookingRoutes.get("/reqsCountFromABuyer/:propertyId", reqsCountFromABuyer);
 
-
-
-bookingRoutes.get("/getCurrentAppointments",getCurrentAppointments);
+bookingRoutes.get("/getCurrentAppointments", getCurrentAppointments);
 module.exports = bookingRoutes; // Export the correct variable

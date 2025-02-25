@@ -341,6 +341,7 @@ const generatePropertyId = async (typePrefix, model) => {
 const translate = require('@iamtraction/google-translate'); // Import translation library
 const auctionModel = require("../models/auctionModel");
 const propertyReservation = require("../models/propertyReservation");
+const { AgentpushNotification } = require("./pushNotifyController");
 
 const insertFieldDetails = async (req, res) => {
   try {
@@ -397,6 +398,8 @@ const insertFieldDetails = async (req, res) => {
         message: `${userData.firstName} ${userData.lastName} has added a new Agriculutral property`,
         notifyType: "Property",
       };
+  AgentpushNotification("New Property!",`A Agriculutral property ${req.body.landDetails.title} is added`,3)
+      title, message, role
     } else {
       return res.status(403).json({ message: "Unauthorized role for this action" });
     }
@@ -585,29 +588,47 @@ const getAllFields = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
+
+    const {page,limit}=req.query
     // Fetch all fields
     let fields;
+    
+    if(page&&limit)
+    {
+      let offset=(page-1)*limit
+
     if (role === 3) {
-      fields = await fieldModel.find({ status: 0 }).sort({ updatedAt: -1 });
+      fields = await fieldModel.find({ status: 0 }).sort({ updatedAt: -1 }).skip(offset).limit(limit)
     } else {
-      fields = await fieldModel.find().sort({ status: 1, updatedAt: -1 });
+      fields = await fieldModel.find().sort({ status: 1, updatedAt: -1 }).skip(offset).limit(limit)
     }
+    }
+    else
+    {
+
+      if (role === 3) {
+        fields = await fieldModel.find({ status: 0 }).sort({ updatedAt: -1 });
+      } else {
+        fields = await fieldModel.find().sort({ status: 1, updatedAt: -1 });
+      }
+    }  
+ 
     if (fields.length === 0) {
       return res.status(200).json({ data: [] });
     }
 
-    // Extract property IDs
-    const propertyIds = fields.map((field) => field._id.toString());
+     const propertyIds = fields.map((field) => field._id.toString());
 
-    // Fetch wishlist statuses for all property IDs
-    const statuses = await wishlistModel
+     const statuses = await wishlistModel
       .find({ userId: userId, propertyId: { $in: propertyIds } })
       .select("propertyId status");
     const ratingstatuses = await propertyRatingModel
       .find({ userId: userId, propertyId: { $in: propertyIds } })
       .select("propertyId status");
-    // Create a map for quick status lookup
-    const statusMap = statuses.reduce((map, item) => {
+
+
+
+     const statusMap = statuses.reduce((map, item) => {
       map[item.propertyId.toString()] = item.status;
       return map;
     }, {});
@@ -616,8 +637,7 @@ const getAllFields = async (req, res) => {
       map[item.propertyId.toString()] = item.status;
       return map;
     }, {});
-    // Add wishStatus to each field item
-    const updatedFields = fields.map((field) => {
+     const updatedFields = fields.map((field) => {
       const fieldObj = field.toObject(); // Convert Mongoose document to plain object
       fieldObj.wishStatus = statusMap[field._id.toString()] || 0; // Default to 0 if not found
       fieldObj.ratingStatus = ratingstatusMap[field._id.toString()] || 0; // Default to 0 if not found

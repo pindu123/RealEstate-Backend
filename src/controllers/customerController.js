@@ -5,10 +5,10 @@ const twilio = require("twilio");
 const nodemailer = require("nodemailer");
 
 const axios = require("axios");
-// Not In use 
+// Not In use
 // const createCustomer = async (req, res) => {
 //   try {
-    
+
 //     const customers = req.body;
 //     const addedByRole=req.user.user.userId;
 //     const addedBy=req.user.user.role;
@@ -35,29 +35,33 @@ const createCustomer = async (req, res) => {
     if (!Array.isArray(customers)) {
       return res.status(400).json({ error: "Customers should be an array" });
     }
-console.log("customers",customers)
-    const processedCustomers = []; 
+    console.log("customers", customers);
+    const processedCustomers = [];
 
     for (let customerData of customers) {
       try {
         customerData.addedBy = addedBy;
         customerData.addedByRole = addedByRole;
         await customerSchema.validateAsync(customerData);
-        console.log("asdasd")
+        console.log("asdasd");
         const customer = new customerModel(customerData);
-        console.log("asdasdqw3e231")
+        console.log("asdasdqw3e231");
 
         await customer.save();
         processedCustomers.push(customer);
       } catch (validationError) {
-        console.error(`Failed to process customer: ${JSON.stringify(customerData)}`);
+        console.error(
+          `Failed to process customer: ${JSON.stringify(customerData)}`
+        );
         console.error(validationError.message);
       }
     }
 
-    console.log(processedCustomers)
+    console.log(processedCustomers);
     if (processedCustomers.length === 0) {
-      return res.status(400).json({ error: "No valid customers were processed" });
+      return res
+        .status(400)
+        .json({ error: "No valid customers were processed" });
     }
 
     res.status(201).json({
@@ -71,24 +75,17 @@ console.log("customers",customers)
   }
 };
 
-
 // not in use
 //getSurveyData
 const getCustomer = async (req, res) => {
   try {
+    const { page, limit } = req.query;
+    let customerData;
 
-    const {page,limit}=req.query
-let customerData
-
-    if(page&&limit)
-    {
-
-      let offset=(page-1)*limit
-        customerData = await customerModel.find().skip(offset).limit(limit)
-
-    }
-    else
-    {
+    if (page && limit) {
+      let offset = (page - 1) * limit;
+      customerData = await customerModel.find().skip(offset).limit(limit);
+    } else {
       customerData = await customerModel.find();
     }
 
@@ -99,122 +96,127 @@ let customerData
   }
 };
 
-
 // role based get
 const getCustomers = async (req, res) => {
   try {
     const { role, userId } = req.user.user;
-    const { agentId } = req.query; 
+    const { agentId } = req.query;
 
-
-    const page=req.query.page
-    const limit=req.query.limit
-
+    const page = req.query.page;
+    const limit = req.query.limit;
+    console.log("page&limit", page, limit);
     let customerData = [];
 
-    let offset
+    let offset;
 
-    if(page && limit)
-    {
-      offset=(page-1)*limit
-
+    if (page && limit) {
+      offset = (page - 1) * limit;
 
       if (role === 5) {
         if (!agentId) {
-          // If no agentId is passed, fetch deals for the logged-in user's userId
-          const deals = await dealsModel.find({ csrId: userId }, "customerId").lean();
+          const deals = await dealsModel
+            .find({ csrId: userId }, "customerId")
+            .lean();
           if (!deals || deals.length === 0) {
             return res.status(404).json({
               message: "No deals found for the current CSR",
             });
           }
-  
-          // Extract unique customerIds from the deals
-          const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
-  
-          // Fetch customer details from userModel where role is 3 and _id matches customerIds
+
+          const customerIds = [
+            ...new Set(deals.map((deal) => deal.customerId)),
+          ];
+
           customerData = await userModel
             .find({ _id: { $in: customerIds }, role: 3 })
-            .select("-password").skip(offset).limit(limit)
-            .sort({ createdAt: -1 }) 
+            .select("-password")
+            .sort({ createdAt: -1 });
         } else {
-          // If agentId is provided, fetch deals for the specified agentId
-          const deals = await dealsModel.find({ agentId }, "customerId").lean();
-          const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
-  
-          // Fetch customer details from userModel where role is 3 and _id matches customerIds
+          const deals = await dealsModel
+            .find({ agentId }, "customerId")
+            .lean()
+            .skip(offset)
+            .limit(limit);
+          const customerIds = [
+            ...new Set(deals.map((deal) => deal.customerId)),
+          ];
+
           customerData = await userModel
             .find({ _id: { $in: customerIds }, role: 3 })
-            .select("-password").skip(offset).limit(limit)
-            .sort({ createdAt: -1 }) 
+            .select("-password")
+            .sort({ createdAt: -1 });
         }
       } else if (role === 1) {
-        // Role 1: Agent - Fetch customers based on the logged-in user's userId
-        const deals = await dealsModel.find({ agentId: userId }, "customerId").lean();
+        const deals = await dealsModel
+          .find({ agentId: userId }, "customerId")
+          .lean();
+
+        console.log("dealsss", deals, page, limit);
         const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
-  
+
         // Fetch customer details from userModel where role is 3 and _id matches customerIds
         customerData = await userModel
           .find({ _id: { $in: customerIds }, role: 3 })
-          .select("-password").skip(offset).limit(limit)
-          .sort({ createdAt: -1 })
+          .select("-password")
+          .skip(offset)
+          .limit(limit)
+          .sort({ createdAt: -1 });
       } else {
         customerData = await userModel
           .find({ role: 3 })
-          .select("-password").skip(offset).limit(limit)
-          .sort({ createdAt: -1 }) 
+          .select("-password")
+          .skip(offset)
+          .limit(limit)
+          .sort({ createdAt: -1 });
       }
+    } else {
+      if (role === 5) {
+        if (!agentId) {
+          const deals = await dealsModel
+            .find({ csrId: userId }, "customerId")
+            .lean();
+          if (!deals || deals.length === 0) {
+            return res.status(404).json({
+              message: "No deals found for the current CSR",
+            });
+          }
 
-    }
-    else
-    {
+          const customerIds = [
+            ...new Set(deals.map((deal) => deal.customerId)),
+          ];
 
-    if (role === 5) {
-      if (!agentId) {
-        // If no agentId is passed, fetch deals for the logged-in user's userId
-        const deals = await dealsModel.find({ csrId: userId }, "customerId").lean();
-        if (!deals || deals.length === 0) {
-          return res.status(404).json({
-            message: "No deals found for the current CSR",
-          });
+          customerData = await userModel
+            .find({ _id: { $in: customerIds }, role: 3 })
+            .select("-password")
+            .sort({ createdAt: -1 });
+        } else {
+          const deals = await dealsModel.find({ agentId }, "customerId").lean();
+          const customerIds = [
+            ...new Set(deals.map((deal) => deal.customerId)),
+          ];
+
+          customerData = await userModel
+            .find({ _id: { $in: customerIds }, role: 3 })
+            .select("-password")
+            .sort({ createdAt: -1 });
         }
-
-        // Extract unique customerIds from the deals
+      } else if (role === 1) {
+        const deals = await dealsModel
+          .find({ agentId: userId }, "customerId")
+          .lean();
         const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
 
-        // Fetch customer details from userModel where role is 3 and _id matches customerIds
         customerData = await userModel
           .find({ _id: { $in: customerIds }, role: 3 })
           .select("-password")
           .sort({ createdAt: -1 });
       } else {
-        // If agentId is provided, fetch deals for the specified agentId
-        const deals = await dealsModel.find({ agentId }, "customerId").lean();
-        const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
-
-        // Fetch customer details from userModel where role is 3 and _id matches customerIds
         customerData = await userModel
-          .find({ _id: { $in: customerIds }, role: 3 })
+          .find({ role: 3 })
           .select("-password")
           .sort({ createdAt: -1 });
       }
-    } else if (role === 1) {
-      // Role 1: Agent - Fetch customers based on the logged-in user's userId
-      const deals = await dealsModel.find({ agentId: userId }, "customerId").lean();
-      const customerIds = [...new Set(deals.map((deal) => deal.customerId))];
-
-      // Fetch customer details from userModel where role is 3 and _id matches customerIds
-      customerData = await userModel
-        .find({ _id: { $in: customerIds }, role: 3 })
-        .select("-password")
-        .sort({ createdAt: -1 });
-    } else {
-      customerData = await userModel
-        .find({ role: 3 })
-        .select("-password")
-        .sort({ createdAt: -1 });
     }
-  }
 
     res.status(200).json(customerData);
   } catch (error) {
@@ -223,11 +225,9 @@ const getCustomers = async (req, res) => {
   }
 };
 
-
-
 // const getCustomer = async (req, res) => {
 //   try {
-    
+
 //     const customerData = await userModel.find({ role: 3 }).select('-password').sort({ createdAt: -1 });
 
 //     res.status(200).json(customerData);
@@ -241,22 +241,60 @@ const getCustomers = async (req, res) => {
 const customerBasedOnAddedBy = async (req, res) => {
   try {
     const userId = req.user.user.userId;
+    console.log("consoleeeeeeee....");
     const role = req.user.user.role;
 
     let customerQuery = { role: 3, addedBy: userId };
 
+    const { page, limit } = req.query;
+
     if (role === 1) {
-      const deals = await dealsModel.find({ agentId: userId ,createdAt:-1});
-      const customerIds = deals.map(deal => deal.customerId);
-      customerQuery = { _id: { $in: customerIds }, role: 3 };
+      if (page && limit) {
+        let offset = (page - 1) * limit;
+        console.log("page&limit", page, limit);
+
+        const deals = await dealsModel
+          .find({ agentId: userId, createdAt: -1 })
+          .skip(offset)
+          .limit(limit);
+
+        console.log("deals", deals, deals.length);
+        const customerIds = deals.map((deal) => deal.customerId);
+        customerQuery = { _id: { $in: customerIds }, role: 3 };
+      } else {
+        const deals = await dealsModel.find({ agentId: userId, createdAt: -1 });
+        const customerIds = deals.map((deal) => deal.customerId);
+        customerQuery = { _id: { $in: customerIds }, role: 3 };
+      }
+    }
+    let customerData = [];
+
+    let customerDataAddedBy = [];
+    if (page && limit) {
+      const offset = (page - 1) * limit;
+      customerData = await userModel
+        .find(customerQuery)
+        .select("-password")
+        .skip(offset)
+        .limit(limit);
+
+      customerDataAddedBy = await userModel
+        .find({ addedBy: userId })
+        .select("-password")
+        .skip(offset)
+        .limit(limit);
+    } else {
+      customerData = await userModel.find(customerQuery).select("-password");
+
+      customerDataAddedBy = await userModel
+        .find({ addedBy: userId })
+        .select("-password");
     }
 
-    const customerData = await userModel.find(customerQuery).select('-password');
-    const customerDataAddedBy = await userModel.find({ addedBy: userId }).select('-password');
-
     const combinedData = [...customerData, ...customerDataAddedBy];
-    const uniqueData = Array.from(new Set(combinedData.map(c => c._id)))
-                             .map(id => combinedData.find(c => c._id === id));
+    const uniqueData = Array.from(new Set(combinedData.map((c) => c._id))).map(
+      (id) => combinedData.find((c) => c._id === id)
+    );
 
     if (!uniqueData || uniqueData.length === 0) {
       return res.status(409).json({
@@ -274,8 +312,6 @@ const customerBasedOnAddedBy = async (req, res) => {
     });
   }
 };
-
-
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
@@ -550,7 +586,7 @@ const sendWhatsAppWithPDF = async (contactValue, pdfUrl) => {
     console.log("Message sent successfully:", message);
   } catch (error) {
     console.error("Error sending message:", error);
-   }
+  }
 };
 
 // Controller function to handle request

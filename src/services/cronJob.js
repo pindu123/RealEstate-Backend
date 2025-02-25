@@ -45,54 +45,104 @@ cron.schedule('* * * * *', async () => {
 });
 
 
+//  cron.schedule('* * * * *', async () => {
+//     const time = new Date()
+
+//     const auctionData = await auctionModel.find()
+
+
+//     for (let auction of auctionData) {
+//         if (auction.auctionStatus === "active" || auction.auctionStatus === "Active") {
+//             const auctionStartTime = new Date(auction.startDate)
+//             let propertyData
+
+//             propertyData = await fieldModel.find({ _id: auction.propertyId })
+//             if (propertyData.length === 0) {
+//                 propertyData = await layoutModel.find({ _id: auction.propertyId })
+
+//             }
+//             if (propertyData.length === 0) {
+//                 propertyData = await commercialModel.find({ _id: auction.propertyId })
+//             }
+//             if (propertyData.length === 0) {
+//                 propertyData = await residentialModel.find({ _id: auction.propertyId })
+//             }
+
+//             let propertyName
+
+//             if (propertyData[0].propertyType === "Agricultural land") {
+//                 propertyName = propertyData[0].landDetails.title
+//             }
+//             else if (propertyData[0].propertyType === "Layout") {
+//                 propertyName=await propertyData[0].layoutDetails.layoutTitle
+//             }
+//             else if (propertyData[0].propertyType === "Residential") {
+//                 propertyName=await propertyData[0].propertyDetails.apartmentName
+//             }
+//             else {
+//                   propertyName=await propertyData[0].propertyTitle
+//             }
+
+
+//             const dateDiff = (Math.floor((auctionStartTime.getTime() - time.getTime())/(1000*3600)));
+
+//             console.log("dateDiff", Math.floor(dateDiff),dateDiff,dateDiff === 22)
+
+//             if ((dateDiff === 1 || dateDiff === "1")&&c===0 ) {
+//                 console.log("api call")
+//                 c=c+1
+//                 AuctionPushNotification(`The auction for the property ${propertyName} will begin in one hour. ⏳`)
+//             }
+//         }
+//     }
+// })
+
 
 cron.schedule('* * * * *', async () => {
-    const time = new Date()
+    const time = new Date();
 
-    const auctionData = await auctionModel.find()
-
+    const auctionData = await auctionModel.find();
 
     for (let auction of auctionData) {
         if (auction.auctionStatus === "active" || auction.auctionStatus === "Active") {
-            const auctionStartTime = new Date(auction.startDate)
-            let propertyData
+            const auctionStartTime = new Date(auction.startDate);
+            let propertyData;
 
-            propertyData = await fieldModel.find({ _id: auction.propertyId })
+            propertyData = await fieldModel.find({ _id: auction.propertyId });
             if (propertyData.length === 0) {
-                propertyData = await layoutModel.find({ _id: auction.propertyId })
-
+                propertyData = await layoutModel.find({ _id: auction.propertyId });
             }
             if (propertyData.length === 0) {
-                propertyData = await commercialModel.find({ _id: auction.propertyId })
+                propertyData = await commercialModel.find({ _id: auction.propertyId });
             }
             if (propertyData.length === 0) {
-                propertyData = await residentialModel.find({ _id: auction.propertyId })
+                propertyData = await residentialModel.find({ _id: auction.propertyId });
             }
 
-            let propertyName
+            let propertyName;
 
             if (propertyData[0].propertyType === "Agricultural land") {
-                propertyName = propertyData[0].landDetails.title
-            }
-            else if (propertyData[0].propertyType === "Layout") {
-                propertyName=await propertyData[0].layoutDetails.layoutTitle
-            }
-            else if (propertyData[0].propertyType === "Residential") {
-                propertyName=await propertyData[0].propertyDetails.apartmentName
-            }
-            else {
-                  propertyName=await propertyData[0].propertyTitle
+                propertyName = propertyData[0].landDetails.title;
+            } else if (propertyData[0].propertyType === "Layout") {
+                propertyName = await propertyData[0].layoutDetails.layoutTitle;
+            } else if (propertyData[0].propertyType === "Residential") {
+                propertyName = await propertyData[0].propertyDetails.apartmentName;
+            } else {
+                propertyName = await propertyData[0].propertyTitle;
             }
 
+             const dateDiffMinutes = Math.floor((auctionStartTime.getTime() - time.getTime()) / (1000 * 60));
 
-            const dateDiff = (Math.floor((auctionStartTime.getTime() - time.getTime())/(1000*3600)));
+            console.log("dateDiffMinutes", dateDiffMinutes);
 
-            console.log("dateDiff", Math.floor(dateDiff),dateDiff,dateDiff === 22)
+             if (dateDiffMinutes === 60 && !auction.notificationSent) {
+                console.log("Sending API call");
 
-            if (dateDiff === 22 || dateDiff === "22") {
-                console.log("api call")
-                AuctionPushNotification(`The auction for the property ${propertyName} will begin in one hour. ⏳`)
+                 AuctionPushNotification(`The auction for the property ${propertyName} will begin in one hour. ⏳`);
+
+                 auction.notificationSent = true;  
+                await auction.save();   
             }
         }
     }
-})
+});

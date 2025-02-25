@@ -7,7 +7,8 @@ const fieldModel = require("../models/fieldModel");
 const commercialModel = require("../models/commercialModel");
 const residentialModel = require("../models/residentialModel");
 const layoutModel = require("../models/layoutModel");
-
+const { AgentpushNotification1 } = require("./pushNotifyController");
+ 
 
 // const getAllScheduledMeetings = async (req, res) => {
 //   try {
@@ -319,6 +320,11 @@ Bhumi.India Bazar`,
       console.log("Email sent: " + info.response);
     });
   }
+
+
+  AgentpushNotification1("Meeting!",`A meeting is scheduled for property ${propertyName} with agent at ${meetingStartTime}`,3,customerId)
+
+  
     res
       .status(201)
       .json({ message: "Meeting created successfully.", data: savedMeeting ,status:true});

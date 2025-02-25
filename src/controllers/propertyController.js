@@ -176,13 +176,33 @@ const getPropertiesByUserId = async (req, res) => {
     queryFilters(commercialFilters);
     queryFilters(layoutFilters);
     queryFilters(residentialFilters);
+ 
+    let fieldData=[]
+    let commercialProperties=[]
+    let layoutProperties=[]
+    let residentialProperties=[]
 
-    const [fieldData, commercialProperties, layoutProperties, residentialProperties] = await Promise.all([
-      buildQuery(fieldModel, fieldFilters),
-      buildQuery(commercialModel, commercialFilters),
-      buildQuery(layoutModel, layoutFilters),
-      buildQuery(residentialModel, residentialFilters)
-    ]);
+    if(page&&limit)
+    {
+fieldData= await fieldModel.find(fieldFilters).skip(offset).limit(limit/4)
+
+commercialProperties=await commercialModel.find(commercialFilters).skip(offset).limit(limit/4)
+
+layoutProperties=await layoutModel.find(layoutFilters).skip(offset).limit(limit/4)
+
+residentialProperties=await residentialModel.find(residentialFilters).skip(offset).limit(limit/4)
+    }
+    else
+    {
+
+        [fieldData, commercialProperties, layoutProperties, residentialProperties] = await Promise.all([
+        buildQuery(fieldModel, fieldFilters),
+        buildQuery(commercialModel, commercialFilters),
+        buildQuery(layoutModel, layoutFilters),
+        buildQuery(residentialModel, residentialFilters)
+      ]);
+    }
+ 
 
     const allProperties = [...fieldData, ...commercialProperties, ...layoutProperties, ...residentialProperties];
 
@@ -4013,28 +4033,40 @@ const propertyBasedOnDistrict = async (req, res) => {
 
     const userId = req.user.user.userId;
 
-    // Fetch user data to get the district
+    const {page,limit}=req.query  
+     
     const userData = await userModel.findById(userId);
     const userDistrict = userData.district;
+    let  fields=[]
+    let residentials=[]
+    let commercials=[]
+    let layouts=[]
+if(page&&limit)
+{
 
-    // Run queries for all models in parallel
-    const [fields, residentials, commercials, layouts] = await Promise.all([
-      fieldModel.find({ 'address.district': userDistrict }),
-      residentialModel.find({ 'address.district': userDistrict }),
-      commercialModel.find({ 'propertyDetails.landDetails.address.district': userDistrict }),
-      layoutModel.find({ 'layoutDetails.address.district': userDistrict }),
-    ]);
+  let offset=(page-1)*limit   
+  fields=await fieldModel.find({'address.district':userDistrict}).skip(offset).limit(limit/2)
+  residentials=await residentialModel.find({'address.district':userDistrict}).skip(offset).limit(limit/2) 
+  commercials=await commercialModel.find({'address.disrict':userDistrict}).skip(offset).limit(limit/2)
+  layouts=await layoutModel.find({'address.district':userDistrict}).skip(offset).limit(limit/2)
 
-    // Combine all results
-    const properties = [...fields, ...residentials, ...commercials, ...layouts];
+  }
+else
+{
+      
+   fields=await  fieldModel.find({ 'address.district': userDistrict }),
+     residentials =await residentialModel.find({ 'address.district': userDistrict }),
+      commercials=await commercialModel.find({ 'propertyDetails.landDetails.address.district': userDistrict }),
+     layouts=await  layoutModel.find({ 'layoutDetails.address.district': userDistrict })
+   }
 
-    // Check if any properties found
-    if (properties.length === 0) {
+     const properties = [...fields, ...residentials, ...commercials, ...layouts];
+
+     if (properties.length === 0) {
       return res.status(404).json({ message: "No properties found in the specified district" });
     }
 
-    // Return the combined properties
-    res.status(200).json(properties);
+     res.status(200).json(properties);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

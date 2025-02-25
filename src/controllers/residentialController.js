@@ -461,6 +461,9 @@ console.log("flat",req.body.flat)
     await notification.save();
     await notification1.save();
 
+    AgentpushNotification("New Property!",`A residential property ${req.body.propertyDetails.apartmentName} is added`,3)
+
+
     res.status(200).send({
       message: "Residential Property Added Successfully",
       success: true,
