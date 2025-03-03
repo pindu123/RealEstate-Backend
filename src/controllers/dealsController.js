@@ -424,7 +424,7 @@ const createDeal = async (req, res) => {
             propertyType: property.propertyType,
             propertyInterestedCount: 1,
           });
-          console.log("asdfghjkkl",agentId);
+          console.log("asdfghjkkl");
           const message = {
             senderId: userId,
             receiverId: role === 3 ? agentId : customerId,
@@ -2403,19 +2403,15 @@ const changeInterest = async (req, res) => {
 
 const startDeal = async (req, res) => {
   try {
-
-    const role=req.user.user.role
     const { dealId, dealStatus } = req.body;
-
-    console.log("reeuest.body",req.body)
-
+console.log("req.body",req.body)
     const deals = await dealsModel.findByIdAndUpdate(dealId, {
       dealStatus: "inProgress" || dealStatus,
     });
-console.log("deals,deals",deals)
+console.log("dealssss",deals)
     let message = {
-      senderId: role===3? deals.customerId:deals.agentId,
-      receiverId: role===1? deals.customerId:deals.agentId,
+      senderId: deals.agentId,
+      receiverId: deals.customerId,
       message: `Deal Has Been Started`,
       details: `Deal for the property ${deals.propertyName} has been started.`,
       notifyType: "Deal",

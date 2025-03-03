@@ -66,7 +66,10 @@ const updateViewCount = async (req, res) => {
 const totalViews = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const views = await viewsModel.find({ propertyId });
+const role=req.user.user.role
+
+
+    const views = await viewsModel.find({ propertyId,role:3 });
     let count = 0;
     views.forEach((view) => {
       count = count + view.viewsCount;

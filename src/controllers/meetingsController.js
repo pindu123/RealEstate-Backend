@@ -554,12 +554,12 @@ const currentDayMeetings = async (req, res) => {
     const currentDay = [];
     const currentDate = new Date();
     const formattedDate = currentDate.toISOString().split("T")[0];
- 
-    console.log("formatted date",formattedDate,meetings.length,userId)
-     
-    const detailsPromises = meetings.map(async (meeting) => {
+ let detailsPromises
+   
+      detailsPromises = meetings.map(async (meeting) => {
 
     
+        
       const startTime = meeting.meetingStartTime.toISOString().split("T")[0];
 
        console.log("formattedDate",formattedDate,meeting.meetingStartTime ,startTime)
@@ -594,7 +594,7 @@ const currentDayMeetings = async (req, res) => {
         currentDay.push(result);
       }
     });
-
+ 
     // Wait for all the promises to resolve
     await Promise.all(detailsPromises);
 
