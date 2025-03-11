@@ -250,6 +250,7 @@ const createDeal = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
+    let customerId = userId;
 
     console.log("Request bodyyy", req.body);
     let csrId;
@@ -316,8 +317,7 @@ const createDeal = async (req, res) => {
         });
       }
 
-      let customerId = userId;
-      if (role !== 3) {
+       if (role !== 3) {
         if (req.body.customerId) {
           customerId = req.body.customerId;
         } else {
