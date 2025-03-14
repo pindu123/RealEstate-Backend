@@ -1033,161 +1033,160 @@ await notifyModel.insertMany(messages)
     // if (any one of the field) 
     // for all ignore if unit is not provided apply units contidion if provided
 
-    const getPropsOnFilter = async (req, res) => {
-      try {
-        let { location, propertyType, propertySize, sizeUnit, propName, maxPrice, minPrice } = req.query;
-        let filterCriteria = { status: 0 };
-        if(propName){
-        propName = new RegExp(propName, 'i'); 
-        }if(location){
-         location=new RegExp(location,'i');
-        }
-        if(propertyType){
-         propertyType=new  RegExp(propertyType,'i'); 
-        }
-        if(sizeUnit){
-          sizeUnit=new RegExp(sizeUnit,'i'); 
-        }
-           
-        // Location filter
-        if (location) {
-          filterCriteria.$or = [
-            { 'propertyDetails.landDetails.address.district': location },
-            { 'layoutDetails.address.district': location },
-            { 'address.district': location }
-          ];
-        }
-    
-        // Property Type Filter
-        if (propertyType) {
-          filterCriteria.propertyType = propertyType;
-        }
-    
-        // Size and Unit filter
-        if (propertySize) {
-          filterCriteria.$or = filterCriteria.$or || []; // Initialize $or if not already present
-          filterCriteria.$or.push(
-            { 'propertyDetails.landDetails.sell.plotSize': propertySize },
-            { 'propertyDetails.landDetails.rent.plotSize': propertySize },
-            { 'propertyDetails.landDetails.lease.plotSize': propertySize },
-            { 'layoutDetails.plotSize': propertySize },
-            { 'propertyDetails.flatSize': propertySize },
-            { 'landDetails.size': propertySize },
-          
-          );
-        }
-    
-        // Size Unit Filter (only if sizeUnit is provided)
-        if (sizeUnit) {
-          filterCriteria.$or = filterCriteria.$or || []; // Initialize $or if not already present
-          filterCriteria.$or.push(
+   
+  const getPropsOnFilter = async (req, res) => {
+    try {
+      let { location, propertyType, propertySize, sizeUnit, propName, maxPrice, minPrice } = req.query;
+  
+      let filterCriteria = { status: 0 };
+  
+       if (propName) propName = new RegExp(propName, 'i');
+      if (location) location = new RegExp(location, 'i');
+      if (propertyType) propertyType = new RegExp(propertyType, 'i');
+      if (sizeUnit) sizeUnit = new RegExp(sizeUnit, 'i');
+  
+       minPrice = minPrice ? Number(minPrice) : null;
+      maxPrice = maxPrice ? Number(maxPrice) : null;
+  
+       if (location) {
+        filterCriteria.$or = [
+          { 'propertyDetails.landDetails.address.district': location },
+          { 'layoutDetails.address.district': location },
+          { 'address.district': location }
+        ];
+      }
+  
+      // Property Type Filter
+      if (propertyType) {
+        filterCriteria.propertyType = propertyType;
+      }
+  
+      // Size and Unit Filter
+      if (propertySize) {
+        filterCriteria.$or = [
+          { 'propertyDetails.landDetails.sell.plotSize': propertySize },
+          { 'propertyDetails.landDetails.rent.plotSize': propertySize },
+          { 'propertyDetails.landDetails.lease.plotSize': propertySize },
+          { 'layoutDetails.plotSize': propertySize },
+          { 'propertyDetails.flatSize': propertySize },
+          { 'landDetails.size': propertySize }
+        ];
+      }
+  
+      if (sizeUnit) {
+        filterCriteria.$and = filterCriteria.$and || [];
+        filterCriteria.$and.push({
+          $or: [
             { 'propertyDetails.landDetails.sell.sizeUnit': sizeUnit },
             { 'propertyDetails.landDetails.rent.sizeUnit': sizeUnit },
             { 'propertyDetails.landDetails.lease.sizeUnit': sizeUnit },
             { 'layoutDetails.sizeUnit': sizeUnit },
             { 'propertyDetails.sizeUnit': sizeUnit },
             { 'landDetails.sizeUnit': sizeUnit }
-          );
-        }
-    
-        // Property Name Filter
-        if (propName) {
-          filterCriteria.$or = filterCriteria.$or || []; // Initialize $or if not already present
-          filterCriteria.$or.push(
+          ]
+        });
+      }
+  
+      // Property Name Filter
+      if (propName) {
+        filterCriteria.$and = filterCriteria.$and || [];
+        filterCriteria.$and.push({
+          $or: [
             { 'propertyTitle': propName },
             { 'layoutDetails.layoutTitle': propName },
             { 'propertyDetails.apartmentName': propName },
             { 'landDetails.title': propName }
-          );
-        }
-    
-        // Price Range Filter (only if maxPrice and minPrice are provided)
-        if (maxPrice && minPrice) {
-          filterCriteria.$or = filterCriteria.$or || []; // Initialize $or if not already present
-          filterCriteria.$or.push(
+          ]
+        });
+      }
+  
+      // Price Range Filter
+      if (minPrice !== null && maxPrice !== null) {
+        filterCriteria.$and = filterCriteria.$and || [];
+        filterCriteria.$and.push({
+          $or: [
             { 'landDetails.totalPrice': { $gte: minPrice, $lte: maxPrice } },
             { 'layoutDetails.totalAmount': { $gte: minPrice, $lte: maxPrice } },
             { 'propertyDetails.landDetails.sell.totalAmount': { $gte: minPrice, $lte: maxPrice } },
             { 'propertyDetails.landDetails.rent.totalAmount': { $gte: minPrice, $lte: maxPrice } },
             { 'propertyDetails.landDetails.lease.totalAmount': { $gte: minPrice, $lte: maxPrice } },
             { 'propertyDetails.totalCost': { $gte: minPrice, $lte: maxPrice } }
-          );
-        }
-    
-        // Fetch data from all models
-        const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
-          fieldModel.find({ ...filterCriteria }),
-          commercialModel.find({ ...filterCriteria }),
-          residentialModel.find({ ...filterCriteria }),
-          layoutModel.find({ ...filterCriteria })
-        ]);
-    
-        // Combine results
-        const properties = [
-          ...fieldData,
-          ...commercialData,
-          ...residentialData,
-          ...layoutData
-        ];
-    
-        let property = [];
-        for (let prop of properties) {
-          let result = {};
-          if (prop.propertyType === "Commercial" || prop.propertyType === "commercial") {
-            result = {
-              "propertyType": prop.propertyType,
-              "propertyTitle": prop.propertyTitle,
-              "size": prop.propertyDetails.landDetails.sell.plotSize || prop.propertyDetails.landDetails.rent.plotSize || prop.propertyDetails.landDetails.lease.plotSize,
-              "address": prop.propertyDetails.landDetails.address.district,
-              "propertyId": prop._id,
-              "price": prop.propertyDetails.landDetails.sell.totalAmount || prop.propertyDetails.landDetails.rent.totalAmount || prop.propertyDetails.landDetails.lease.totalAmount,
-              "images": prop.propertyDetails.uploadPics,
-              "propId":prop.propertyId,
-            };
-          } else if (prop.propertyType === "Layout" || prop.propertyType === "layout") {
-            result = {
-              "propertyTitle": prop.layoutDetails.layoutTitle,
-              "propertyType": prop.propertyType,
-              "images": prop.uploadPics,
-              "address": prop.layoutDetails.address.district,
-              "propertyId": prop._id,
-              "price": prop.layoutDetails.totalAmount,
-              "size": prop.layoutDetails.plotSize,
-              "propId":prop.propertyId,
-            };
-          } else if (prop.propertyType === "Residential" || prop.propertyType === "residential") {
-            result = {
-              "propertyTitle": prop.propertyDetails.apartmentName,
-              "propertyType": prop.propertyType,
-              "images": prop.propPhotos,
-              "size": prop.propertyDetails.flatSize,
-              "propertyId": prop._id,
-              "address": prop.address.district,
-              "price": prop.propertyDetails.totalCost,
-              "propId":prop.propertyId,
-            };
-          } else {
-            result = {
-              "propertyTitle": prop.landDetails.title,
-              "propertyType": prop.propertyType,
-              "images": prop.landDetails.images,
-              "size": prop.landDetails.size,
-              "propertyId": prop._id,
-              "address": prop.address.district,
-              "price": prop.landDetails.totalPrice,
-              "propId":prop.propertyId,
-            };
-          }
-          property.push(result);
-        }
-    
-        res.status(200).json(property);
-      } catch (error) {
-        console.log(error);
-        res.status(500).json("Internal Server Error");
+          ]
+        });
       }
-    };
-    
+  
+      // Fetch data concurrently
+      const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
+        fieldModel.find(filterCriteria),
+        commercialModel.find(filterCriteria),
+        residentialModel.find(filterCriteria),
+        layoutModel.find(filterCriteria)
+      ]);
+  
+      // Format Response
+      const properties = [...fieldData, ...commercialData, ...residentialData, ...layoutData];
+  
+      const result = properties.map((prop) => {
+        if (prop.propertyType?.toLowerCase() === 'commercial') {
+          return {
+            propertyType: prop.propertyType,
+            propertyTitle: prop.propertyTitle,
+            size:
+              prop.propertyDetails.landDetails.sell?.plotSize ||
+              prop.propertyDetails.landDetails.rent?.plotSize ||
+              prop.propertyDetails.landDetails.lease?.plotSize,
+            address: prop.propertyDetails.landDetails.address?.district,
+            propertyId: prop._id,
+            price:
+              prop.propertyDetails.landDetails.sell?.totalAmount ||
+              prop.propertyDetails.landDetails.rent?.totalAmount ||
+              prop.propertyDetails.landDetails.lease?.totalAmount,
+            images: prop.propertyDetails.uploadPics,
+            propId: prop.propertyId,
+          };
+        } else if (prop.propertyType?.toLowerCase() === 'layout') {
+          return {
+            propertyTitle: prop.layoutDetails.layoutTitle,
+            propertyType: prop.propertyType,
+            images: prop.uploadPics,
+            address: prop.layoutDetails.address?.district,
+            propertyId: prop._id,
+            price: prop.layoutDetails.totalAmount,
+            size: prop.layoutDetails.plotSize,
+            propId: prop.propertyId,
+          };
+        } else if (prop.propertyType?.toLowerCase() === 'residential') {
+          return {
+            propertyTitle: prop.propertyDetails.apartmentName,
+            propertyType: prop.propertyType,
+            images: prop.propPhotos,
+            size: prop.propertyDetails.flatSize,
+            propertyId: prop._id,
+            address: prop.address?.district,
+            price: prop.propertyDetails.totalCost,
+            propId: prop.propertyId,
+          };
+        } else {
+          return {
+            propertyTitle: prop.landDetails.title,
+            propertyType: prop.propertyType,
+            images: prop.landDetails.images,
+            size: prop.landDetails.size,
+            propertyId: prop._id,
+            address: prop.address?.district,
+            price: prop.landDetails.totalPrice,
+            propId: prop.propertyId,
+          };
+        }
+      });
+  
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
 
 // const getPropsOnFilter=async(req,res)=>{
 //   try
