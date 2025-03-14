@@ -197,7 +197,7 @@ const getTodayAuctions = async (req, res) => {
     });
 
     if (auctionData.length === 0) {
-      return res.status(409).json({ message: "No Auction Found" });
+      return res.status(400).json({ message: "No Auction Found" });
     }
 
     auctionWinner("679c923ebda9afb73db55205");
@@ -446,8 +446,11 @@ const getWinnerData = async (req, res) => {
     const userId = req.user.user.userId;
 
     const auctionData = await auctionModel.find({ auctionWinner: userId });
-
+ 
     let result = [];
+
+ 
+
 
     if (auctionData.length === 0) {
       res.status(409).json({ message: "No won Auctions", status: false });
@@ -488,12 +491,20 @@ const getWinnerData = async (req, res) => {
 
           propertyImage = propertyDetails[0].uploadPics;
         }
+        if(auction.winnerData.seenStatus===0 || auction.winnerData.seenStatus==="0")
+          {
+            await auctionModel.findByIdAndUpdate(auction._id,{"winnerData.seenStatus":1})
 
-        result.push({
-          auctionData: auction,
-          propertyName: propertyName,
-          propertyImage: propertyImage,
-        });
+
+            result.push({
+              auctionData: auction,
+              propertyName: propertyName,
+              propertyImage: propertyImage,
+            });
+          } 
+
+             
+ 
       }
 
       res.status(200).json({ data: result, status: true });
