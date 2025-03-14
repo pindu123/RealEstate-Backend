@@ -15,6 +15,7 @@ const {
   validateFilterData,
   validateId,
 } = require("../helpers/bookingValidation");
+const { AgentpushNotification1 } = require("./pushNotifyController");
 
 //api for a buyer/ seller to book appointment
 const createBooking = async (req, res) => {
@@ -41,6 +42,31 @@ const createBooking = async (req, res) => {
     const result = await userBookingSchema.validateAsync(details);
     const booking = new bookingModel(result);
     await booking.save();
+let agentId=req.body.agentId
+ 
+let userData=await userModel.find({_id:userId})
+
+let propType=req.body.propertyType
+ 
+ let prop=[]
+
+   if(propType==="Agricultural land")
+   {
+    prop=await fieldModel.find({_id:propertyId})
+   }
+   else if(propType ==="")
+   {
+    prop=await fieldModel.find({_id:propertyId})
+
+   }
+
+    AgentpushNotification1(
+      "Update on Agent Contact",
+       `${userData[0].firstName}  has consulted for property`,
+      1,
+      agentId);
+ 
+
     res.status(200).send({ message: "Booked Successfully", success: true });
   } catch (error) {
     if (error.isJoi === true) {
@@ -430,17 +456,15 @@ const getAgentBookings = async (req, res) => {
 const updateBookingStatus = async (req, res) => {
   try {
     const result = await validateBookingIdStatus.validateAsync(req.params);
-    const bookingId = result.bookingId; // Get bookingId from request parameters
-    const status = result.status; // Get status from request body
-    // Ensure status is either 0 or 1
-    // Update the booking status
+    const bookingId = result.bookingId;  
+    const status = result.status;  
+ 
     const updatedBooking = await bookingModel.findByIdAndUpdate(
       bookingId,
       { status: status },
       { new: true }
     );
-    // If no booking found with the given id
-    if (!updatedBooking) {
+     if (!updatedBooking) {
       return res.status(404).json({ message: "Booking not found" });
     }
     const resultData = {
@@ -448,8 +472,33 @@ const updateBookingStatus = async (req, res) => {
       status: updatedBooking.status,
     };
     console.log(resultData);
-    // Return the updated booking
-    res
+
+
+     const bookingData=await  bookingModel.find({_id:bookingId})
+     
+      const agentData=await userModel.find({_id:bookingData[0].agentId})
+       
+     let message=""
+
+     if(status===1 || status==="1")
+     {
+          message=`${agentData[0].firstName} has accepted your request`
+     }
+     else
+     {
+      message=`${agentData[0].firstName} has Rejected your request`
+
+     }
+     
+  AgentpushNotification1(
+    "Update on Agent Contact",
+     message,
+    3,
+    bookingData[0].userId
+  );
+
+
+     res
       .status(200)
       .json({ message: "Booking status updated successfully", resultData });
   } catch (error) {
