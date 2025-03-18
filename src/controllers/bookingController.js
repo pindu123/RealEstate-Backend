@@ -39,14 +39,13 @@ const createBooking = async (req, res) => {
       // profilePicture,
       ...req.body,
     };
-
-
-    console.log("daata",details,req.body)
     const result = await userBookingSchema.validateAsync(details);
     const booking = new bookingModel(result);
     await booking.save();
 let agentId=req.body.agentId
  
+console.log("user",details)
+
 let userData=await userModel.find({_id:userId})
 
 let propType=req.body.propertyType
@@ -85,6 +84,7 @@ let propType=req.body.propertyType
       .send({ message: "Error in booking", error: error.message || error });
   }
 };
+
 
 //api for an agent to book appointment
 const createAgentBooking = async (req, res) => {
