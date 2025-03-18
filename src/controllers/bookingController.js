@@ -39,6 +39,9 @@ const createBooking = async (req, res) => {
       // profilePicture,
       ...req.body,
     };
+
+
+    console.log("daata",details,req.body)
     const result = await userBookingSchema.validateAsync(details);
     const booking = new bookingModel(result);
     await booking.save();
