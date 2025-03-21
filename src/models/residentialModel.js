@@ -666,6 +666,14 @@ propertyPurposeTe:{
          flatCost: {
           type: Number,
         },
+
+         flatLength:{
+          type:Number
+         },
+         flatWidth:{
+          type:Number
+         },
+
         propertyLayout:{
           type:String
         }

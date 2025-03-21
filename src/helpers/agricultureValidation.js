@@ -194,6 +194,8 @@ const fieldValidationSchema = Joi.object({
     images: Joi.array().items(Joi.string()).optional(),
     videos: Joi.array().items(Joi.string()).optional(),
     propertyDesc: Joi.string().allow("").optional(),
+    documentsVerified:Joi.string().optional(),
+    propertyOrigin:Joi.string().optional()
   }).pattern(/Te$/, Joi.string().optional()),
 
   agentDetails: Joi.object({ userId: Joi.string().optional() }).optional(),

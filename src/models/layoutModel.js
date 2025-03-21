@@ -310,6 +310,7 @@ const layoutSchema = new mongoose.Schema(
       ownerEmail: { type: String },
     },
     layoutDetails: {
+      brochure:{type:String},
       reraRegistered: { type: Boolean },
       dtcpApproved: { type: Boolean },
       tlpApproved: { type: Boolean },
@@ -348,6 +349,8 @@ const layoutSchema = new mongoose.Schema(
         {
           plotId:{type:Number,required:false},
           plotSize: { type: Number, required: true }, 
+          plotLength:{type:Number},
+          plotWidth:{type:Number},
           sizeUnit: { type: String, required: true },
           sizeUnitTe: { type: String }, 
           plotAmount: { type: Number }, 

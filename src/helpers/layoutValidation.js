@@ -167,6 +167,8 @@ const layoutValidationSchema = Joi.object({
     dtcpApproved: Joi.boolean().required(),
     tlpApproved: Joi.boolean().required(),
     flpApproved: Joi.boolean().required(),
+
+    brochure:Joi.string().optional(),
     layoutTitle: Joi.string()
       .required()
       .custom((value) => capitalizeWords(value), "Capitalization for LayoutTitle"),
@@ -185,20 +187,14 @@ const layoutValidationSchema = Joi.object({
           plotId: Joi.number().optional(), // Optional because it's generated automatically
           plotSize: Joi.number().required().min(0.1),
           sizeUnit: Joi.string().required(),
+          plotLength:Joi.number().optional(),
+          plotWidth:Joi.number().optional(),
           sizeUnitTe: Joi.string().optional(),
           plotAmount: Joi.number().optional().min(0),
         })
       )
       .required()
-      .custom((plots, helpers) => {
-        // Ensure the number of plots matches `plotCount`
-        if (plots.length !== helpers.state.ancestors[0].plotCount) {
-          return helpers.message(
-            `Number of plots (${plots.length}) does not match the plotCount (${helpers.state.ancestors[0].plotCount}).`
-          );
-        }
-        return plots;
-      }),
+ ,
 
     address: Joi.object({
       pinCode: Joi.string()

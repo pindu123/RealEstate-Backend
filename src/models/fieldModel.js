@@ -264,6 +264,9 @@ const fieldSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
+      documentsVerified:{
+          type:String
+      },
       price: {
         type: Number,
         required: true,
@@ -308,6 +311,12 @@ const fieldSchema = new mongoose.Schema(
       propertyDescTe: {
         type: String, // Translated field for Telugu
       },
+
+
+      propertyOrigin:{
+        type:String
+      }
+
     },
 
     address: {

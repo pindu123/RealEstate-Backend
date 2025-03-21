@@ -29,6 +29,7 @@ const generatePropertyId = async (typePrefix, model) => {
 
 const translate = require("@iamtraction/google-translate");
 const auctionModel = require("../models/auctionModel");
+const { AgentpushNotification } = require("./pushNotifyController");
 
 const insertLayoutDetails = async (req, res) => {
   try {
@@ -112,16 +113,16 @@ const insertLayoutDetails = async (req, res) => {
     }
 
     // Generate plot IDs and ensure plots align with the count
-    const { plotCount, plots } = layoutDetailsData.layoutDetails;
-    if (plots) {
-      if (plots.length !== plotCount) {
-        console.error(`Mismatch between plotCount (${plotCount}) and plots provided (${plots.length}).`);
-        return res.status(400).json({
-          message: `The number of plots provided (${plots.length}) does not match the plotCount (${plotCount}).`,
-        });
-      }
-      console.log("Plots verified successfully:", plots);
-    }
+    // const { plotCount, plots } = layoutDetailsData.layoutDetails;
+    // if (plots) {
+    //   if (plots.length !== plotCount) {
+    //     console.error(`Mismatch between plotCount (${plotCount}) and plots provided (${plots.length}).`);
+    //     return res.status(400).json({
+    //       message: `The number of plots provided (${plots.length}) does not match the plotCount (${plotCount}).`,
+    //     });
+    //   }
+    //   console.log("Plots verified successfully:", plots);
+    // }
 
     // Validate the request body against the Joi schema
     console.log("Validating layoutDetailsData...");
