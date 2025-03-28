@@ -49,6 +49,8 @@ console.log("user",details)
 let userData=await userModel.find({_id:userId})
 
 let propType=req.body.propertyType
+
+let propertyId=req.body.propertyId
  
  let prop=[]
 
