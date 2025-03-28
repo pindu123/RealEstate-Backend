@@ -6,19 +6,22 @@ const userModel = require("../models/userModel");
 const viewsModel = require("../models/viewsModel");
 const residentialRoutes = require("../routes/residentialRoutes");
 
+
 const updateViewCount = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     const { propertyId, propertyType } = req.body;
 
     console.log(req.body);
-
-    // Check if the document already exists
     const docs = await viewsModel.find({
       userId: userId,
       role: role,
       propertyId: propertyId,
     });
+if(role!==1)
+{
+    // Check if the document already exists
+  
 
     if (docs.length !== 0) {
       const countDocs = docs[0].viewsCount;
@@ -54,13 +57,77 @@ const updateViewCount = async (req, res) => {
     console.log("New document saved:", newData);
 
     res.status(200).json({ message: "New view count added", newData });
+  }
+  else
+  {
+  res.status(200).json({"message":"viewCount",viewsCount:docs[0].viewsCount})
+  }
   } catch (error) {
     console.error("Error during operation:", error);
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
   }
+
+ 
 };
+
+
+// const updateViewCount = async (req, res) => {
+//   try {
+//     const { userId, role } = req.user.user;
+//     const { propertyId, propertyType } = req.body;
+
+//     console.log(req.body);
+
+//     // Check if the document already exists
+//     const docs = await viewsModel.find({
+//       userId: userId,
+//       role: role,
+//       propertyId: propertyId,
+//     });
+
+//     if (docs.length !== 0) {
+//       const countDocs = docs[0].viewsCount;
+//       console.log("Existing document count:", countDocs);
+
+//       // Increment count or set to 1 if it's a new entry
+//       let newCount = countDocs + 1;
+//       console.log(newCount);
+//       // Update the existing document's view count
+//       const updated = await viewsModel.updateOne(
+//         { userId: userId, role: role, propertyId: propertyId },
+//         { $set: { viewsCount: newCount } }
+//       );
+//       console.log("Update result:", updated);
+//       return res
+//         .status(200)
+//         .json({ message: "View count updated", viewsCount: newCount });
+//     }
+
+//     // Create a new document if no existing match is found
+//     let data = {
+//       userId,
+//       role,
+//       propertyId,
+//       propertyType,
+//       viewsCount: 1, // Ensure this matches your schema field
+//     };
+
+//     console.log("New document data:", data);
+
+//     const newData = new viewsModel(data);
+//     await newData.save();
+//     console.log("New document saved:", newData);
+
+//     res.status(200).json({ message: "New view count added", newData });
+//   } catch (error) {
+//     console.error("Error during operation:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
+//   }
+// };
 
 //total no. of views
 const totalViews = async (req, res) => {
