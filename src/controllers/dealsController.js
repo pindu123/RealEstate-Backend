@@ -2912,10 +2912,11 @@ const getDistinctProperties = async (req, res) => {
               propertyType: 1,
             },
           },
-          { $limit: Number(limit) },
+           {$skip:offset},
+           { $limit: Number(limit) },
+
         ])
-        .skip(offset);
-    } else {
+     } else {
       distinctProperties = await dealsModel.aggregate([
         { $match: matchCriteria },
         {
