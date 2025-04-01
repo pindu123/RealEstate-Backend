@@ -7,7 +7,6 @@ const display = (req, res) => {
   }
 };
 
-// Exporting the display function
-module.exports = {
+ module.exports = {
   display,
 };

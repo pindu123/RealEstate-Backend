@@ -133,7 +133,6 @@
 
 const Joi = require("joi");
 
-
 const capitalizeWords = (value) => {
   if (typeof value === "string") {
     return value
@@ -149,7 +148,7 @@ const fieldValidationSchema = Joi.object({
   role: Joi.number().required(),
   propertyType: Joi.string().default("Agricultural land"),
   rating: Joi.number().default(0),
-  propertyInterestedCount:Joi.number().optional(),
+  propertyInterestedCount: Joi.number().optional(),
   ratingCount: Joi.number().default(0),
   status: Joi.number().default(0),
   csrId: Joi.string().optional(),
@@ -157,7 +156,10 @@ const fieldValidationSchema = Joi.object({
   ownerDetails: Joi.object({
     ownerName: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for OwnerName"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for OwnerName"
+      ),
     phoneNumber: Joi.string()
       .length(10)
       .pattern(/[6-9]{1}[0-9]{9}/)
@@ -170,7 +172,10 @@ const fieldValidationSchema = Joi.object({
   landDetails: Joi.object({
     title: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for title"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for title"
+      ),
     surveyNumber: Joi.string().required(),
     size: Joi.number().min(0).required(),
     sizeUnit: Joi.string().required(),
@@ -179,10 +184,16 @@ const fieldValidationSchema = Joi.object({
     totalPrice: Joi.number().min(0).required(),
     landType: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for landType"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for landType"
+      ),
     crops: Joi.array()
       .items(
-        Joi.string().custom((value, helpers) => capitalizeWords(value), "Capitalization for crops")
+        Joi.string().custom(
+          (value, helpers) => capitalizeWords(value),
+          "Capitalization for crops"
+        )
       )
       .optional(),
     litigation: Joi.boolean().required(),
@@ -194,8 +205,8 @@ const fieldValidationSchema = Joi.object({
     images: Joi.array().items(Joi.string()).optional(),
     videos: Joi.array().items(Joi.string()).optional(),
     propertyDesc: Joi.string().allow("").optional(),
-    documentsVerified:Joi.string().optional(),
-    propertyOrigin:Joi.string().optional()
+    documentsVerified: Joi.string().optional(),
+    propertyOrigin: Joi.string().optional(),
   }).pattern(/Te$/, Joi.string().optional()),
 
   agentDetails: Joi.object({ userId: Joi.string().optional() }).optional(),
@@ -212,13 +223,22 @@ const fieldValidationSchema = Joi.object({
     state: Joi.string().default("Andhra Pradesh").required(),
     district: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for district"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for district"
+      ),
     mandal: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for mandal"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for mandal"
+      ),
     village: Joi.string()
       .required()
-      .custom((value, helpers) => capitalizeWords(value), "Capitalization for village"),
+      .custom(
+        (value, helpers) => capitalizeWords(value),
+        "Capitalization for village"
+      ),
     latitude: Joi.string().optional(),
     longitude: Joi.string().optional(),
     landMark: Joi.string().optional(),
@@ -232,13 +252,25 @@ const fieldValidationSchema = Joi.object({
     storageFacility: Joi.boolean(),
     extraAmenities: Joi.array()
       .items(
-        Joi.string().custom((value, helpers) => capitalizeWords(value), "Capitalization for extra amenities")
+        Joi.string().custom(
+          (value, helpers) => capitalizeWords(value),
+          "Capitalization for extra amenities"
+        )
       )
       .optional(),
   }).pattern(/Te$/, Joi.string().optional()),
-  propertyInterestedCount:Joi.number().optional(),
+  propertyInterestedCount: Joi.number().optional(),
   propertyId: Joi.string().optional(),
-  propertyOnHold:Joi.string().optional(),
-}).pattern(/Te$/, Joi.alternatives().try(Joi.string(), Joi.object(), Joi.array(), Joi.boolean(), Joi.number()));
+  propertyOnHold: Joi.string().optional(),
+}).pattern(
+  /Te$/,
+  Joi.alternatives().try(
+    Joi.string(),
+    Joi.object(),
+    Joi.array(),
+    Joi.boolean(),
+    Joi.number()
+  )
+);
 
 module.exports = { fieldValidationSchema };

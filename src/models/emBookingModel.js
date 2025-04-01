@@ -15,7 +15,7 @@ const emBookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    estId:{
+    estId: {
       type: String,
       required: true,
     },

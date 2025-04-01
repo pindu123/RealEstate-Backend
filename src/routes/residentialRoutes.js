@@ -6,7 +6,7 @@ const {
 } = require("../controllers/residentialController");
 
 const residentialRoutes = express.Router();
-const apicache = require('apicache');
+const apicache = require("apicache");
 let cache = apicache.middleware;
 
 residentialRoutes.post("/add", createResidential);

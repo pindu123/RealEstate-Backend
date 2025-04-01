@@ -1,5 +1,3 @@
-
-
 const mongoose = require("mongoose");
 
 const emInterestSchema = new mongoose.Schema(
@@ -13,7 +11,7 @@ const emInterestSchema = new mongoose.Schema(
     },
     estId: {
       type: String,
-    }
+    },
   },
   { timestamps: true }
 );

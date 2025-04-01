@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const customerAssignmentSchema = new mongoose.Schema(
   {
-
-
-
-    
     assignedBy: {
       type: String,
       required: true,
@@ -26,41 +22,43 @@ const customerAssignmentSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-         default:"Pending"
+          default: "Pending",
         },
         description: {
           type: String,
         },
-       
-          property:[
-          {landTitle:{
-          type:String,
-          },
-          propertyType:{
-            type: String,
+
+        property: [
+          {
+            landTitle: {
+              type: String,
             },
-          propertyId:{
-            type:String,
+            propertyType: {
+              type: String,
+            },
+            propertyId: {
+              type: String,
+            },
+            agentName: {
+              type: String,
+            },
+            agentId: {
+              type: String,
+            },
           },
-          agentName:{
-            type:String,
-          },
-          agentId:{
-            type:String,
-          },},
         ],
-          size:{
-          type:String,
-          },
-          price:{
-          type:String,
-          },
-          location:{
-          type:String,
-          },
-          reschedule:{
-            type: Date,
-          }
+        size: {
+          type: String,
+        },
+        price: {
+          type: String,
+        },
+        location: {
+          type: String,
+        },
+        reschedule: {
+          type: Date,
+        },
       },
     ],
   },

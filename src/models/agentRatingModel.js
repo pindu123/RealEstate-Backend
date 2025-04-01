@@ -7,10 +7,10 @@ const agentRatingSchema = new mongoose.Schema(
       required: true,
     },
     status: {
-        type: "Number",
-        default: 0,
-      },
-  
+      type: "Number",
+      default: 0,
+    },
+
     agentId: {
       type: String,
       required: true,

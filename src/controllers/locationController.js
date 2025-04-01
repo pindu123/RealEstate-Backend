@@ -1,4 +1,3 @@
-// Import necessary modules
 const districtModel = require("../models/districtModel");
 const locationModel = require("../models/locationModel");
 
@@ -10,25 +9,20 @@ const getLocationByPincode = async (req, res) => {
       return res.status(400).json({ message: "Pincode not found in request" });
     }
 
-    // Build the query dynamically based on the params
     const query = {
       "villages.0": { $exists: true },
     };
 
-    // If district is not '@', add it to the query
     if (district !== "@") {
       query.district = district;
     }
 
-    // If mandal is not '@', add it to the query
     if (mandal !== "@") {
       query.mandal = mandal;
     }
 
-    // Find all documents matching the built query
     const locations = await districtModel.find(query);
     console.log(query);
-    // Initialize the result structure
     const result = {
       districts: [],
       mandals: [],
@@ -113,51 +107,41 @@ const getLocationByPincode = async (req, res) => {
   }
 };
 
-//get mandals based on district
 const getMandalsByDistrict = async (req, res) => {
   try {
     const { district } = req.params;
 
-    // Check if district is provided
     if (!district) {
       return res.status(400).json({ message: "District not found in request" });
     }
 
-    // Find all documents matching the specified district
     const locations = await districtModel.find({ district });
 
-    // Extract and collect unique mandals
     const mandals = [...new Set(locations.map((location) => location.mandal))];
 
-    // If no mandals are found
     if (mandals.length === 0) {
       return res
         .status(404)
         .json({ message: "No mandals found for this district" });
     }
     mandals.sort();
-    // Return the list of mandals
     res.status(200).json({ mandals });
   } catch (error) {
     console.error("Error fetching mandals:", error);
-    // Internal server error
     res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
-//get villages by mandal
 const getVillagesByMandal = async (req, res) => {
   try {
     const { mandal } = req.params;
 
-    // Check if mandal is provided
     if (!mandal) {
       return res.status(400).json({ message: "Mandal not found in request" });
     }
 
-    // Find all documents matching the specified mandal
     const locations = await districtModel.find({ mandal });
 
     let villagesData = locations[0].villages;
@@ -169,25 +153,21 @@ const getVillagesByMandal = async (req, res) => {
       villages.push(village.villageName);
     });
 
-    // If no villages are found
     if (villages.length === 0) {
       return res
         .status(404)
         .json({ message: "No villages found for this mandal" });
     }
 
-    // Return the list of villages
     res.status(200).json(villages.sort());
   } catch (error) {
     console.error("Error fetching villages:", error);
-    // Internal server error
     res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
-//display all mandals
 const getAllMandals = async (req, res) => {
   try {
     const mandals = await locationModel.distinct("mandal");
@@ -197,14 +177,12 @@ const getAllMandals = async (req, res) => {
     res.status(200).json(mandals.sort());
   } catch (error) {
     console.error("Error fetching mandals:", error);
-    // Internal server error
     res
       .status(500)
       .json({ message: "Internal Server Error", error: error.message });
   }
 };
 
-//get all villages
 const getAllVillages = async (req, res) => {
   try {
     const villagesData = await locationModel.find({}, { villages: 1 }); // Fetch the entire 'villages' array
@@ -221,8 +199,7 @@ const getAllVillages = async (req, res) => {
         villageNames.push(v);
       }
     }
-    //console.log(villageNames);
-    res.status(200).json(villageNames.sort());
+     res.status(200).json(villageNames.sort());
   } catch (error) {
     console.error("Error fetching mandals:", error);
     // Internal server error
@@ -235,6 +212,6 @@ module.exports = {
   getLocationByPincode,
   getMandalsByDistrict,
   getVillagesByMandal,
-  getAllMandals, //unused
-  getAllVillages, //unused
+  getAllMandals,  
+  getAllVillages,  
 };

@@ -20,17 +20,22 @@ function formatToIndianRupees(number) {
   return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger;
 }
 
-// Function to create a new commercial property
 const createCommercials = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
-    console.log(userId, role)
+    console.log(userId, role);
     let createcomm;
 
-    req.body.propertyDetails.amenities.isElectricity = String(req.body.propertyDetails.amenities.isElectricity);
-    req.body.propertyDetails.landDetails.address.latitude = String(req.body.propertyDetails.landDetails.address.latitude);
-    req.body.propertyDetails.landDetails.address.longitude = String(req.body.propertyDetails.landDetails.address.longitude);
-    let message = {}
+    req.body.propertyDetails.amenities.isElectricity = String(
+      req.body.propertyDetails.amenities.isElectricity
+    );
+    req.body.propertyDetails.landDetails.address.latitude = String(
+      req.body.propertyDetails.landDetails.address.latitude
+    );
+    req.body.propertyDetails.landDetails.address.longitude = String(
+      req.body.propertyDetails.landDetails.address.longitude
+    );
+    let message = {};
     if (role === 1) {
       if (req.body.enteredBy) {
         const csrData = await userModel.find({ _id: userId }, { password: 0 });
@@ -42,9 +47,12 @@ const createCommercials = async (req, res) => {
         };
       } else {
         console.log("abc");
-        console.log("xyz", req.user.user.userId)
-        const csrData = await userModel.find({ _id: req.user.user.userId }, { password: 0 });
-        console.log("sddds")
+        console.log("xyz", req.user.user.userId);
+        const csrData = await userModel.find(
+          { _id: req.user.user.userId },
+          { password: 0 }
+        );
+        console.log("sddds");
         createcomm = {
           userId,
           enteredBy: userId,
@@ -55,18 +63,20 @@ const createCommercials = async (req, res) => {
       const csrData = await userModel.find({ _id: userId }, { password: 0 });
 
       message = {
-        "senderId": req.user.user.userId,
-        "receiverId": csrData[0].assignedCsr,
-        "message": `${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
-        "notifyType": "Property"
-
-      }
+        senderId: req.user.user.userId,
+        receiverId: csrData[0].assignedCsr,
+        message: `${csrData[0].firstName} ${csrData[0].lastName} Has Added New Property`,
+        notifyType: "Property",
+      };
     }
     if (role === 5) {
       console.log(req.body);
-      const userData = await userModel.find({
-        email: req.body.propertyDetails.agentDetails.userId,
-      }, { password: 0 });
+      const userData = await userModel.find(
+        {
+          email: req.body.propertyDetails.agentDetails.userId,
+        },
+        { password: 0 }
+      );
 
       if (req.body.enteredBy) {
         createcomm = {
@@ -77,7 +87,7 @@ const createCommercials = async (req, res) => {
         };
       } else {
         console.log("abc");
-        console.log("xyz", req.user.user.userId, userId)
+        console.log("xyz", req.user.user.userId, userId);
         createcomm = {
           csrId: userId,
           enteredBy: userId,
@@ -85,26 +95,32 @@ const createCommercials = async (req, res) => {
           userId: userData[0]._id.toString(),
         };
       }
-      console.log("agent", createcomm)
+      console.log("agent", createcomm);
 
-      const csrData = await userModel.find({ _id: req.user.user.userId }, { password: 0 });
-      console.log("agent", req.body)
+      const csrData = await userModel.find(
+        { _id: req.user.user.userId },
+        { password: 0 }
+      );
+      console.log("agent", req.body);
       message = {
-        "senderId": req.user.user.userId,
-        "receiverId": req.body.propertyDetails.agentDetails.userId,
-        "message": `${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
-        "notifyType": "Property"
-
-      }
+        senderId: req.user.user.userId,
+        receiverId: req.body.propertyDetails.agentDetails.userId,
+        message: `${csrData[0].firstName} ${csrData[0].lastName}  has added a new property`,
+        notifyType: "Property",
+      };
     }
 
-
-
-    if (createcomm.propertyDetails.landDetails.address.latitude === '' || createcomm.propertyDetails.landDetails.address.latitude === undefined) {
+    if (
+      createcomm.propertyDetails.landDetails.address.latitude === "" ||
+      createcomm.propertyDetails.landDetails.address.latitude === undefined
+    ) {
       delete createcomm.propertyDetails.landDetails.address.latitude;
     }
 
-    if (createcomm.propertyDetails.landDetails.address.longitude === '' || createcomm.propertyDetails.landDetails.address.longitude === undefined) {
+    if (
+      createcomm.propertyDetails.landDetails.address.longitude === "" ||
+      createcomm.propertyDetails.landDetails.address.longitude === undefined
+    ) {
       delete createcomm.propertyDetails.landDetails.address.longitude;
     }
 
@@ -113,9 +129,8 @@ const createCommercials = async (req, res) => {
     await commercialDetails.save();
     console.log(result);
 
-
-    const notify = new notifyModel(message)
-    await notify.save()
+    const notify = new notifyModel(message);
+    await notify.save();
 
     console.log(commercialDetails);
     res.status(201).json("property added successfully");
@@ -132,12 +147,11 @@ const createCommercials = async (req, res) => {
   }
 };
 
-/**
- * Utility function to generate a unique property ID for commercial properties.
- * Prefix: "PC"
- */
 const generatePropertyId = async (typePrefix, model) => {
-  const lastEntry = await model.findOne().sort({ _id: -1 }).select('propertyId');
+  const lastEntry = await model
+    .findOne()
+    .sort({ _id: -1 })
+    .select("propertyId");
   let lastId = 0;
   if (lastEntry && lastEntry.propertyId) {
     lastId = parseInt(lastEntry.propertyId.slice(2), 10); // Extract numeric part after "PC"
@@ -145,24 +159,26 @@ const generatePropertyId = async (typePrefix, model) => {
   return `${typePrefix}${lastId + 1}`;
 };
 
-/**
- * API to create a commercial property.PC1
- */
-const translate = require('@iamtraction/google-translate'); // Import translation library
+const translate = require("@iamtraction/google-translate");
 const auctionModel = require("../models/auctionModel");
-const { UserBindingInstance } = require("twilio/lib/rest/ipMessaging/v2/service/user/userBinding");
-
+const {
+  UserBindingInstance,
+} = require("twilio/lib/rest/ipMessaging/v2/service/user/userBinding");
 
 const createCommercial = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
 
-    // Ensure required fields are structured correctly
-    req.body.propertyDetails.amenities.isElectricity = String(req.body.propertyDetails.amenities.isElectricity);
-    req.body.propertyDetails.landDetails.address.latitude = String(req.body.propertyDetails.landDetails.address.latitude);
-    req.body.propertyDetails.landDetails.address.longitude = String(req.body.propertyDetails.landDetails.address.longitude);
+    req.body.propertyDetails.amenities.isElectricity = String(
+      req.body.propertyDetails.amenities.isElectricity
+    );
+    req.body.propertyDetails.landDetails.address.latitude = String(
+      req.body.propertyDetails.landDetails.address.latitude
+    );
+    req.body.propertyDetails.landDetails.address.longitude = String(
+      req.body.propertyDetails.landDetails.address.longitude
+    );
 
-    // Generate a unique property ID for commercial properties
     const propertyId = await generatePropertyId("PC", commercialModel);
     req.body.propertyId = propertyId;
 
@@ -175,7 +191,8 @@ const createCommercial = async (req, res) => {
       return res.status(409).json({ message: "User not found" });
     }
 
-    if (role === 1) { // CSR role
+    if (role === 1) {
+      // CSR role
       const csrId = userData.assignedCsr;
       const csrData = await userModel.findById(csrId);
       if (!csrData) {
@@ -196,8 +213,11 @@ const createCommercial = async (req, res) => {
         message: `${csrData.firstName} ${csrData.lastName} has added a new commercial property`,
         notifyType: "Property",
       };
-    } else if (role === 5) { // Agent role
-      const agentData = await userModel.findOne({ email: req.body.propertyDetails.agentDetails.userId });
+    } else if (role === 5) {
+      // Agent role
+      const agentData = await userModel.findOne({
+        email: req.body.propertyDetails.agentDetails.userId,
+      });
       if (!agentData) {
         return res.status(409).json({ message: "Agent not found" });
       }
@@ -217,7 +237,9 @@ const createCommercial = async (req, res) => {
         notifyType: "Property",
       };
     } else {
-      return res.status(403).json({ message: "Unauthorized role for this action" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized role for this action" });
     }
 
     // Clean up optional latitude/longitude if empty
@@ -235,8 +257,13 @@ const createCommercial = async (req, res) => {
         commercialData[`${key}Te`] = translatedValue; // Add directly to commercialData
       } else if (typeof value === "object" && !Array.isArray(value)) {
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          if (typeof nestedValue === "string" && /^[a-zA-Z\s]+$/.test(nestedValue)) {
-            const { text: translatedValue } = await translate(nestedValue, { to: "te" });
+          if (
+            typeof nestedValue === "string" &&
+            /^[a-zA-Z\s]+$/.test(nestedValue)
+          ) {
+            const { text: translatedValue } = await translate(nestedValue, {
+              to: "te",
+            });
             commercialData[key][`${nestedKey}Te`] = translatedValue; // Add directly to nested object in commercialData
           }
         }
@@ -244,8 +271,10 @@ const createCommercial = async (req, res) => {
     }
 
     // Validate the data
-    const validatedData = await commercialSchema.validateAsync(commercialData, { abortEarly: false });
-    console.log(req.body)
+    const validatedData = await commercialSchema.validateAsync(commercialData, {
+      abortEarly: false,
+    });
+    console.log(req.body);
     // Save the commercial details
     const commercialDetails = new commercialModel(validatedData);
     const commercialDataResponse = await commercialDetails.save();
@@ -265,8 +294,11 @@ const createCommercial = async (req, res) => {
     await notification.save();
     await notification1.save();
 
-    AgentpushNotification("New Property!",`A commercial property ${req.body.propertyTitle} is added`,3)
-
+    AgentpushNotification(
+      "New Property!",
+      `A commercial property ${req.body.propertyTitle} is added`,
+      3
+    );
 
     res.status(201).json({
       message: "Commercial property added successfully",
@@ -283,22 +315,26 @@ const createCommercial = async (req, res) => {
       });
     }
     console.error(error);
-    res.status(500).json({ message: "Error creating commercial property", error });
+    res
+      .status(500)
+      .json({ message: "Error creating commercial property", error });
   }
 };
-
-
 
 const createCommercialInUse = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
 
-    // Ensure required fields are structured correctly
-    req.body.propertyDetails.amenities.isElectricity = String(req.body.propertyDetails.amenities.isElectricity);
-    req.body.propertyDetails.landDetails.address.latitude = String(req.body.propertyDetails.landDetails.address.latitude);
-    req.body.propertyDetails.landDetails.address.longitude = String(req.body.propertyDetails.landDetails.address.longitude);
+    req.body.propertyDetails.amenities.isElectricity = String(
+      req.body.propertyDetails.amenities.isElectricity
+    );
+    req.body.propertyDetails.landDetails.address.latitude = String(
+      req.body.propertyDetails.landDetails.address.latitude
+    );
+    req.body.propertyDetails.landDetails.address.longitude = String(
+      req.body.propertyDetails.landDetails.address.longitude
+    );
 
-    // Generate a unique property ID for commercial properties
     const propertyId = await generatePropertyId("PC", commercialModel);
     req.body.propertyId = propertyId;
 
@@ -311,7 +347,8 @@ const createCommercialInUse = async (req, res) => {
       return res.status(409).json({ message: "User not found" });
     }
 
-    if (role === 1) { // CSR role
+    if (role === 1) {
+      // CSR role
       const csrId = userData.assignedCsr;
       const csrData = await userModel.findById(csrId, { password: 0 });
       if (!csrData) {
@@ -332,8 +369,11 @@ const createCommercialInUse = async (req, res) => {
         message: `${csrData.firstName} ${csrData.lastName} has added a new commercial property`,
         notifyType: "Property",
       };
-    } else if (role === 5) { // Agent role
-      const agentData = await userModel.findOne({ email: req.body.propertyDetails.agentDetails.userId });
+    } else if (role === 5) {
+      // Agent role
+      const agentData = await userModel.findOne({
+        email: req.body.propertyDetails.agentDetails.userId,
+      });
       if (!agentData) {
         return res.status(409).json({ message: "Agent not found" });
       }
@@ -353,7 +393,9 @@ const createCommercialInUse = async (req, res) => {
         notifyType: "Property",
       };
     } else {
-      return res.status(403).json({ message: "Unauthorized role for this action" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized role for this action" });
     }
 
     // Clean up optional latitude/longitude if empty
@@ -363,9 +405,11 @@ const createCommercialInUse = async (req, res) => {
     if (!commercialData.propertyDetails.landDetails.address.longitude) {
       delete commercialData.propertyDetails.landDetails.address.longitude;
     }
-    console.log(commercialData)
+    console.log(commercialData);
     // Validate the data
-    const validatedData = await commercialSchema.validateAsync(commercialData, { abortEarly: false });
+    const validatedData = await commercialSchema.validateAsync(commercialData, {
+      abortEarly: false,
+    });
 
     // Save the commercial details
     const commercialDetails = new commercialModel(validatedData);
@@ -377,8 +421,8 @@ const createCommercialInUse = async (req, res) => {
       senderId: userId,
       receiverId: 0,
       message: "A new property added ! Please checkout",
-      notifyType: "Customer"
-    }
+      notifyType: "Customer",
+    };
 
     const notification = new notifyModel(message);
     const notification1 = new notifyModel(message1);
@@ -393,7 +437,7 @@ const createCommercialInUse = async (req, res) => {
     });
   } catch (error) {
     if (error.isJoi) {
-      console.log(error)
+      console.log(error);
       return res.status(422).json({
         message: "Validation failed",
         details: error.details.map((err) => err.message),
@@ -401,29 +445,28 @@ const createCommercialInUse = async (req, res) => {
       });
     }
     console.error(error);
-    res.status(500).json({ message: "Error creating commercial property", error });
+    res
+      .status(500)
+      .json({ message: "Error creating commercial property", error });
   }
 };
 
-
-
-
-
-// Function to get all commercial properties added by that user
 const getCommercials = async (req, res) => {
   try {
     const userId = req.user.user.userId;
-    let page = req.query.page
-    let limit = req.query.limit
-    let commercials = []
+    let page = req.query.page;
+    let limit = req.query.limit;
+    let commercials = [];
     if (page) {
-      let offset = (page - 1) * limit
-      commercials = await Commercial.find({ userId: userId }).sort({
-        status: 1,
-        updatedAt: -1,
-      }).skip(offset).limit(limit);
-    }
-    else {
+      let offset = (page - 1) * limit;
+      commercials = await Commercial.find({ userId: userId })
+        .sort({
+          status: 1,
+          updatedAt: -1,
+        })
+        .skip(offset)
+        .limit(limit);
+    } else {
       commercials = await Commercial.find({ userId: userId }).sort({
         status: 1,
         updatedAt: -1,
@@ -434,95 +477,98 @@ const getCommercials = async (req, res) => {
       return res.status(200).json([]);
     }
 
-
-    let resultData = []
+    let resultData = [];
     for (let comm of commercials) {
-      const id = comm._id
-      const data = await auctionModel.find({ propertyId: id })
+      const id = comm._id;
+      const data = await auctionModel.find({ propertyId: id });
 
-      const reservation = await propertyReservation.find({ "propId": id,"reservationStatus":true,"userId":userId })
+      const reservation = await propertyReservation.find({
+        propId: id,
+        reservationStatus: true,
+        userId: userId,
+      });
 
       if (reservation.length > 0) {
-        comm.reservedBy = reservation[0].userId
+        comm.reservedBy = reservation[0].userId;
       }
 
-      comm.auctionData = data
-      comm.auctionData = data
+      comm.auctionData = data;
+      comm.auctionData = data;
       if (data.length === 0) {
         comm.auctionStatus = "InActive";
-
-      }
-      else {
-
-
+      } else {
         for (let auction of data) {
           if (auction.auctionStatus === "active") {
             comm.auctionStatus = auction.auctionStatus;
-            comm.auctionType=auction.auctionType
+            comm.auctionType = auction.auctionType;
             break;
-          }
-          else {
+          } else {
             comm.auctionStatus = auction.auctionStatus;
-            comm.auctionType=auction.auctionType
+            comm.auctionType = auction.auctionType;
           }
-
         }
 
-        const buyerData = data[0].buyers
+        const buyerData = data[0].buyers;
         if (buyerData.length > 0) {
-          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount);
         }
       }
 
-      resultData.push({ ...comm._doc, "reservedBy": comm.reservedBy, "auctionStatus": comm.auctionStatus, "auctionData": comm.auctionData })
+      resultData.push({
+        ...comm._doc,
+        reservedBy: comm.reservedBy,
+        auctionStatus: comm.auctionStatus,
+        auctionData: comm.auctionData,
+      });
     }
 
     res.status(200).json(resultData);
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// Function to get all commercial properties
 const getAllCommercials = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
 
-    let page = req.query.page
-    let limit = req.query.limit
+    let page = req.query.page;
+    let limit = req.query.limit;
     // Fetch all commercials
     let commercials;
 
     if (page) {
-      let offset = (page - 1) * limit
+      let offset = (page - 1) * limit;
 
       if (role === 3) {
-        commercials = await Commercial.find({ status: 0 }).sort({
-          updatedAt: -1,
-        }).skip(offset).limit(limit);;
+        commercials = await Commercial.find({ status: 0 })
+          .sort({
+            updatedAt: -1,
+          })
+          .skip(offset)
+          .limit(limit);
       } else {
-        commercials = await Commercial.find().sort({
-          status: 1,
-          updatedAt: -1,
-        }).skip(offset).limit(limit);
+        commercials = await Commercial.find()
+          .sort({
+            status: 1,
+            updatedAt: -1,
+          })
+          .skip(offset)
+          .limit(limit);
       }
-
-    }
-    else {
+    } else {
       if (role === 3) {
         commercials = await Commercial.find({ status: 0 }).sort({
           updatedAt: -1,
-        })
+        });
       } else {
         commercials = await Commercial.find().sort({
           status: 1,
           updatedAt: -1,
         });
       }
-
     }
 
     if (commercials.length === 0) {
@@ -558,44 +604,41 @@ const getAllCommercials = async (req, res) => {
       return commercialObj;
     });
 
-
-
     for (let comm of updatedCommercials) {
-      const id = comm._id
-      const data = await auctionModel.find({ propertyId: id })
-      const reservation = await propertyReservation.find({ "propId": id ,"reservationStatus":true,"userId":userId})
-
+      const id = comm._id;
+      const data = await auctionModel.find({ propertyId: id });
+      const reservation = await propertyReservation.find({
+        propId: id,
+        reservationStatus: true,
+        userId: userId,
+      });
 
       if (reservation.length > 0) {
-        comm.reservedBy = reservation[0].userId
+        comm.reservedBy = reservation[0].userId;
       }
-      comm.auctionData = data
+      comm.auctionData = data;
       if (data.length === 0) {
         comm.auctionStatus = "InActive";
-
-      }
-      else {
-for(let auction of data)
-{
-  if(auction.auctionType==="active"|| auction.auctionType==="Active")
-  {
-    comm.auctionStatus=auction.auctionStatus
-   comm.auctionType=auction.auctionType
-  break;
-  }
-  else
-  {
-    comm.auctionType=auction.auctionType
-    comm.auctionStatus=auction.auctionStatus
-
-  }
-}
-
-         const buyerData = data[0].buyers
-        if (buyerData.length > 0) {
-          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+      } else {
+        for (let auction of data) {
+          if (
+            auction.auctionType === "active" ||
+            auction.auctionType === "Active"
+          ) {
+            comm.auctionStatus = auction.auctionStatus;
+            comm.auctionType = auction.auctionType;
+            break;
+          } else {
+            comm.auctionType = auction.auctionType;
+            comm.auctionStatus = auction.auctionStatus;
+          }
         }
-        comm.auctionData.buyers = buyerData
+
+        const buyerData = data[0].buyers;
+        if (buyerData.length > 0) {
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount);
+        }
+        comm.auctionData.buyers = buyerData;
       }
     }
 
@@ -617,66 +660,58 @@ const editCommDetails = async (req, res) => {
   }
 };
 
-
-
-
-
 const getProperties = async (req, res) => {
   try {
-    const type = req.params.type
-    const {page,limit}=req.query
- 
-    let commercialData
-    if(page&&limit)
-    {
-      let offset=(page-1)*limit
-        commercialData = await commercialModel.find().skip(offset).limit(limit)
+    const type = req.params.type;
+    const { page, limit } = req.query;
 
+    let commercialData;
+    if (page && limit) {
+      let offset = (page - 1) * limit;
+      commercialData = await commercialModel.find().skip(offset).limit(limit);
+    } else {
+      commercialData = await commercialModel.find();
     }
-    else
-    {
-        commercialData = await commercialModel.find();
 
-    }
- 
- 
-    let resultData = []
+    let resultData = [];
 
     for (let comm of commercialData) {
-      if (type === "sell" && comm.propertyDetails.landDetails.sell.landUsage.length > 0) {
-        resultData.push(comm)
+      if (
+        type === "sell" &&
+        comm.propertyDetails.landDetails.sell.landUsage.length > 0
+      ) {
+        resultData.push(comm);
       }
 
-      if (type === "lease" && comm.propertyDetails.landDetails.lease.landUsage.length > 0) {
-        resultData.push(comm)
+      if (
+        type === "lease" &&
+        comm.propertyDetails.landDetails.lease.landUsage.length > 0
+      ) {
+        resultData.push(comm);
       }
 
-      if (type === "rent" && comm.propertyDetails.landDetails.rent.landUsage.length > 0) {
-        resultData.push(comm)
+      if (
+        type === "rent" &&
+        comm.propertyDetails.landDetails.rent.landUsage.length > 0
+      ) {
+        resultData.push(comm);
       }
-
     }
 
     if (resultData.length === 0) {
-      res.status(400).json({ "message": "No Data Found" })
+      res.status(400).json({ message: "No Data Found" });
+    } else {
+      res.status(200).json({ data: resultData });
     }
-    else
-    {
-
-    res.status(200).json({ "data": resultData })
-    }
-
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
   }
-  catch (error) {
-    res.status(500).json({ "message": "Internal Server Error" })
-  }
-}
+};
 
-// Exporting the display function
 module.exports = {
   createCommercial,
   getCommercials,
   getAllCommercials,
   editCommDetails,
-  getProperties
+  getProperties,
 };

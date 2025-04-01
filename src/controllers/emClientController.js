@@ -17,12 +17,11 @@ const getInterestedAgents = async (req, res) => {
 
       for (let interest of interests) {
         const agentId = interest.userId;
-        const agentDetails = await userModel.findOne({ _id: agentId }); // Use `findOne` for a single document
+        const agentDetails = await userModel.findOne({ _id: agentId });
 
         if (agentDetails) {
-          // Add agent details to the interest object
           result.push({
-            ...interest.toObject(), // Convert Mongoose document to plain object if needed
+            ...interest.toObject(),
             agentDetails,
           });
         }
@@ -36,8 +35,7 @@ const getInterestedAgents = async (req, res) => {
   }
 };
 
-//get all agents
-const getAllAgents = async (req, res) => {
+ const getAllAgents = async (req, res) => {
   try {
     const { estId } = req.params;
     const userId = req.user.user.userId;

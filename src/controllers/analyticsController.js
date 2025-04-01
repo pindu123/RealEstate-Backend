@@ -70,8 +70,8 @@ async function getTopEventsData() {
       auth,
       property: GA4_PROPERTY_ID,
       requestBody: {
-        dimensions: [{ name: "eventName" }], // Dimension for event names
-        metrics: [{ name: "eventCount" }], // Metric for event counts
+        dimensions: [{ name: "eventName" }], 
+        metrics: [{ name: "eventCount" }], 
         dateRanges: [{ startDate: "7daysAgo", endDate: "today" }], // Date range
         orderBys: [
           {

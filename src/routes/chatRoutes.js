@@ -1,10 +1,9 @@
-const express=require('express')
-const { sendMessage, readMessage } = require('../controllers/chatController')
+const express = require("express");
+const { sendMessage, readMessage } = require("../controllers/chatController");
 
-const chatRoutes=express.Router()
+const chatRoutes = express.Router();
 
-chatRoutes.post("/sendMessage",sendMessage)
-chatRoutes.get("/getMessages/:senderId/:receiverId",readMessage)
+chatRoutes.post("/sendMessage", sendMessage);
+chatRoutes.get("/getMessages/:senderId/:receiverId", readMessage);
 
-
-module.exports=chatRoutes
+module.exports = chatRoutes;

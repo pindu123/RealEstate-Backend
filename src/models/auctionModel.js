@@ -1,94 +1,89 @@
 const { string } = require("joi");
 const mongoose = require("mongoose");
 
-
-const auctionSchema = new mongoose.Schema({
-
-   propertyId: {
+const auctionSchema = new mongoose.Schema(
+  {
+    propertyId: {
       type: String,
-      required: true
-   },
-   auctionWinner:{
-        type:String
-   },
-   winnerData:{
-      bidAmount:{
-         type:String
-               },
-         buyerName:{
-            type:String
-         },
-          buyerId:{
-            type:String
-          },
-          bidTime: {
-            type: Date,
-          },
-         transactionId: {
-            type:String
-         },
-         reservationAmount:{
-            type:String
-         }
-   },
-   startDate: {
-      type: Date,
+      required: true,
     },
-   endDate: {
-      type: Date,
-    },
-
-
-   startTime:{
-      type:String,
-      
-   },
-   endTime:{
-   type:String
-   },
-   auctionType:{
-     type:String
-   },
-   AgentId: {
+    auctionWinner: {
       type: String,
-
-   },
-   amount: {
-      type: String
-   },
-
-   buyers: [{
-      bidAmount:{
-type:String
+    },
+    winnerData: {
+      bidAmount: {
+        type: String,
       },
-buyerName:{
-   type:String
-},
- buyerId:{
-   type:String
- },
- bidTime: {
-   type: Date,
-   default: Date.now
-},
-transactionId: {
-   type:String
-},
-reservationAmount:{
-   type:String
-}
- 
-   },
-      
-   ],
-   auctionStatus: {
-      type: String
-   }
+      buyerName: {
+        type: String,
+      },
+      buyerId: {
+        type: String,
+      },
+      bidTime: {
+        type: Date,
+      },
+      transactionId: {
+        type: String,
+      },
+      reservationAmount: {
+        type: String,
+      },
+    },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
 
-}, {
-   timestamps: true
-})
+    startTime: {
+      type: String,
+    },
+    endTime: {
+      type: String,
+    },
+    auctionType: {
+      type: String,
+    },
+    AgentId: {
+      type: String,
+    },
+    amount: {
+      type: String,
+    },
 
+    buyers: [
+      {
+        bidAmount: {
+          type: String,
+        },
+        buyerName: {
+          type: String,
+        },
+        buyerId: {
+          type: String,
+        },
+        bidTime: {
+          type: Date,
+          default: Date.now,
+        },
+        transactionId: {
+          type: String,
+        },
+        reservationAmount: {
+          type: String,
+        },
+      },
+    ],
+    auctionStatus: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 const auctionModel = mongoose.model("auction", auctionSchema);
 

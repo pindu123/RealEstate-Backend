@@ -9,9 +9,9 @@ const emFieldSchema = new mongoose.Schema(
     role: {
       type: Number,
     },
-    estType:{
-        type: String,
-        required: true,
+    estType: {
+      type: String,
+      required: true,
     },
     status: {
       type: Number,
@@ -46,7 +46,7 @@ const emFieldSchema = new mongoose.Schema(
         type: Number,
         required: true,
       },
-      images: [String]
+      images: [String],
     },
     address: {
       pinCode: {

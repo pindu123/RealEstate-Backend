@@ -20,7 +20,7 @@ const {
   getPropertiesFilter,
   getMaxPriceAndSize,
   getAllCsrORMarketingAgent,
- } = require("../controllers/adminController");
+} = require("../controllers/adminController");
 
 const adminRoutes = express.Router();
 
@@ -39,14 +39,14 @@ adminRoutes.get("/getLayoutStats", getLayoutStats);
 adminRoutes.delete("/removeProperties/:propertyId/:type", removeProperties);
 adminRoutes.get("/getTotalSales", getTotalSales);
 adminRoutes.get("/getStateWiseStats", getStateWiseStats);
-adminRoutes.get("/getTopPropOnPrice",getTopPropOnPrice)
-adminRoutes.put("/deleteDeal",deleteDeal)
+adminRoutes.get("/getTopPropOnPrice", getTopPropOnPrice);
+adminRoutes.put("/deleteDeal", deleteDeal);
 
-adminRoutes.get("/csrOrMarketingAgents/:role",getAllCsrORMarketingAgent);
-adminRoutes.get("/getPropsOnFilter", getPropsOnFilter)
+adminRoutes.get("/csrOrMarketingAgents/:role", getAllCsrORMarketingAgent);
+adminRoutes.get("/getPropsOnFilter", getPropsOnFilter);
 
-adminRoutes.get("/getMaxPriceAndSize",getMaxPriceAndSize)
+adminRoutes.get("/getMaxPriceAndSize", getMaxPriceAndSize);
 
-adminRoutes.get("/getPropertiesFilter/:text",getPropertiesFilter )
-adminRoutes.put("/unAssignAgent",unAssignAgent)
+adminRoutes.get("/getPropertiesFilter/:text", getPropertiesFilter);
+adminRoutes.put("/unAssignAgent", unAssignAgent);
 module.exports = adminRoutes;

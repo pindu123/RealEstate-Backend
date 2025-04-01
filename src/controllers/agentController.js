@@ -11,12 +11,10 @@ const commercialModel = require("../models/commercialModel");
 const residentialModel = require("../models/residentialModel");
 const layoutModel = require("../models/layoutModel");
 
-//insertAgentRatings
-const insertAgentRatings = async (req, res) => {
+ const insertAgentRatings = async (req, res) => {
   try {
     const userId = req.user.user.userId;
-    // const firstName = req.user.user.firstName;
-    // const lastName = req.user.user.lastName;
+ 
     const status = 1;
     if (!userId) {
       return res
@@ -26,10 +24,9 @@ const insertAgentRatings = async (req, res) => {
 
     const ratingsData = {
       userId,
-      // firstName,
-      // lastName,
+ 
       status,
-      ...req.body, // Spread the rest of the fields from the request body
+      ...req.body, 
     };
 
     const result = await agentRatingValidation.validateAsync(ratingsData);
@@ -51,8 +48,7 @@ const insertAgentRatings = async (req, res) => {
   }
 };
 
-//api for agent to view his own ratings
-const getAgentRatingsByAgentId = async (req, res) => {
+ const getAgentRatingsByAgentId = async (req, res) => {
   try {
     const agentId = req.user.user.userId;
     const ratings = await agentRatingModel.find({ agentId: agentId });
@@ -83,8 +79,7 @@ const getAgentRatingsByAgentId = async (req, res) => {
   }
 };
 
-//api for displaying ratings of an agent, agentId is sent through path params
-const getAgentRatings = async (req, res) => {
+ const getAgentRatings = async (req, res) => {
   try {
     const result = await validateId.validateAsync(req.params);
     const agentId = result.agentId;
@@ -122,8 +117,7 @@ const getAgentRatings = async (req, res) => {
   }
 };
 
-//get agents by location(village)
-
+ 
 const getAgentsbyloc = async (req, res) => {
   try {
     const result = await validateLocation.validateAsync(req.params);
@@ -211,8 +205,7 @@ const getAgentsbyloc = async (req, res) => {
   }
 };
 
-// get agents by mandal
-const getAgentsbyMandal = async (req, res) => {
+ const getAgentsbyMandal = async (req, res) => {
   try {
     const result = await validateLocation.validateAsync(req.params);
     let location = result.location;
@@ -299,7 +292,7 @@ const getAgentsbyMandal = async (req, res) => {
   }
 };
 
-// get agents by district
+ 
 const getAgentsbyDistrict = async (req, res) => {
   try {
     const result = await validateLocation.validateAsync(req.params);
@@ -389,87 +382,7 @@ const getAgentsbyDistrict = async (req, res) => {
   }
 };
 
-// const getAgentSales = async (req, res) => {
-//   try {
-//     const agentData = await userModel.find({ role: 1 });
-//     let stats = [];
-
-//     for (const agent of agentData) {
-//       const bookings = await bookingModel.find({ agentId: agent.id });
-
-//        let totalPrice = 0;
-//        let totalSales = 0;
-//       let propertyData = [];
-//       bookings.forEach(async (prop) => {
-//         let propertyId = prop.propertyId;
-//          if (prop.propertyType === "Agricultural land") {
-//           propertyData = await fieldModel.findById({ _id: propertyId });
-
-//         } else if (prop.propertyType === "Commercial") {
-//           propertyData = await commercialModel.findById({ _id: propertyId });
-
-//         } else if (prop.propertyType === "Residential") {
-//           propertyData = await residentialModel.findById({
-//             _id: propertyId,
-//           });
-
-//         } else {
-//           propertyData = await layoutModel.findById({
-//             _id: propertyId,
-//           });
-
-//         }
-//         if (propertyData.status === 1) {
-//           totalSales += 1;
-
-//           if (propertyData.propertyType === "Agricultural land") {
-
-//             totalPrice += propertyData.landDetails.totalPrice;
-//             console.log(totalPrice)
-//           } else if (propertyData.propertyType === "Commercial") {
-//             if (
-//               propertyData.propertyDetails.landDetails.rent.landUsage.length > 0
-//             ) {
-//               totalPrice +=
-//                 propertyData.propertyDetails.landDetails.rent.totalAmount;
-//                           console.log(totalPrice);
-
-//             }
-//             if (
-//               propertyData.propertyDetails.landDetails.sell.landUsage.length > 0
-//             ) {
-//               totalPrice +=
-//                 propertyData.propertyDetails.landDetails.sell.totalAmount;
-//                           console.log(totalPrice);
-
-//             }
-//           } else if (propertyData.propertyType === "Residential") {
-//             totalPrice += propertyData.propertyDetails.totalCost;
-//                         console.log(totalPrice);
-
-//           } else {
-//             totalPrice += propertyData.layoutDetails.totalAmount;
-//                         console.log(totalPrice);
-
-//           }
-//         }
-//       });
-// console.log(totalPrice)
-//       let userdata = {
-//         agentName: agent.firstName,
-//         agentId: agent.id,
-//         totalSales: totalSales,
-//         totalPrice: totalPrice,
-//       };
-//       stats.push(userdata);
-//     }
-
-//     res.status(200).json(stats);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
+ 
 
 const getAgentSales = async (req, res) => {
   try {

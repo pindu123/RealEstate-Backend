@@ -9,9 +9,9 @@ const emBuildingSchema = new mongoose.Schema(
     role: {
       type: Number,
     },
-    estType:{
-        type: String,
-        required: true,
+    estType: {
+      type: String,
+      required: true,
     },
     status: {
       type: Number,
@@ -30,14 +30,14 @@ const emBuildingSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      floorCount:{
-type:Number,
-required: true,
+      floorCount: {
+        type: Number,
+        required: true,
       },
-houseCount:{
-type: Number,
-required: true
-},
+      houseCount: {
+        type: Number,
+        required: true,
+      },
       description: {
         type: String,
         required: false,
@@ -57,7 +57,7 @@ required: true
       images: [String],
       landDocument: {
         type: String,
-      }
+      },
     },
     address: {
       pinCode: {

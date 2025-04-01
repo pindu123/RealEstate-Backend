@@ -1,31 +1,45 @@
-const express=require('express')
-const { postAuction, bidByBuyer, getBidsOfAuction, closeAuction, getAllAuctions, getTodayAuctions, getFutureAuctions, getAuctionDetailsofProperty, auctionById, getWinnerData, registerPushToken, testNotification } = require('../controllers/auctionController')
+const express = require("express");
+const {
+  postAuction,
+  bidByBuyer,
+  getBidsOfAuction,
+  closeAuction,
+  getAllAuctions,
+  getTodayAuctions,
+  getFutureAuctions,
+  getAuctionDetailsofProperty,
+  auctionById,
+  getWinnerData,
+  registerPushToken,
+  testNotification,
+} = require("../controllers/auctionController");
 
-const auctionRoutes=express.Router()
+const auctionRoutes = express.Router();
 
+auctionRoutes.post("/postAuction", postAuction);
 
-auctionRoutes.post("/postAuction",postAuction)
+auctionRoutes.put("/bid/:auctionId", bidByBuyer);
 
-auctionRoutes.put("/bid/:auctionId",bidByBuyer)
+auctionRoutes.get("/getBidsOfAuction/:auctionId", getBidsOfAuction);
 
-auctionRoutes.get("/getBidsOfAuction/:auctionId",getBidsOfAuction)
+auctionRoutes.put("/closeAuction", closeAuction);
 
-auctionRoutes.put("/closeAuction",closeAuction)
+auctionRoutes.get("/getAllAuctions", getAllAuctions);
 
-auctionRoutes.get("/getAllAuctions",getAllAuctions)
+auctionRoutes.get("/getTodayAuctions", getTodayAuctions);
 
-auctionRoutes.get("/getTodayAuctions",getTodayAuctions)
+auctionRoutes.get("/getFutureAuctions", getFutureAuctions);
 
-auctionRoutes.get("/getFutureAuctions",getFutureAuctions) 
+auctionRoutes.get(
+  "/getAuctionDetailsProperty/:propertyId",
+  getAuctionDetailsofProperty
+);
 
-auctionRoutes.get("/getAuctionDetailsProperty/:propertyId",getAuctionDetailsofProperty)
+auctionRoutes.get("/auctionById/:auctionId", auctionById);
 
-auctionRoutes.get("/auctionById/:auctionId",auctionById)
+auctionRoutes.get("/getWinnerData", getWinnerData);
 
-auctionRoutes.get("/getWinnerData",getWinnerData)
+auctionRoutes.post("/registerPushToken", registerPushToken);
 
-auctionRoutes.post("/registerPushToken",registerPushToken)
-
-
-auctionRoutes.post("/testNotification",testNotification)
-module.exports=auctionRoutes
+auctionRoutes.post("/testNotification", testNotification);
+module.exports = auctionRoutes;

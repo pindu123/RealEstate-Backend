@@ -1,4 +1,3 @@
-
 // const residentialSchema = new mongoose.Schema(
 //   {
 //     userId: {
@@ -228,10 +227,8 @@
 //   { timestamps: true }
 // );
 
-
 const { string, required } = require("joi");
 const mongoose = require("mongoose");
-
 
 // const residentialSchema = new mongoose.Schema(
 //   {
@@ -257,7 +254,7 @@ const mongoose = require("mongoose");
 //       type: String,
 //       required: false,
 //     },
-   
+
 //     rating: {
 //       type: Number,
 //       default: 0,
@@ -304,14 +301,14 @@ const mongoose = require("mongoose");
 //         type: String,
 //         required: false,
 //       },
-//       typeTe: { 
+//       typeTe: {
 //         type: String,
 //         required: false,
 //       },
 //       apartmentName: {
 //         type: String,
 //       },
-//       apartmentNameTe: { 
+//       apartmentNameTe: {
 //         type: String,
 //       },
 
@@ -502,7 +499,6 @@ const mongoose = require("mongoose");
 //   { timestamps: true }
 // );
 
-
 const residentialSchema = new mongoose.Schema(
   {
     userId: {
@@ -523,11 +519,12 @@ const residentialSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    propertyTypeTe: { // Telugu translation
+    propertyTypeTe: {
+      // Telugu translation
       type: String,
       required: false,
     },
-   
+
     rating: {
       type: Number,
       default: 0,
@@ -554,7 +551,8 @@ const residentialSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      ownerNameTe: { // Telugu translation
+      ownerNameTe: {
+        // Telugu translation
         type: String,
         required: false,
       },
@@ -574,24 +572,24 @@ const residentialSchema = new mongoose.Schema(
         type: String,
         required: false,
       },
-      typeTe: { 
+      typeTe: {
         type: String,
         required: false,
       },
       apartmentName: {
         type: String,
       },
-      apartmentNameTe: { 
+      apartmentNameTe: {
         type: String,
       },
-      
-      flatCount:{
-        type:Number,
-        required:false,
+
+      flatCount: {
+        type: Number,
+        required: false,
       },
-      availableFlats:{
-        type:Number,
-        required:false,
+      availableFlats: {
+        type: Number,
+        required: false,
       },
       flatNumber: {
         type: String,
@@ -619,7 +617,6 @@ const residentialSchema = new mongoose.Schema(
         type: String,
       },
 
-      
       furnitured: {
         type: String,
       },
@@ -629,55 +626,56 @@ const residentialSchema = new mongoose.Schema(
       propDescTe: {
         type: String,
       },
-propertyPurpose:{
-type:String
-},
+      propertyPurpose: {
+        type: String,
+      },
 
-propertyPurposeTe:{
-  type:String
-  },
+      propertyPurposeTe: {
+        type: String,
+      },
 
-      flat:[{
-        flatNumber:{
-          type:Number,
+      flat: [
+        {
+          flatNumber: {
+            type: Number,
+          },
+          flatFacing: {
+            type: String,
+          },
+          bedroomCount: {
+            type: Number,
+          },
+          floorNumber: {
+            type: Number,
+          },
+          furnitured: {
+            type: String,
+          },
+          flatSize: {
+            type: Number,
+          },
+          flatSizeUnit: {
+            type: String,
+          },
+          balconyCount: {
+            type: Number,
+          },
+          flatCost: {
+            type: Number,
+          },
+
+          flatLength: {
+            type: Number,
+          },
+          flatWidth: {
+            type: Number,
+          },
+
+          propertyLayout: {
+            type: String,
+          },
         },
-        flatFacing:{
-          type:String,
-        },
-         bedroomCount:{
-          type:Number,
-         },
-         floorNumber:{
-          type:Number,
-         },
-         furnitured:
-         {
-          type:String,
-         },
-         flatSize:{
-          type:Number,
-         },
-         flatSizeUnit:{
-          type:String,
-         },
-         balconyCount:{
-          type:Number,
-         },
-         flatCost: {
-          type: Number,
-        },
-
-         flatLength:{
-          type:Number
-         },
-         flatWidth:{
-          type:Number
-         },
-
-        propertyLayout:{
-          type:String
-        }
-      }],
+      ],
     },
     address: {
       pincode: {
@@ -696,21 +694,24 @@ propertyPurposeTe:{
         type: String,
         required: true,
       },
-      districtTe: { // Telugu translation
+      districtTe: {
+        // Telugu translation
         type: String,
       },
       mandal: {
         type: String,
         required: true,
       },
-      mandalTe: { // Telugu translation
+      mandalTe: {
+        // Telugu translation
         type: String,
       },
       village: {
         type: String,
         required: true,
       },
-      villageTe: { // Telugu translation
+      villageTe: {
+        // Telugu translation
         type: String,
       },
       latitude: {
@@ -722,14 +723,15 @@ propertyPurposeTe:{
       landMark: {
         type: String,
       },
-      landMarkTe: { // Telugu translation
+      landMarkTe: {
+        // Telugu translation
         type: String,
       },
     },
     amenities: {
-      nearBy:{
-        type:String,
-        required:false,
+      nearBy: {
+        type: String,
+        required: false,
       },
       powerSupply: {
         type: Boolean,
@@ -739,7 +741,7 @@ propertyPurposeTe:{
       },
       electricityFacility: {
         type: String,
-        default:'Residential'
+        default: "Residential",
       },
       elevator: {
         type: Boolean,
@@ -763,25 +765,27 @@ propertyPurposeTe:{
       gymFacility: {
         type: Boolean,
       },
-      roadType:{
-        type:String
-     },
-     distanceFromRoad: {
-      type: String,
-      required:false
-    },
-    distanceFromRoadTe: {
-      type: String,
-      required:false
-    },
+      roadType: {
+        type: String,
+      },
+      distanceFromRoad: {
+        type: String,
+        required: false,
+      },
+      distanceFromRoadTe: {
+        type: String,
+        required: false,
+      },
     },
     propPhotos: {
       type: [String],
-      default:["https://res.cloudinary.com/ds1qogjpk/image/upload/v1735582521/commercial_qqcdbt.png"],
+      default: [
+        "https://res.cloudinary.com/ds1qogjpk/image/upload/v1735582521/commercial_qqcdbt.png",
+      ],
     },
-    videos:{
-      type:[String],
-      required:false
+    videos: {
+      type: [String],
+      required: false,
     },
     configurations: {
       bathroomCount: {
@@ -820,14 +824,13 @@ propertyPurposeTe:{
         type: [String],
       },
     },
-    propertyOnHold:{
-      type:String,
-      default:'no'
-
+    propertyOnHold: {
+      type: String,
+      default: "no",
     },
-    propertyInterestedCount:{
-            type:Number
-   },
+    propertyInterestedCount: {
+      type: Number,
+    },
     // Amenities, configurations, and other fields remain the same.
   },
   { timestamps: true }

@@ -48,21 +48,21 @@ dealsRoutes.get("/getAgentDealings", getAgentDealings);
 
 dealsRoutes.put("/changeInterest", changeInterest);
 
-dealsRoutes.put("/closeDeal", closeDeal)
+dealsRoutes.put("/closeDeal", closeDeal);
 
-dealsRoutes.get("/getClosedDeals", getClosedDeals)
+dealsRoutes.get("/getClosedDeals", getClosedDeals);
 
 dealsRoutes.post("/holdProperty", propertyOnHold);
 dealsRoutes.get("/reservedProperty", getPropertyOnHold);
-dealsRoutes.get("/getIntresetedCustomers", getIntresetedCustomers)
+dealsRoutes.get("/getIntresetedCustomers", getIntresetedCustomers);
 
-dealsRoutes.get("/getDistinctProperties", getDistinctProperties)
+dealsRoutes.get("/getDistinctProperties", getDistinctProperties);
 
-dealsRoutes.get('/getPropertyDeals/:propertyId', getPropertyDeals)
+dealsRoutes.get("/getPropertyDeals/:propertyId", getPropertyDeals);
 
-dealsRoutes.get("/getDealsRelatedAgents", getDealsRelatedAgents)
+dealsRoutes.get("/getDealsRelatedAgents", getDealsRelatedAgents);
 
-dealsRoutes.get("/getIntrestedProperties", getIntrestedProperties)
+dealsRoutes.get("/getIntrestedProperties", getIntrestedProperties);
 
 dealsRoutes.get("/dealSearchonCustomer/:text", dealSearchOnCustomer);
 
@@ -70,14 +70,11 @@ dealsRoutes.get("/dealsSearchOnProps/:text", dealsSearchOnProps);
 dealsRoutes.get("/customerFilter/:text/:customerId", getCustomerDealsFilters);
 dealsRoutes.get("/searchPropertyDeals/:text/:propertyId", searchPropertyDeals);
 
+dealsRoutes.put("/unReserveProperty", unReserveProperty);
+dealsRoutes.get("/getAgentDealings2/:agentRole", getAgentDealings2);
 
-dealsRoutes.put("/unReserveProperty", unReserveProperty)
-dealsRoutes.get("/getAgentDealings2/:agentRole",  getAgentDealings2)
+dealsRoutes.get("/getDeals1", getDeals1);
 
-
-dealsRoutes.get("/getDeals1",getDeals1)
-
-
-dealsRoutes.get("/customerInterest/:propertyId",customerInterest)
+dealsRoutes.get("/customerInterest/:propertyId", customerInterest);
 
 module.exports = dealsRoutes;

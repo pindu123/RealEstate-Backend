@@ -23,8 +23,7 @@ userRoutes.get("/getprofile", getProfile);
 userRoutes.get("/getnames/:role", namesBasedOnRole);
 userRoutes.get("/getusersbyrole/:role", getUsersByRole);
 userRoutes.post("/createCSR", createCSR);
-userRoutes.get("/myCsr",getCsr);
-userRoutes.put("/updateSubscription",updateSubscription);
-
+userRoutes.get("/myCsr", getCsr);
+userRoutes.put("/updateSubscription", updateSubscription);
 
 module.exports = userRoutes;

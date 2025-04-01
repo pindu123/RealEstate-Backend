@@ -9,14 +9,14 @@ const estateSchema = new mongoose.Schema(
     role: {
       type: Number,
     },
-    agentId:{
+    agentId: {
       type: String,
     },
-    agentName:{
-      type:String
+    agentName: {
+      type: String,
     },
-    status:{
-type: Number
+    status: {
+      type: Number,
     },
     serviceReq: {
       type: [String],
@@ -129,9 +129,9 @@ type: Number
       swimmingPool: {
         type: Boolean,
       },
-      rainWaterStorage:{
+      rainWaterStorage: {
         type: Boolean,
-      }
+      },
     },
 
     buildingDetails: {

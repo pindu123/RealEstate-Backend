@@ -789,84 +789,6 @@ const getStateWiseStats = async (req, res) => {
   }
 };
 
-// const getTopPropOnPrice = async (req, res) => {
-//   try {
-//     let fieldData = await fieldModel.find();
-//     let comData = await commercialModel.find();
-//     let layoutData = await layoutModel.find();
-//     let resData = await residentialModel.find();
-
-//     let totalProps = [...fieldData, ...comData, ...layoutData, ...resData];
-//     let maxprice = 0;
-//    let properties=[]
-//     for (let prop of totalProps) {
-//       let property;
-//       if (prop.propertyType === "Commercial") {
-      
-//         // price =
-//         //   prop.propertyDetails.landDetails.sell.totalAmount ||
-//         //   prop.propertyDetails.landDetails.rent.totalAmount ||
-//         //   prop.propertyDetails.landDetails.lease.totalAmount;
-//         // maxprice = price > maxprice ? price : maxprice
-        
-//         property = {
-//           images: prop.propertyDetails.uploadPics,
-
-//           name: prop.propertyTitle,
-//           price: price,
-//           size:
-//             prop.propertyDetails.landDetails.sell.plotSize ||
-//             prop.propertyDetails.landDetails.rent.plotSize ||
-//             prop.propertyDetails.landDetails.lease.plotSize,
-//           district: prop.propertyDetails.landDetails.address.district,
-//         };
-//       } else if (prop.propertyType === "Layout") {
-//         property = {
-//           name: prop.propertyTitle,
-
-//           images: prop.uploadPics,
-//           size: prop.layoutDetails.plotSize,
-
-//           price: prop.layoutDetails.totalAmount,
-//           district: prop.layoutDetails.address.district,
-//          };
-
-
-//       } else if (prop.propertyType === "Residential") {
-//                 property = {
-//                   images: prop.propPhotos,
-//                   size: prop.propertyDetails.flatSize,
-
-//                   price: prop.propertyDetails.totalCost,
-//                   district: prop.address.district,
-//                   name: prop.propertyTitle,
-//                 };
-//         price = prop.propertyDetails.totalCost;
-//       } else {
-//         price = prop.landDetails.totalPrice;
-//         console.log(prop.propertyTitle)
-//               property = {
-//                 images: prop.landDetails.images,
-//                 size: prop.landDetails.size,
-
-//                 price: prop.landDetails.totalPrice,
-//                 district: prop.address.district,
-//                };
-        
-//       }
-//       properties.push(property)
-//     }
-//     console.log(properties)
-//  properties=   properties.sort((a, b) => 
-//     b.price-a.price
-//    )
-// console.log( )
-//    res.status(200).json(properties )
-//   } catch (error) {console.log(error)
-//     res.status(500).json("Internal Server Error")
-//   }
-// };
-
 const getTopPropOnPrice = async (req, res) => {
   try {
     let fieldData = await fieldModel.find();
@@ -991,7 +913,6 @@ await notifyModel.insertMany(messages)
 
 
   const dealsModel = require("../models/propertyDealsModel");
-// const { size } = require("pdfkit/js/page");
 
    
   const deleteDeal = async (req, res) => {
@@ -1000,23 +921,19 @@ await notifyModel.insertMany(messages)
       const dealId = req.body.dealId;
   
   
-      // Ensure the user is an admin
-      if (role !== 0) {
+       if (role !== 0) {
         return res.status(403).json({ message: "Access denied. Admins only." });
       }
   
-      // if (!mongoose.Types.ObjectId.isValid(dealId)) {
-      //   return res.status(400).json({ message: "Invalid deal ID." });
-      // }
+
       const deal = await dealsModel.findById(dealId);
       if (!deal) {
         return res.status(404).json({ message: "Deal not found." });
       }
-      deal.isActive = "-1"; // Ensure consistency in data type (string)
+      deal.isActive = "-1"; 
       await deal.save();
   
-      // Send success response
-      return res.status(200).json({ message: "Deal marked as deleted successfully." });
+       return res.status(200).json({ message: "Deal marked as deleted successfully." });
     } catch (error) {
       console.error("Error marking deal as deleted:", error);
       return res
@@ -1024,15 +941,7 @@ await notifyModel.insertMany(messages)
         .json({ message: "An error occurred while marking the deal as deleted." });
     }
   };
-
-
-    // if (propertyType and  (maxPrice and minPrice) and (size and unit) or only size)
-    // if (propertyType ) and  (maxPrice and minPrice),)
-    // if (propertyType) and (size and unit) 
-    // if (size and unit) and (maxPrice and minPrice)
-    // if (any one of the field) 
-    // for all ignore if unit is not provided apply units contidion if provided
-
+ 
    
   const getPropsOnFilter = async (req, res) => {
     try {
@@ -1188,179 +1097,7 @@ await notifyModel.insertMany(messages)
   };
   
 
-// const getPropsOnFilter=async(req,res)=>{
-//   try
-//   {
  
-//    const { location, propertyType, propertySize,sizeUnit, propName ,maxPrice,minPrice} = req.query;
-//      let filterCriteria = { status: 0 };  
-
-//      if (location) {
-//       filterCriteria.$or = [
-//         { 'propertyDetails.landDetails.address.district': location },
-//         { 'layoutDetails.address.district': location },
-//         { 'address.district': location }
-//       ];
-//     }
-
-
-//     if (propertyType) {
-//       filterCriteria.propertyType = propertyType;
-//     }
-
-//     if (propertySize) {
- 
-//       filterCriteria.$or = [
-//         { 'propertyDetails.landDetails.sell.plotSize': propertySize },
-//         { 'propertyDetails.landDetails.rent.plotSize': propertySize },
-
-//         { 'propertyDetails.landDetails.lease.plotSize': propertySize },
-
-//         { 'layoutDetails.plotSize': propertySize },
-//         { 'propertyDetails.flatSize': propertySize },
-//         {
-//           'landDetails.size':propertySize
-//         }
-//       ];
-//     }
-
-
-
-//     //  if (sizeUnit) {
- 
-//     //   filterCriteria.$or = [
-//     //     { 'propertyDetails.landDetails.sell.sizeUnit': sizeUnit },
-//     //     { 'propertyDetails.landDetails.rent.sizeUnit': sizeUnit },
-
-//     //     { 'propertyDetails.landDetails.lease.sizeUnit': sizeUnit },
-
-//     //     { 'layoutDetails.sizeUnit': sizeUnit },
-//     //     { 'propertyDetails.sizeUnit': sizeUnit },
-//     //     {
-//     //       'landDetails.sizeUnit':sizeUnit
-//     //     }
-//     //   ];
-//     // }
-
-//     if (propName) {
-//       filterCriteria.$or = [
-//         { 'propertyTitle': propName },
-//         { 'layoutDetails.layoutTitle': propName },
-//         { 'propertyDetails.apartmentName': propName },
-//         {
-//           'landDetails.title':propName
-//         }
-//       ];
-//      }
-
-//     //  if(price)
-//     //  {
-//     //   filterCriteria.$or = [
-//     //     { 'landDetails.totalPrice' :  price },
-//     //     { 'layoutDetails.totalAmount': price },
-//     //     { 'propertyDetails.landDetails.sell.totalAmount': price },
-//     //     { 'propertyDetails.landDetails.rent.totalAmount': price },
-
-//     //     { 'propertyDetails.landDetails.lease.totalAmount': price },
-
-//     //     {
-//     //       'propertyDetails.totalCost':price
-//     //     }
-//     //   ];
-//     //  }
-
-//     if(maxPrice&&minPrice) {
-//       filterCriteria.$or = [
-//         { 'landDetails.totalPrice': {$gte:minPrice, $lte: maxPrice } },
-//         { 'layoutDetails.totalAmount': {$gte:minPrice, $lte: maxPrice } },
-//         { 'propertyDetails.landDetails.sell.totalAmount': {$gte:minPrice ,$lte: maxPrice } },
-//         { 'propertyDetails.landDetails.rent.totalAmount': { $gte:minPrice,$lte: maxPrice } },
-//         { 'propertyDetails.landDetails.lease.totalAmount': { $gte:minPrice,$lte: maxPrice } },
-//         { 'propertyDetails.totalCost': { $gte:minPrice,$lte: maxPrice } }
-//       ];
-//     }
-    
-//      const [fieldData, commercialData, residentialData, layoutData] = await Promise.all([
-//       fieldModel.find({ ...filterCriteria  }),
-//       commercialModel.find({ ...filterCriteria }),
-//       residentialModel.find({ ...filterCriteria }),
-//       layoutModel.find({ ...filterCriteria })
-//     ]);
-
-//      const properties = [
-//       ...fieldData,
-//       ...commercialData,
-//       ...residentialData,
-//       ...layoutData
-//     ];
-// let property=[]
-// for(let prop of properties)
-//   {
-// let result={}
-// if(prop.propertyType==="Commercial" || prop.propertyType==="commercial" )
-// {
-//   result={
-//     "propertyType":prop.propertyType,
-//     "propertyTitle":prop.propertyTitle,
-//     "size":prop.propertyDetails.landDetails.sell.plotSize||prop.propertyDetails.landDetails.rent.plotSize||prop.propertyDetails.landDetails.lease.plotSize,
-//     "address":prop.propertyDetails.landDetails.address.district,
-//     "propertyId":prop._id,
-//     "price":prop.propertyDetails.landDetails.sell.totalAmount||prop.propertyDetails.landDetails.rent.totalAmount||prop.propertyDetails.landDetails.lease.totalAmount,
-//     "images":prop.propertyDetails.uploadPics
-//   }
-// }
-// else if(prop.propertyType==="Layout" || prop.propertyType==="layout")
-// {
-//   result={
-//     "propertyTitle":prop.layoutDetails.layoutTitle,
-//     "propertyType":prop.propertyType,
-//     "images":prop.uploadPics,
-//     "address":prop.layoutDetails.address.district,
-//     "propertyId":prop._id,
-//     "price":prop.layoutDetails.totalAmount,
-//     "size":prop.layoutDetails.plotSize
-//   }
-// }
-// else if(prop.propertyType==="Residential" ||prop.propertyType==="residential" )
-// {
-//  result={
-//   "propertyTitle":prop.propertyDetails.apartmentName,
-//   "propertyType":prop.propertyType,
-//   "images":prop.propPhotos,
-//   "size":prop.propertyDetails.flatSize,
-//   "propertyId":prop._id,
-//   "address":prop.address.district,
-//   "price":prop.propertyDetails.totalCost
-//  }
-
-// }
-
-// else
-// {
-//   result={
-//     "propertyTitle":prop.landDetails.title,
-//     "propertyType":prop.propertyType,
-//     "images":prop.landDetails.images,
-//     "size":prop.landDetails.size,
-//     "propertyId":prop._id,
-//     "address":prop.address.district,
-//     "price":prop.landDetails.totalPrice
-//    }
-// }
-
-
-// property.push(result)
-//   }
-
-
-// res.status(200).json(property)
-//   }catch(error)
-//   {
-//     console.log(error)
-// res.status(500).json("Internal Server Error")
-//   }
-// }
-
 const getAllCsrORMarketingAgent = async (req, res) => {
   try {
     const role = parseInt(req.params.role); 
@@ -1387,7 +1124,7 @@ const getPropertiesFilter = async (req, res) => {
     let text = req.params.text;
 
     let regex = new RegExp(text, 'i'); 
-    let filterCriteria = { status: 0 }; // Default filter criteria
+    let filterCriteria = { status: 0 };  
 
     let { page, limit } = req.query;
 
@@ -1528,8 +1265,7 @@ const getPropertiesFilterInuse = async (req, res) => {
     let page=req.query.page
     let limit=req.query.limit
 
-    // 
-    if (text) {
+     if (text) {
       filterCriteria.$or = [
         { 'propertyDetails.landDetails.address.district': { $regex: regex } },
         { 'layoutDetails.address.district': { $regex: regex } },
@@ -1546,8 +1282,7 @@ let fieldData=[]
 let commercialData=[]
 let residentialData=[]
 let layoutData=[]
-    // Fetch the data from the models
-    if(page)
+     if(page)
     {
       let offset=(page-1)*limit;
 

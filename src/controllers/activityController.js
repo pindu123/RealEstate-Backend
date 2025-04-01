@@ -5,7 +5,6 @@ const userModel = require("../models/userModel");
 const notifyModel = require("../models/notificationModel");
 const { message } = require("../helpers/taskValidation");
 
-// api to post activity by the agent
 const getActivities = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
@@ -31,7 +30,7 @@ const getActivities = async (req, res) => {
 
     const userIds = activities
       .map((activity) => activity.activityBy)
-      .filter((id) => id); // Filter out undefined or null IDs
+      .filter((id) => id);
     const users = await userModel.find(
       { _id: { $in: userIds } },
       "firstName lastName"
@@ -39,7 +38,7 @@ const getActivities = async (req, res) => {
 
     const dealIds = activities
       .map((activity) => activity.dealingId)
-      .filter((id) => id); // Filter out undefined or null IDs
+      .filter((id) => id);
     const deals = await dealsModel.find(
       { _id: { $in: dealIds } },
       "propertyName"
@@ -63,19 +62,16 @@ const getActivities = async (req, res) => {
       };
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Activities retrieved successfully.",
-        data: activitiesWithDetails,
-      });
+    res.status(200).json({
+      message: "Activities retrieved successfully.",
+      data: activitiesWithDetails,
+    });
   } catch (error) {
     console.error("Error retrieving activities:", error.message, error.stack);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-// api to get all activity based on dealing or agentId
 const getAllActivities = async (req, res) => {
   try {
     const { agentId, dealingId } = req.query;
@@ -111,20 +107,17 @@ const getAllActivities = async (req, res) => {
           : "Unknown User",
       };
     });
-    res
-      .status(200)
-      .json({
-        message: "Activities retrieved successfully.",
-        data: activitiesWithNames,
-      });
+    res.status(200).json({
+      message: "Activities retrieved successfully.",
+      data: activitiesWithNames,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-// get specific activity based on activity id
-const getSpecificActivity = async (req, res) => {
+ const getSpecificActivity = async (req, res) => {
   try {
     const { activityId } = req.params;
     const activity = await activityModel.findById(activityId);
@@ -140,14 +133,12 @@ const getSpecificActivity = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-// update specific Activity
-const updateActivity = async (req, res) => {
+ const updateActivity = async (req, res) => {
   try {
     const { activityId } = req.params;
     const { dealingId, agentId, comment, meetingDate } = req.body;
 
-    // Build an update object
-    let updateFields = {};
+     let updateFields = {};
 
     if (dealingId !== undefined) updateFields.dealingId = dealingId;
     if (agentId !== undefined) updateFields.agentId = agentId;
@@ -172,12 +163,10 @@ const updateActivity = async (req, res) => {
     }
 
     // Respond with the updated activity data
-    res
-      .status(200)
-      .json({
-        message: "Activity updated successfully.",
-        data: updatedActivity,
-      });
+    res.status(200).json({
+      message: "Activity updated successfully.",
+      data: updatedActivity,
+    });
   } catch (error) {
     console.error("Error updating activity:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -224,82 +213,27 @@ const createActivity = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-//get all the activities based on the user role
-// if role is 3, then also get recieverId as "0" 
-// const getNotification = async (req, res) => {
-//   try {
-//     const userId = req.user.user.userId;
-//     const role = req.user.user.role;
-//     let notification = [];
 
-//     // If role is 3, include both '0' and userId as receiverId
-//     if (role === 3) {
-//       notification = await notifyModel.find({
-//         $or: [
-//           { receiverId: '0' },
-//           { receiverId: userId }
-//         ],
-//         status: "unSeen",
-//       });
-//     } else {
-//       notification = await notifyModel.find({
-//         receiverId: userId,
-//         status: "unSeen",
-//       });
-//     }
-
-//     let notifications = [];
-
-//     for (let notify of notification) {
-//       const userData = await userModel.findById({ _id: notify.senderId });
-
-//       notifications.push({
-//         notificationId: notify._id,
-//         message: notify.message,
-//         senderId: notify.senderId,
-//         receiverId:userId,
-//         details:notify.details||null,
-//         role:`${userData.role}`,
-//         notifyType: notify.notifyType,
-//         senderName: `${userData.firstName} ${userData.lastName}`,
-//         profilePicture: userData.profilePicture,
-//       });
-//     }
-
-//     if (notifications.length === 0) {
-//       res.status(409).json("No Notifications");
-//     } else {
-//       res.status(200).json(notifications);
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
 const getNotification = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
     let notification = [];
 
-    // If role is 3, include both '0' and userId as receiverId
     if (role === 3) {
       notification = await notifyModel
         .find({
-          $or: [
-            { receiverId: '0' },
-            { receiverId: userId }
-          ],
+          $or: [{ receiverId: "0" }, { receiverId: userId }],
           status: "unSeen",
         })
-        .sort({ createdAt: -1 }); 
+        .sort({ createdAt: -1 });
     } else {
       notification = await notifyModel
         .find({
           receiverId: userId,
           status: "unSeen",
         })
-        .sort({ createdAt: -1 }); 
+        .sort({ createdAt: -1 });
     }
 
     let notifications = [];
@@ -331,64 +265,6 @@ const getNotification = async (req, res) => {
   }
 };
 
-// const getNotification = async (req, res) => {
-//   try {
-//     const userId = req.user.user.userId;
-//     const role=req.user.user.role;
-//     let notification=''
-//     if(role===3||role==='3'){
-//        notification = await notifyModel.find({
-//         receiverId: userId ||'0'||0,
-
-//         status: "unSeen",
-//       });
-//     }
-//    else {  notification = await notifyModel.find({
-//       receiverId: userId,
-//       status: "unSeen",
-//     });
-//   }
-//     let notifications = [];
-
-//     for (let notify of notification) {
-//       const userData = await userModel.findById({ _id: notify.senderId });
-
-//     if(role==3 && notify.notifyType==="Customer")
-//     {
-//       notifications.push({
-//         notificationId: notify._id,
-//         message: notify.message,
-//         senderId: notify.senderId,
-//         receiverId: userId,
-//         notifyType: notify.notifyType,
-//         senderName: `${userData.firstName} ${userData.lastName}`,
-//         profilePicture: userData.profilePicture,
-//       });
-//     }
-// else{
-//       notifications.push({
-//         notificationId: notify._id,
-//         message: notify.message,
-//         senderId: notify.senderId,
-//         receiverId: notify.receiverId,
-//         notifyType: notify.notifyType,
-//         senderName: `${userData.firstName} ${userData.lastName}`,
-//         profilePicture: userData.profilePicture,
-//       });
-//     }
-//     }
-
-//     if (notifications.length == 0) {
-//       res.status(409).json("No Notifications");
-//     } else {
-//       res.status(200).json(notifications);
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
-
 const updateNotification = async (req, res) => {
   try {
     const offset = req.query.offset;
@@ -409,8 +285,7 @@ const updateNotification = async (req, res) => {
       res.status(200).json("Notification status updated successfully");
     }
   } catch (error) {
-
-    console.log(error)
+    console.log(error);
     res.status(500).json("Internal Server Error");
   }
 };
@@ -423,5 +298,5 @@ module.exports = {
   getActivities,
   createActivity,
   getNotification,
-  updateNotification
+  updateNotification,
 };

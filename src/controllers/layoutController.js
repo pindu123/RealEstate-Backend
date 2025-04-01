@@ -10,11 +10,6 @@ const notifyModel = require("../models/notificationModel");
 
 const propertyReservation = require("../models/propertyReservation");
 
-
-/**
- * Utility function to generate a unique property ID for layout properties.
- * Prefix: "PL"
- */
 const generatePropertyId = async (typePrefix, model) => {
   const lastEntry = await model
     .findOne()
@@ -22,7 +17,7 @@ const generatePropertyId = async (typePrefix, model) => {
     .select("propertyId");
   let lastId = 0;
   if (lastEntry && lastEntry.propertyId) {
-    lastId = parseInt(lastEntry.propertyId.slice(2), 10); // Extract numeric part after "PL"
+    lastId = parseInt(lastEntry.propertyId.slice(2), 10);
   }
   return `${typePrefix}${lastId + 1}`;
 };
@@ -38,10 +33,14 @@ const insertLayoutDetails = async (req, res) => {
     const { userId, role } = req.user.user;
     console.log("Extracted user info:", { userId, role });
 
-    req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
-    console.log("Updated amenities.electricityFacility:", req.body.amenities.electricityFacility);
+    req.body.amenities.electricityFacility = String(
+      req.body.amenities.electricityFacility
+    );
+    console.log(
+      "Updated amenities.electricityFacility:",
+      req.body.amenities.electricityFacility
+    );
 
-    // Generate a unique property ID for layout properties
     console.log("Generating unique property ID...");
     const propertyId = await generatePropertyId("PL", layoutModel);
     req.body.propertyId = propertyId;
@@ -75,9 +74,14 @@ const insertLayoutDetails = async (req, res) => {
       };
     } else if (role === 5) {
       console.log("Processing as Agent role...");
-      const agentData = await userModel.findOne({ email: req.body.agentDetails.userId });
+      const agentData = await userModel.findOne({
+        email: req.body.agentDetails.userId,
+      });
       if (!agentData) {
-        console.error("Agent not found for email:", req.body.agentDetails.userId);
+        console.error(
+          "Agent not found for email:",
+          req.body.agentDetails.userId
+        );
         return res.status(404).json({ message: "Agent not found" });
       }
 
@@ -99,7 +103,9 @@ const insertLayoutDetails = async (req, res) => {
       };
     } else {
       console.error("Unauthorized role:", role);
-      return res.status(403).json({ message: "Unauthorized role for this action" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized role for this action" });
     }
 
     // Clean up optional latitude/longitude if empty
@@ -126,7 +132,10 @@ const insertLayoutDetails = async (req, res) => {
 
     // Validate the request body against the Joi schema
     console.log("Validating layoutDetailsData...");
-    const validatedData = await layoutValidationSchema.validateAsync(layoutDetailsData, { abortEarly: false });
+    const validatedData = await layoutValidationSchema.validateAsync(
+      layoutDetailsData,
+      { abortEarly: false }
+    );
     console.log("Validation successful:", validatedData);
 
     // Translate all string fields and append Telugu versions
@@ -137,8 +146,13 @@ const insertLayoutDetails = async (req, res) => {
         validatedData[`${key}Te`] = translatedValue;
       } else if (typeof value === "object" && !Array.isArray(value)) {
         for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          if (typeof nestedValue === "string" && /^[a-zA-Z\s]+$/.test(nestedValue)) {
-            const { text: translatedValue } = await translate(nestedValue, { to: "te" });
+          if (
+            typeof nestedValue === "string" &&
+            /^[a-zA-Z\s]+$/.test(nestedValue)
+          ) {
+            const { text: translatedValue } = await translate(nestedValue, {
+              to: "te",
+            });
             validatedData[key][`${nestedKey}Te`] = translatedValue;
           }
         }
@@ -167,8 +181,11 @@ const insertLayoutDetails = async (req, res) => {
     await notification1.save();
     console.log("Notifications saved successfully.");
 
-    AgentpushNotification("New Property!",`A Layout ${req.body.layoutDetails.layoutTitle} is added`,3)
-
+    AgentpushNotification(
+      "New Property!",
+      `A Layout ${req.body.layoutDetails.layoutTitle} is added`,
+      3
+    );
 
     res.status(201).json({
       message: "Layout details added successfully",
@@ -188,346 +205,62 @@ const insertLayoutDetails = async (req, res) => {
   }
 };
 
-
-// /**
-//  * API to insert layout details.
-//  */
-// const translate = require('@iamtraction/google-translate'); // Import translation library
-
-
-
-
-// const insertLayoutDetails = async (req, res) => {
-//   try {
-//     const { userId, role } = req.user.user;
-
-//     req.body.amenities.electricityFacility = String(req.body.amenities.electricityFacility);
-
-//     // Generate a unique property ID for layout properties
-//     const propertyId = await generatePropertyId("PL", layoutModel);
-//     req.body.propertyId = propertyId;
-
-//     let layoutDetailsData;
-//     let message = {};
-
-//     if (role === 1) {
-//       // CSR role
-//       const csrData = await userModel.findById(userId);
-//       if (!csrData) {
-//         return res.status(404).json({ message: "CSR not found" });
-//       }
-
-//       layoutDetailsData = {
-//         userId,
-//         role,
-//         enteredBy: req.body.enteredBy || userId,
-//         ...req.body,
-//         csrId: csrData.assignedCsr,
-//       };
-
-//       message = {
-//         senderId: userId,
-//         receiverId: csrData.assignedCsr,
-//         message: `${csrData.firstName} ${csrData.lastName} has added a new Layout property`,
-//         notifyType: "Property",
-//       };
-//     } else if (role === 5) {
-//       // Agent role
-//       const agentData = await userModel.findOne({ email: req.body.agentDetails.userId });
-//       if (!agentData) {
-//         return res.status(404).json({ message: "Agent not found" });
-//       }
-
-//       layoutDetailsData = {
-//         csrId: userId,
-//         role,
-//         enteredBy: req.body.enteredBy || userId,
-//         ...req.body,
-//         userId: agentData._id.toString(),
-//       };
-
-//       const csrData = await userModel.findById(userId);
-//       message = {
-//         senderId: userId,
-//         receiverId: req.body.agentDetails.userId,
-//         message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
-//         notifyType: "Property",
-//       };
-//     } else {
-//       return res.status(403).json({ message: "Unauthorized role for this action" });
-//     }
-
-//     // Clean up optional latitude/longitude if empty
-//     if (!layoutDetailsData.layoutDetails.address.latitude) {
-//       delete layoutDetailsData.layoutDetails.address.latitude;
-//     }
-//     if (!layoutDetailsData.layoutDetails.address.longitude) {
-//       delete layoutDetailsData.layoutDetails.address.longitude;
-//     }
-
-//     // Validate the request body against the Joi schema
-//     const validatedData = await layoutValidationSchema.validateAsync(layoutDetailsData, { abortEarly: false });
-
-//     // Translate all string fields and append Telugu versions
-//     for (const [key, value] of Object.entries(validatedData)) {
-//       if (typeof value === "string" && /^[a-zA-Z\s]+$/.test(value)) {
-//         const { text: translatedValue } = await translate(value, { to: "te" });
-//         validatedData[`${key}Te`] = translatedValue; // Add directly to validatedData
-//       } else if (typeof value === "object" && !Array.isArray(value)) {
-//         for (const [nestedKey, nestedValue] of Object.entries(value)) {
-//           if (typeof nestedValue === "string" && /^[a-zA-Z\s]+$/.test(nestedValue)) {
-//             const { text: translatedValue } = await translate(nestedValue, { to: "te" });
-//             validatedData[key][`${nestedKey}Te`] = translatedValue; // Add directly to nested object in validatedData
-//           }
-//         }
-//       }
-//     }
-
-//     // Save layout details with translations
-//     const layoutDetails = new layoutModel(validatedData);
-//     await layoutDetails.save();
-
-//     // Save notifications
-//     let message1 = {
-//       senderId: userId,
-//       receiverId: 0,
-//       message: "A new property added! Please checkout",
-//       details:`Property type : Layout of location ${req.body.layoutDetails.address.district}`,
-//       notifyType: "Customer",
-//     };
-//     const notification = new notifyModel(message);
-//     const notification1 = new notifyModel(message1);
-//     await notification.save();
-//     await notification1.save();
-
-//     res.status(201).json({
-//       message: "Layout details added successfully",
-//       success: true,
-//       propertyDetails: validatedData,
-//     });
-//   } catch (error) {
-//     if (error.isJoi) {
-//       return res.status(422).json({
-//         message: "Validation failed",
-//         details: error.details.map((err) => err.message),
-//         success: false,
-//       });
-//     }
-//     res.status(500).json({ message: "Error inserting layout details", error });
-//   }
-// };
-
-
-// for saving without translation
-
-// const insertLayoutDetails = async (req, res) => {
-//   try {
-//     const { userId, role } = req.user.user;
-
-//     req.body.amenities.electricityFacility = String(
-//       req.body.amenities.electricityFacility
-//     );
-
-//     // Generate a unique property ID for layout properties
-//     const propertyId = await generatePropertyId("PL", layoutModel);
-//     req.body.propertyId = propertyId;
-
-//     let layoutDetailsData;
-//     let message = {};
-
-//     if (role === 1) {
-//       // CSR role
-//       const csrData = await userModel.findById(userId);
-//       if (!csrData) {
-//         return res.status(404).json({ message: "CSR not found" });
-//       }
-
-//       layoutDetailsData = {
-//         userId,
-//         role,
-//         enteredBy: req.body.enteredBy || userId,
-//         ...req.body,
-//         csrId: csrData.assignedCsr,
-//       };
-
-//       message = {
-//         senderId: userId,
-//         receiverId: csrData.assignedCsr,
-//         message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
-//         notifyType: "Property",
-//       };
-//     } else if (role === 5) {
-//       // Agent role
-//       const agentData = await userModel.findOne({
-//         email: req.body.agentDetails.userId,
-//       });
-//       if (!agentData) {
-//         return res.status(404).json({ message: "Agent not found" });
-//       }
-
-//       layoutDetailsData = {
-//         csrId: userId,
-//         role,
-//         enteredBy: req.body.enteredBy || userId,
-//         ...req.body,
-//         userId: agentData._id.toString(),
-//       };
-
-//       const csrData = await userModel.findById(userId);
-//       message = {
-//         senderId: userId,
-//         receiverId: req.body.agentDetails.userId,
-//         message: `${csrData.firstName} ${csrData.lastName} has added a new property`,
-//         notifyType: "Property",
-//       };
-//     } else {
-//       return res
-//         .status(403)
-//         .json({ message: "Unauthorized role for this action" });
-//     }
-
-//     // Clean up optional latitude/longitude if empty
-//     if (!layoutDetailsData.layoutDetails.address.latitude) {
-//       delete layoutDetailsData.layoutDetails.address.latitude;
-//     }
-//     if (!layoutDetailsData.layoutDetails.address.longitude) {
-//       delete layoutDetailsData.layoutDetails.address.longitude;
-//     }
-
-//     // Validate the request body against the Joi schema
-//     const validatedData = await layoutValidationSchema.validateAsync(
-//       layoutDetailsData,
-//       { abortEarly: false }
-//     );
-
-//     // Save layout details
-//     const layoutDetails = new layoutModel(validatedData);
-//   // Remove translated fields (those with 'Te' suffix)
-//   const sanitizedData = {};
-//   Object.keys(layoutDetailsData).forEach((key) => {
-//     if (!key.endsWith("Te")) {
-//       sanitizedData[key] = layoutDetailsData[key];
-//     }
-//   });
-
-//   // Translate all string fields and append Telugu versions
-//   for (const [key, value] of Object.entries(sanitizedData)) {
-//     if (typeof value === "string" && /^[a-zA-Z\s]+$/.test(value)) {
-//       const { text: translatedValue } = await translate(value, { to: "te" });
-//       sanitizedData[`${key}Te`] = translatedValue;
-//     } else if (typeof value === "object" && !Array.isArray(value)) {
-//       // Recursively handle nested objects
-//       for (const [nestedKey, nestedValue] of Object.entries(value)) {
-//         if (typeof nestedValue === "string" && /^[a-zA-Z\s]+$/.test(nestedValue)) {
-//           const { text: translatedValue } = await translate(nestedValue, { to: "te" });
-//           sanitizedData[key][`${nestedKey}Te`] = translatedValue;
-//         }
-//       }
-//     }
-//   }
-
-//     await layoutDetails.save();
-
-//     // Save notification
-
-//     let message1 = {
-//       senderId: userId,
-//       receiverId: 0,
-//       message: "A new property added ! Please checkout",
-//       notifyType: "Customer",
-//     };
-//     const notification = new notifyModel(message);
-
-//     const notification1 = new notifyModel(message1);
-//     await notification.save();
-//     await notification1.save();
-//     res.status(201).json({
-//       message: "Layout details added successfully",
-//       success: true,
-//       propertyDetails: validatedData,
-//     });
-//   } catch (error) {
-//     if (error.isJoi) {
-//       return res.status(422).json({
-//         message: "Validation failed",
-//         details: error.details.map((err) => err.message),
-//         success: false,
-//       });
-//     }
-//     res.status(500).json({ message: "Error inserting layout details", error });
-//   }
-// };
-
 module.exports = { insertLayoutDetails };
 
-// Function to get all layout properties added by that user
 const getLayouts = async (req, res) => {
   try {
     const userId = req.user.user.userId;
 
+    const page = req.query.page;
+    const limit = req.query.limit;
 
-    const page = req.query.page
-    const limit = req.query.limit
-    // if(page)
-    // {
-
-    // }
     const layouts = await layoutModel
       .find({ userId: userId })
       .sort({ status: 1, updatedAt: -1 });
 
-
-
-    let resultData = []
+    let resultData = [];
 
     for (let res of layouts) {
-      const id = res._id
-      const data = await auctionModel.find({ propertyId: id })
+      const id = res._id;
+      const data = await auctionModel.find({ propertyId: id });
 
-      res.auctionData = data
+      res.auctionData = data;
 
-      const reservation = await propertyReservation.find({ "propId": id ,reservationStatus:true,"userId":userId})
-
+      const reservation = await propertyReservation.find({
+        propId: id,
+        reservationStatus: true,
+        userId: userId,
+      });
 
       if (reservation.length > 0) {
-        res.reservedBy = reservation[0].userId
+        res.reservedBy = reservation[0].userId;
       }
       if (data.length === 0) {
         res.auctionStatus = "InActive";
-
-      }
-      else {
-
+      } else {
         for (let auction of data) {
-          res.auctionType=auction.auctionType
+          res.auctionType = auction.auctionType;
           if (auction.auctionStatus === "active") {
             res.auctionStatus = auction.auctionStatus;
             break;
-          }
-          else {
+          } else {
             res.auctionStatus = auction.auctionStatus;
-
           }
-
         }
-        const buyerData = data[0].buyers
+        const buyerData = data[0].buyers;
         if (buyerData.length > 0) {
-          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount);
         }
-        res.auctionData.buyers = buyerData
+        res.auctionData.buyers = buyerData;
       }
 
       resultData.push({
         ...res._doc,
-        "reservedBy": res.reservedBy,
-        "auctionStatus": res.auctionStatus,
-        "auctionData": res.auctionData
-      })
+        reservedBy: res.reservedBy,
+        auctionStatus: res.auctionStatus,
+        auctionData: res.auctionData,
+      });
     }
-
-
-
-
 
     if (layouts.length === 0) {
       return res.status(200).json([]);
@@ -538,36 +271,37 @@ const getLayouts = async (req, res) => {
   }
 };
 
-//get all layouts
-
 const getAllLayouts = async (req, res) => {
   try {
     const userId = req.user.user.userId;
     const role = req.user.user.role;
 
-    const page = req.query.page
-    const limit = req.query.limit
+    const page = req.query.page;
+    const limit = req.query.limit;
     let layouts;
 
-    // Fetch all layouts
-
     if (page) {
-      let offset = (page - 1) * limit
+      let offset = (page - 1) * limit;
       if (role === 3) {
-        layouts = await layoutModel.find({ status: 0 }).skip(offset).limit(limit).sort({ updatedAt: -1 });
+        layouts = await layoutModel
+          .find({ status: 0 })
+          .skip(offset)
+          .limit(limit)
+          .sort({ updatedAt: -1 });
       } else {
-        layouts = await layoutModel.find().skip(offset).limit(limit).sort({ status: 1, updatedAt: -1 });
+        layouts = await layoutModel
+          .find()
+          .skip(offset)
+          .limit(limit)
+          .sort({ status: 1, updatedAt: -1 });
       }
-    }
-    else {
+    } else {
       if (role === 3) {
         layouts = await layoutModel.find({ status: 0 }).sort({ updatedAt: -1 });
       } else {
         layouts = await layoutModel.find().sort({ status: 1, updatedAt: -1 });
       }
     }
-
-
 
     if (layouts.length === 0) {
       return res.status(200).json([]);
@@ -601,45 +335,42 @@ const getAllLayouts = async (req, res) => {
       return layoutObj;
     });
 
-
-
     for (let res of updatedLayouts) {
-      const id = res._id
-      const data = await auctionModel.find({ propertyId: id })
+      const id = res._id;
+      const data = await auctionModel.find({ propertyId: id });
 
-      res.auctionData = data
+      res.auctionData = data;
 
-      const reservation = await propertyReservation.find({ "propId": id,"reservationStatus":true,"userId":userId })
-
+      const reservation = await propertyReservation.find({
+        propId: id,
+        reservationStatus: true,
+        userId: userId,
+      });
 
       if (reservation.length > 0) {
-        res.reservedBy = reservation[0].userId
+        res.reservedBy = reservation[0].userId;
       }
       if (data.length === 0) {
         res.auctionStatus = "InActive";
-
-      }
-      else {
-
-        for(let auction of data)
-        {
-          res.auctionType=auction.auctionType
-          res.auctionStatus=auction.auctionStatus
-          if(auction.auctionStatus==="active" || auction.auctionStatus==="Active")
-          {
+      } else {
+        for (let auction of data) {
+          res.auctionType = auction.auctionType;
+          res.auctionStatus = auction.auctionStatus;
+          if (
+            auction.auctionStatus === "active" ||
+            auction.auctionStatus === "Active"
+          ) {
             break;
           }
         }
 
-         const buyerData = data[0].buyers
+        const buyerData = data[0].buyers;
         if (buyerData.length > 0) {
-          buyerData.sort((a, b) => b.bidAmount - a.bidAmount)
+          buyerData.sort((a, b) => b.bidAmount - a.bidAmount);
         }
-        res.auctionData.buyers = buyerData
+        res.auctionData.buyers = buyerData;
       }
     }
-
-
 
     res.status(200).json(updatedLayouts);
   } catch (error) {
@@ -648,19 +379,15 @@ const getAllLayouts = async (req, res) => {
   }
 };
 
-//update available plots
 const updateplots = async (req, res) => {
   try {
-    // Extract userId from the authenticated user
     const userId = req.user.user.userId;
 
-    // Prepare the data to be validated
     const updateData = {
       ...req.body, // Spread the request body which includes propertyId and availablePlots
       userId, // Include the userId from the token
     };
 
-    // Validate the request body using the Joi schema
     const validatedData = await updatePlotsValidationSchema.validateAsync(
       updateData,
       { abortEarly: false }
@@ -713,7 +440,6 @@ const updateplots = async (req, res) => {
   }
 };
 
-// Export functions
 module.exports = {
   insertLayoutDetails,
   getLayouts,

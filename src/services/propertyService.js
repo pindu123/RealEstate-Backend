@@ -71,15 +71,14 @@
 //   updatePropertyOnHoldStatus,
 // };
 
-
 // services/propertyService.js
 
-const { ObjectId } = require('mongoose').Types; // Import ObjectId from mongoose
-const residentialModel = require('../models/residentialModel');
-const layoutModel = require('../models/layoutModel');
-const fieldModel = require('../models/fieldModel');
-const commercialModel = require('../models/commercialModel');
-const propertyReservation = require('../models/propertyReservation');
+const { ObjectId } = require("mongoose").Types; // Import ObjectId from mongoose
+const residentialModel = require("../models/residentialModel");
+const layoutModel = require("../models/layoutModel");
+const fieldModel = require("../models/fieldModel");
+const commercialModel = require("../models/commercialModel");
+const propertyReservation = require("../models/propertyReservation");
 
 async function updatePropertyOnHoldStatus() {
   try {
@@ -105,34 +104,34 @@ async function updatePropertyOnHoldStatus() {
         // Step 3: Based on propertyType, find the corresponding model and update the propertyOnHold field
         let propertyModel;
         switch (reservation.propertyType) {
-          case 'Residential':
+          case "Residential":
             propertyModel = residentialModel;
             break;
-          case 'Layout':
+          case "Layout":
             propertyModel = layoutModel;
             break;
-          case 'Agricultural land':
+          case "Agricultural land":
             propertyModel = fieldModel;
             break;
-          case 'Commercial':
+          case "Commercial":
             propertyModel = commercialModel;
             break;
           default:
-            console.log('Unknown property type:', reservation.propertyType);
+            console.log("Unknown property type:", reservation.propertyType);
             continue;
         }
 
         // Step 4: Find the property by propId and update the propertyOnHold field to 'no'
         await propertyModel.updateOne(
-          { _id: new ObjectId(reservation.propId) },  // Convert propId to ObjectId
-          { $set: { propertyOnHold: 'no' } }
+          { _id: new ObjectId(reservation.propId) }, // Convert propId to ObjectId
+          { $set: { propertyOnHold: "no" } }
         );
       }
     }
 
-    console.log('Property updates completed.');
+    console.log("Property updates completed.");
   } catch (error) {
-    console.error('Error updating properties:', error);
+    console.error("Error updating properties:", error);
   }
 }
 

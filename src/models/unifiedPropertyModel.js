@@ -173,9 +173,7 @@ const unifiedSchema = new mongoose.Schema(
     },
     images: {
       type: [String],
-      default: [
-        "https://res.cloudinary.com/default_image.png",
-      ],
+      default: ["https://res.cloudinary.com/default_image.png"],
     },
     videos: {
       type: [String],

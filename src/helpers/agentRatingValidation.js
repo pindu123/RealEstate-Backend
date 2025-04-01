@@ -1,15 +1,14 @@
-
 const Joi = require("joi");
 // Function to capitalize the first letter of each word
 const capitalizeWords = (value) => {
-    if (typeof value === 'string') {
-      return value
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    }
-    return value;
-  };
+  if (typeof value === "string") {
+    return value
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  }
+  return value;
+};
 // Joi validation schema for agentRating
 const agentRatingValidation = Joi.object({
   userId: Joi.string().required(),
@@ -27,11 +26,12 @@ const agentRatingValidation = Joi.object({
   //review: Joi.string().optional().allow(null, ''), // Review is optional, can be empty or null
 });
 
-
-const validateLocation= Joi.object({
-location: Joi.string().required() .custom((value) => {
-    return capitalizeWords(value);
-  }, "formatting location"),
-  userId : Joi.string().required()
-})
+const validateLocation = Joi.object({
+  location: Joi.string()
+    .required()
+    .custom((value) => {
+      return capitalizeWords(value);
+    }, "formatting location"),
+  userId: Joi.string().required(),
+});
 module.exports = { agentRatingValidation, validateLocation };

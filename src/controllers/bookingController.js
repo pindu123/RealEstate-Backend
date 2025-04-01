@@ -17,26 +17,16 @@ const {
 } = require("../helpers/bookingValidation");
 const { AgentpushNotification1 } = require("./pushNotifyController");
 
-//api for a buyer/ seller to book appointment
-const createBooking = async (req, res) => {
+ const createBooking = async (req, res) => {
   try {
     const {
       userId,
       role,
-      // firstName,
-      // lastName,
-      // email,
-      // phoneNumber,
-      // profilePicture,
+ 
     } = req.user.user;
     const details = {
       userId,
       role,
-      // firstName,
-      // lastName,
-      // email,
-      // phoneNumber,
-      // profilePicture,
       ...req.body,
     };
     const result = await userBookingSchema.validateAsync(details);
@@ -88,8 +78,7 @@ let propertyId=req.body.propertyId
 };
 
 
-//api for an agent to book appointment
-const createAgentBooking = async (req, res) => {
+ const createAgentBooking = async (req, res) => {
   try {
     const { role } = req.user.user; //, firstName, lastName, email, phoneNumber, profilePicture } =
     const agentId = req.user.user.userId;
@@ -123,13 +112,11 @@ const createAgentBooking = async (req, res) => {
   }
 };
 
-//get details of buyer/seller who booked appointement with agent
-const getUserBookings = async (req, res) => {
+ const getUserBookings = async (req, res) => {
   try {
-    const agentId = req.user.user.userId; // Extract agentId from the token
-    const { role } = req.params; //role of buyer or seller
-    //  console.log(propertyId);
-    console.log(role);
+    const agentId = req.user.user.userId;  
+    const { role } = req.params; 
+     console.log(role);
     if (role !== "2" && role !== "3") {
       return res.status(400).json("Incorrect role");
     }
@@ -214,13 +201,12 @@ const getUserBookings = async (req, res) => {
   }
 };
 
-//get user bookings based on status(accepted(1),rejected(-1), booked(2), pending(0))
-//get details of buyer/seller who booked appointement with agent
+ 
 const getUserBookingsByStatus = async (req, res) => {
   try {
-    const agentId = req.user.user.userId; // Extract agentId from the token
+    const agentId = req.user.user.userId;  
     const result = await validateRoleAndStatus.validateAsync(req.params);
-    const { role, status } = result; // role of buyer or seller
+    const { role, status } = result;  
 
     const { page, limit } = req.query;
 
@@ -343,12 +329,11 @@ const getUserBookingsByStatus = async (req, res) => {
   }
 };
 
-//get userbookings based on name
-//get details of buyer/seller who booked appointement with agent
+ 
 const getBookingByName = async (req, res) => {
   try {
-    const agentId = req.user.user.userId; // Extract agentId from the token
-    const { role, name } = req.params; //role of buyer or seller
+    const agentId = req.user.user.userId; 
+    const { role, name } = req.params;  
     const words = name.split(" ");
     const firstName = words[0];
     const lastName = words[1];
@@ -372,8 +357,7 @@ const getBookingByName = async (req, res) => {
   }
 };
 
-//get details of agents who booked appointments with that user
-const getAgentBookings = async (req, res) => {
+ const getAgentBookings = async (req, res) => {
   try {
     const userId = req.user.user.userId; // Extract userId from the token
     const role = 1; //role 1
@@ -457,8 +441,7 @@ const getAgentBookings = async (req, res) => {
   }
 };
 
-//update booking status
-const updateBookingStatus = async (req, res) => {
+ const updateBookingStatus = async (req, res) => {
   try {
     const result = await validateBookingIdStatus.validateAsync(req.params);
     const bookingId = result.bookingId;  
@@ -519,8 +502,7 @@ const updateBookingStatus = async (req, res) => {
   }
 };
 
-//update status of apntmnt to 0 if it is 2 -----> only for backend use to clear db collection
-const updateStatus = async (req, res) => {
+ const updateStatus = async (req, res) => {
   try {
     // Update all bookings where the status is 2 to 0
     const updatedBookings = await bookingModel.updateMany(
@@ -546,8 +528,7 @@ const updateStatus = async (req, res) => {
   }
 };
 
-//get booking details of agent- accepting and rebooking with a user
-const getBookingByUserAndAgent = async (req, res) => {
+ const getBookingByUserAndAgent = async (req, res) => {
   try {
     const result = await validateIds.validateAsync(req.params);
     console.log("result", result);
@@ -579,8 +560,7 @@ const getBookingByUserAndAgent = async (req, res) => {
     res.status(500).json({ message: "Error fetching booking", error });
   }
 };
-
-//get booking details of buyer- accepting and rebooking with an agent
+ 
 const rebookingWithAgent = async (req, res) => {
   try {
     const result = await validateIds.validateAsync(req, params);
@@ -626,89 +606,29 @@ const rebookingWithAgent = async (req, res) => {
   }
 };
 
-//delete--- my use
-// const deleteappointment = async (req, res) => {
-//   try {
-//     const deleted = await bookingModel.deleteMany({ role: 1 });
-//     // Return the result of the update operation
-//     res.status(200).json({
-//       message: "Booking statuses updated successfully",
-//       updatedCount: deleted.modifiedCount,
-//     });
-//   } catch (error) {
-//     // Handle any errors
-//     res.status(500).json({ message: "Error updating booking statuses", error });
-//   }
-// };
-
+ 
 const deleteappointment = async (req, res) => {
   try {
-    const id = req.params.id; // Get the ID from the request parameters
+    const id = req.params.id;  
     console.log(id);
-    const deleted = await bookingModel.findByIdAndDelete(id); // Pass the ID directly
-    // Check if a booking was deleted
-    if (!deleted) {
+    const deleted = await bookingModel.findByIdAndDelete(id); 
+     if (!deleted) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // Return a success message
-    res.status(200).json({
+     res.status(200).json({
       message: "Booking deleted",
     });
   } catch (error) {
-    // Handle any errors
-    res.status(500).json({ message: "Error deleting booking", error });
+     res.status(500).json({ message: "Error deleting booking", error });
   }
 };
-
-// const getByFilters = async (req, res) => {
-//   try {
-//     const agentId = req.user.user.userId; // Extract agentId from the token
-//     const { role, location, status } = req.params; // role of buyer or seller
-//     //  if status is 3, all bookings will be displayed irrespective of status
-//     let bookings;
-//     if (location === "@") {
-//       if (parseInt(status) === 3) {
-//         bookings = await bookingModel.find({ role: role, agentId: agentId });
-//       } else {
-//         bookings = await bookingModel.find({
-//           role: role,
-//           agentId: agentId,
-//           status: status,
-//         });
-//       }
-//     } else {
-//       if (parseInt(status) === 3) {
-//         bookings = await bookingModel.find({
-//           role: role,
-//           agentId: agentId,
-//           location:location
-//         });
-//       } else {
-//         bookings = await bookingModel.find({
-//           role: role,
-//           agentId: agentId,
-//           status: status,
-//           location:location
-//         });
-//       }
-//     }
-//     if (bookings.length === 0) {
-//       return res.status(404).json({ message: "No bookings found" });
-//     }
-
-//     res.status(200).json(bookings);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-//get bookings by filters--- for agent login
+ 
 const getByFilters = async (req, res) => {
   try {
-    const agentId = req.user.user.userId; // Extract agentId from the token
+    const agentId = req.user.user.userId; 
     const result = await validateFilterData.validateAsync(req.params);
-    const { role, location, status } = result; // Role of buyer or seller
+    const { role, location, status } = result;  
 
     let query = {
       role: role,
@@ -720,7 +640,7 @@ const getByFilters = async (req, res) => {
     }
 
     if (location !== "@") {
-      query.location = new RegExp(location, "i"); // Case-insensitive search
+      query.location = new RegExp(location, "i");  
     }
 
     const bookings = await bookingModel.find(query).sort({ _id: -1 });
@@ -809,13 +729,11 @@ const getByFilters = async (req, res) => {
   }
 };
 
-//get bookings by filters--- for buyer login(not used)
-const getBookingByFilters = async (req, res) => {
+ const getBookingByFilters = async (req, res) => {
   try {
     const userId = req.user.user.userId; // Extract userId from the token
     const { name, status } = req.params;
-    //  if status is 3, all bookings will be displayed irrespective of status
-    let bookings;
+     let bookings;
     if (name === "@") {
       if (parseInt(status) === 3) {
         bookings = await bookingModel
@@ -867,8 +785,7 @@ const getBookingByFilters = async (req, res) => {
   }
 };
 
-//buyer requested agents
-const getBuyerBookings = async (req, res) => {
+ const getBuyerBookings = async (req, res) => {
   try {
     const userId = req.user.user.userId; // Extract userId from the token
     const role = 3; // Role for buyer
@@ -1007,8 +924,7 @@ const getBuyerBookings = async (req, res) => {
   }
 };
 
-//get all the buyer requests for a particular agent
-const getBuyerReqForAgent = async (req, res) => {
+ const getBuyerReqForAgent = async (req, res) => {
   const userId = req.user.user.userId;
   const role = 3;
   try {
@@ -1119,8 +1035,7 @@ const getBuyerReqForAgent = async (req, res) => {
   }
 };
 
-//no. of requests for a particular property
-const totalReqsForProp = async (req, res) => {
+ const totalReqsForProp = async (req, res) => {
   try {
     const { propertyId } = req.params;
     const reqsCount = await bookingModel.countDocuments({
@@ -1181,8 +1096,7 @@ const reqsCountFromABuyer = async (req, res) => {
 const getCurrentAppointments = async (req, res) => {
   try {
     let currentDate = new Date();
-    //  const formattedDate=currentDate.toISOString().split('T')[0]
-
+ 
     let agentId = req.user.user.userId;
 
     const appointments = await bookingModel.find({
@@ -1202,16 +1116,13 @@ const getCurrentAppointments = async (req, res) => {
 };
 
 module.exports = {
-  //buyer
-  createBooking,
+   createBooking,
   getAgentBookings,
   rebookingWithAgent,
   getBuyerBookings,
   getBuyerReqForAgent,
 
-  updateBookingStatus, // both agent and buyer
-
-  //agent
+  updateBookingStatus,  
   createAgentBooking,
   getUserBookings,
   getBookingByUserAndAgent,

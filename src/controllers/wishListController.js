@@ -4,21 +4,23 @@ const fieldModel = require("../models/fieldModel");
 const commercialModel = require("../models/commercialModel");
 const residentialModel = require("../models/residentialModel");
 const layoutModel = require("../models/layoutModel");
-const {wishlistSchema,deleteWishlistValidationSchema} = require('../helpers/wishListValidation');
-// Add a property to the wishlist
+const {
+  wishlistSchema,
+  deleteWishlistValidationSchema,
+} = require("../helpers/wishListValidation");
 const addToWishlist = async (req, res) => {
   try {
     const { userId, role } = req.user.user;
     const wishlistDetailsData = {
-      userId, 
-      ...req.body, 
+      userId,
+      ...req.body,
     };
-    // Validate the data using Joi
-    const validatedData = await wishlistSchema.validateAsync(wishlistDetailsData, { abortEarly: false });
-    // Destructure the necessary fields from the validated data
+    const validatedData = await wishlistSchema.validateAsync(
+      wishlistDetailsData,
+      { abortEarly: false }
+    );
     const { propertyId, propertyType, status = 1 } = validatedData;
 
-    // Check if the property is already in the user's wishlist
     const propertyCheck = await wishlistModel.findOne({
       propertyId: propertyId,
       userId: userId,
@@ -46,7 +48,7 @@ const addToWishlist = async (req, res) => {
       // Handle Joi validation errors
       return res.status(422).json({
         message: "Validation error",
-        details: error.details.map(err => err.message), // Collect all validation error messages
+        details: error.details.map((err) => err.message), // Collect all validation error messages
         success: false,
       });
     }
@@ -60,164 +62,12 @@ const addToWishlist = async (req, res) => {
   }
 };
 
-//get wishlist items
-// const getWishlist = async (req, res) => {
-//   try {
-//     const userId = req.user.user.userId;
-//     const wishlistItems = await wishlistModel.find({ userId: userId }).sort({_id:-1});
-//     //console.log(wishlistItems);
-//     if (!wishlistItems || wishlistItems.length === 0) {
-//       return res.status(404).json({ message: "Your wishlist is empty" });
-//     }
-
-//     const filteredWishlistItems = wishlistItems.map((item) => ({
-//       propertyId: item.propertyId,
-//       propertyType: item.propertyType,
-//     }));
-
-//     let propertyIds = [];
-//     let propertyTypes = [];
-
-//     for (let element of filteredWishlistItems) {
-//       propertyIds.push(element.propertyId);
-//       propertyTypes.push(element.propertyType);
-//     }
-
-//     let fields = [];
-//     let residentials = [];
-//     let commercials = [];
-//     let layouts = [];
-
-//     for (let i = 0; i < propertyIds.length; i++) {
-//       if (propertyTypes[i] === "Agricultural") {
-//         const result = await fieldModel.findOne(
-//           { _id: propertyIds[i] },
-//           {
-//             "landDetails.images": 1,
-//             "landDetails.totalPrice": 1,
-//             "landDetails.title": 1,
-//             "landDetails.size": 1,
-//             "address.district": 1,
-//           }
-//         );
-//         if (result) {
-//           fields.push({
-//             propertyId: propertyIds[i],
-//             propertyType: propertyTypes[i],
-//             images: result.landDetails.images,
-//             price: result.landDetails.totalPrice,
-//             size: result.landDetails.size,
-//             title: result.landDetails.title,
-//             district: result.address.district,
-//           });
-//         }
-//       } else if (propertyTypes[i] === "Commercial") {
-//         const result = await commercialModel.findOne(
-//           { _id: propertyIds[i] },
-//           {
-//             "propertyDetails.uploadPics": 1,
-//             "propertyDetails.landDetails": 1,
-//             propertyTitle: 1,
-//           }
-//         );
-//         if (result) {
-//           let price;
-//           let size;
-//           if (result.propertyDetails.landDetails.sell.landUsage.length !== 0) {
-//             price = result.propertyDetails.landDetails.sell.totalAmount;
-//             size = result.propertyDetails.landDetails.sell.plotSize;
-//           } else if (
-//             result.propertyDetails.landDetails.rent.landUsage.length !== 0
-//           ) {
-//             price = result.propertyDetails.landDetails.rent.totalAmount;
-//             size = result.propertyDetails.landDetails.rent.plotSize;
-//           } else {
-//             price = result.propertyDetails.landDetails.lease.totalAmount;
-//             size = result.propertyDetails.landDetails.lease.plotSize;
-//           }
-//           commercials.push({
-//             propertyId: propertyIds[i],
-//             propertyType: propertyTypes[i],
-//             images: result.propertyDetails.uploadPics,
-//             price: price, //result.propertyDetails.landDetails.totalPrice, //price
-//             size: size, //result.propertyDetails.landDetails.plotSize, //size
-//             title: result.propertyTitle,
-//             district: result.propertyDetails.landDetails.address.district,
-//           });
-//         }
-//       } else if (propertyTypes[i] === "Residential") {
-//         const result = await residentialModel.findOne(
-//           { _id: propertyIds[i] },
-//           {
-//             propPhotos: 1,
-//             "propertyDetails.flatCost": 1,
-//             "propertyDetails.flatSize": 1,
-//             "propertyDetails.apartmentName": 1,
-//             "address.district": 1,
-//           }
-//         );
-//         if (result) {
-//           residentials.push({
-//             propertyId: propertyIds[i],
-//             propertyType: propertyTypes[i],
-//             images: result.propPhotos,
-//             price: result.propertyDetails.flatCost,
-//             size: result.propertyDetails.flatSize,
-//             title: result.propertyDetails.apartmentName,
-//             district: result.address.district,
-//           });
-//         }
-//       } else {
-//         const result = await layoutModel.findOne(
-//           { _id: propertyIds[i] },
-//           {
-//             uploadPics: 1,
-//             "layoutDetails.layoutTitle": 1,
-//             "layoutDetails.plotSize": 1,
-//             "layoutDetails.totalAmount": 1,
-//             "layoutDetails.address.district": 1,
-//           }
-//         );
-//         if (result) {
-//           layouts.push({
-//             propertyId: propertyIds[i],
-//             propertyType: propertyTypes[i],
-//             images: result.uploadPics,
-//             price: result.layoutDetails.totalAmount,
-//             size: result.layoutDetails.plotSize,
-//             title: result.layoutDetails.layoutTitle,
-//             district: result.layoutDetails.address.district,
-//           });
-//         }
-//       }
-//     }
-
-//     //response for empty wishlist
-//     if (!fields && !commercials && !residentials && !layouts) {
-//       res.status(404).json({ message: "Your wishlist is empty" });
-//     }
-//     res.status(200).json({
-//       title1: "Agricultural property details",
-//       fields: fields,
-//       title2: "Commercial property details",
-//       commercials: commercials,
-//       title3: "Residential property details",
-//       residentials: residentials,
-//       title4: "Layout property details",
-//       layouts: layouts,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error fetching wishlist items", error });
-//   }
-// };
-
-// getting all wishlist properties in a single array
-
 const getWishlist = async (req, res) => {
   try {
     const userId = req.user.user.userId;
-    const wishlistItems = await wishlistModel.find({ userId: userId }).sort({_id:-1});
-    //console.log(wishlistItems);
+    const wishlistItems = await wishlistModel
+      .find({ userId: userId })
+      .sort({ _id: -1 });
     if (!wishlistItems || wishlistItems.length === 0) {
       return res.status(409).json({ message: "Your wishlist is empty" });
     }
@@ -239,7 +89,7 @@ const getWishlist = async (req, res) => {
     let residentials = [];
     let commercials = [];
     let layouts = [];
-let wishlistprops= [];
+    let wishlistprops = [];
     for (let i = 0; i < propertyIds.length; i++) {
       if (propertyTypes[i] === "Agricultural") {
         const result = await fieldModel.findOne(
@@ -349,15 +199,13 @@ let wishlistprops= [];
       res.status(409).json({ message: "Your wishlist is empty" });
     }
     res.status(200).json({
-      wishlistprops
+      wishlistprops,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching wishlist items", error });
   }
 };
 
-
-//delete from wishlist by propertyid
 const deleteFromWishlist = async (req, res) => {
   try {
     // Validate the request params (propertyId)
@@ -372,13 +220,14 @@ const deleteFromWishlist = async (req, res) => {
     // Find and delete the wishlist item
     const deletedItem = await wishlistModel.findOneAndDelete({
       userId,
-      propertyId
+      propertyId,
     });
 
     if (!deletedItem) {
-      return res
-        .status(409)
-        .json({ message: "This Property is not in WishList to Delete", success: false });
+      return res.status(409).json({
+        message: "This Property is not in WishList to Delete",
+        success: false,
+      });
     }
 
     // Successfully deleted
@@ -394,27 +243,23 @@ const deleteFromWishlist = async (req, res) => {
   }
 };
 
-
-
-
-const getRecentWishlist= async(req,res)=>{
-try{
- const userId = req.params.buyerId;
-console.log(userId);
-const result=await wishlistModel.find({userId:userId}).sort({createdAt:-1})
-console.log(result);
-res.status(200).json(result)
-
-}
-catch(error)
-{
-res.status(500).json("Internal Server Error")
-}
-}
+const getRecentWishlist = async (req, res) => {
+  try {
+    const userId = req.params.buyerId;
+    console.log(userId);
+    const result = await wishlistModel
+      .find({ userId: userId })
+      .sort({ createdAt: -1 });
+    console.log(result);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json("Internal Server Error");
+  }
+};
 
 module.exports = {
   addToWishlist,
   getWishlist,
   deleteFromWishlist,
-  getRecentWishlist
+  getRecentWishlist,
 };

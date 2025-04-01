@@ -13,15 +13,12 @@ const {
 const { getByDistrict } = require("./fieldController");
 const contactModel = require("../models/contactModel");
 
-// const twilio = require('twilio');
-const accountSid = process.env.TWILIO_ACCOUNT_SID; // Your Twilio account SID from environment variables
-const authToken = process.env.TWILIO_AUTH_TOKEN; // Your Twilio auth token from environment variables
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioNumber = process.env.TWILIO_NUMBER;
-// const client = new twilio(accountSid, authToken);  // Twilio client
 const twilio = require("twilio")(accountSid, authToken);
-//send sms
 const sendSMS = async (phoneNumber, body) => {
-  const phone = `+91${phoneNumber}`; // Format the phone number correctly
+  const phone = `+91${phoneNumber}`;
   let msgOptions = {
     from: twilioNumber,
     to: phone,
@@ -36,41 +33,37 @@ const sendSMS = async (phoneNumber, body) => {
   }
 };
 
-let otpStore = {}; //store the otp in memory
+let otpStore = {};
 
-// Function to generate and store OTP
 function generateOtp(phoneNumber) {
-  const otp = Math.floor(100000 + Math.random() * 900000); // Generate 6-digit OTP
-  otpStore[phoneNumber] = otp; // Store OTP in memory, map it to the phone number
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  otpStore[phoneNumber] = otp;
   console.log(otpStore[phoneNumber]);
   return otp;
 }
 
-// Function to verify OTP
 function verifyOtp(phoneNumber, inputOtp) {
-  const storedOtp = otpStore[phoneNumber]; // Get the stored OTP for this phone number
+  const storedOtp = otpStore[phoneNumber];
   console.log(otpStore[phoneNumber]);
   if (!storedOtp) {
-    return false; // OTP not found for the phone number
+    return false;
   }
   if (parseInt(inputOtp) === storedOtp) {
-    delete otpStore[phoneNumber]; // Remove OTP after successful verification
-    return true; // OTP matches
+    delete otpStore[phoneNumber];
+    return true;
   }
-  return false; // OTP does not match
+  return false;
 }
 
-//otp login
 const otpForLogin = async (req, res) => {
   try {
     const result = await validateNumber.validateAsync(req.body);
     let { phoneNumber } = result;
-    //let {phoneNumber}= req.params;
     let user = await userModel.findOne({ phoneNumber });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const otp = generateOtp(phoneNumber); // Format the phone number correctly
+    const otp = generateOtp(phoneNumber);
     const body = `Dear user, your One-Time Password (OTP) for logging into RealEstate Lokam is: "${otp}". Please use this code within 2 minutes to complete your login.`;
     const responseMsg = await sendSMS(phoneNumber, body);
     res.status(200).json({ smsResponse: responseMsg });
@@ -92,8 +85,7 @@ const otpLogin = async (req, res) => {
     const result = await otpValidation.validateAsync(req.body);
     let { phoneNumber, otp } = result;
 
-    // let {phoneNumber,otp}= req.body;
-    let user = await userModel.findOne({ phoneNumber });
+     let user = await userModel.findOne({ phoneNumber });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -133,14 +125,12 @@ const otpLogin = async (req, res) => {
   }
 };
 
-// Controller function for user login
-const userLoginController = async (req, res) => {
+ const userLoginController = async (req, res) => {
   try {
     const result = await loginSchema.validateAsync(req.body);
-    let {  password } = result;
+    let { password } = result;
     const email = result.email.toLowerCase();
-    // Find the user in the database by email and password
-    let user = await userModel.findOne({ email });
+     let user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -156,7 +146,7 @@ const userLoginController = async (req, res) => {
             phoneNumber: user.phoneNumber,
             role: user.role,
             district: user.district,
-            profilePicture:user.profilePicture,
+            profilePicture: user.profilePicture,
           },
         },
         secret_key,
@@ -184,8 +174,7 @@ const userLoginController = async (req, res) => {
   }
 };
 
-// check if phone number exists
-const verifyPhno = async (req, res) => {
+ const verifyPhno = async (req, res) => {
   try {
     const { phoneNumber } = req.params;
     const present = await userModel.findOne({ phoneNumber: phoneNumber });
@@ -197,31 +186,20 @@ const verifyPhno = async (req, res) => {
     return res.status(500).json("Internal server error");
   }
 };
+ 
 
-//check if email exists
-// const verifyEmail = async (req, res) => {
-//   try {
-//     const { email } = req.params;
-    
-//     const present = await userModel.findOne({ email: email });
-//     if (!present) {
-//       return res.status(404).json("User with this email does not exist");
-//     }
-//     res.status(200).json("User exists");
-//   } catch (error) {
-//     return res.status(500).json("Internal server error");
-//   }
-// };
 const verifyEmail = async (req, res) => {
   try {
     const { email } = req.params;
-    const userEmail = email.toLowerCase();  // Corrected usage of toLowerCase
+    const userEmail = email.toLowerCase(); // Corrected usage of toLowerCase
     const present = await userModel.findOne({ email: userEmail });
 
     if (!present) {
-      return res.status(409).json({ message: "User with this email does not exist" });
+      return res
+        .status(409)
+        .json({ message: "User with this email does not exist" });
     }
-    
+
     res.status(200).json({ message: "User exists" });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
@@ -248,15 +226,13 @@ const resetMail = async (req, res) => {
   }
 };
 
-const contactUs=async (req,res)=>{
-  try{
-  const contact = new contactModel(req.body);
-  await contact.save();
-  res.status(200).json({ message:"Response saved !",success:"true"})
-  }catch(error){
-
-  }
-}
+const contactUs = async (req, res) => {
+  try {
+    const contact = new contactModel(req.body);
+    await contact.save();
+    res.status(200).json({ message: "Response saved !", success: "true" });
+  } catch (error) {}
+};
 module.exports = {
   userLoginController,
   otpForLogin,

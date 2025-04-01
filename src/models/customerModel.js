@@ -44,7 +44,7 @@ const customerSchema = new mongoose.Schema(
       type: String,
       default: "India",
     },
-   
+
     district: {
       type: String,
       required: false,
@@ -62,21 +62,21 @@ const customerSchema = new mongoose.Schema(
     },
 
     budget: { type: String, required: false },
-    interestedIn:{
-      type:String
+    interestedIn: {
+      type: String,
     },
-    description:{
-      type:String,
+    description: {
+      type: String,
     },
-    addedBy:{
-      type:String,
+    addedBy: {
+      type: String,
     },
-    addedByRole:{
-    type:Number
+    addedByRole: {
+      type: Number,
     },
-    customerRole:{
-      type:String,
-    }
+    customerRole: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

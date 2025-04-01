@@ -1,10 +1,9 @@
+const express = require("express");
 
-const express = require('express');
-
-const {getAgentEstates} = require('../controllers/emAgentController');
+const { getAgentEstates } = require("../controllers/emAgentController");
 
 const emAgentRoutes = express.Router();
 
-emAgentRoutes.get('/getAgentEstates',getAgentEstates);
+emAgentRoutes.get("/getAgentEstates", getAgentEstates);
 
-module.exports = emAgentRoutes
+module.exports = emAgentRoutes;

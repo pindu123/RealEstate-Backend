@@ -82,11 +82,7 @@ const AgentpushNotification1 = async (title, message, role, userId) => {
     console.log(error);
   }
 };
-
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount)
-//   });
-
+ 
 module.exports = {
   AgentpushNotification,
   AgentpushNotification1,

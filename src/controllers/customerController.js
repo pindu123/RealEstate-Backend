@@ -5,30 +5,11 @@ const twilio = require("twilio");
 const nodemailer = require("nodemailer");
 
 const axios = require("axios");
-// Not In use
-// const createCustomer = async (req, res) => {
-//   try {
-
-//     const customers = req.body;
-//     const addedByRole=req.user.user.userId;
-//     const addedBy=req.user.user.role;
-//     for (let customerData of customers) {
-//       customerData.addedBy;
-//       customerData.addedByRole;
-//       await customerSchema.validateAsync(customerData);
-//       const customer = new customerModel(customerData);
-//       await customer.save();
-//     }
-//     res.status(201).json("Customer Entered Successfully");
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
+ 
 
 const createCustomer = async (req, res) => {
   try {
-    const customers = req.body; // Assuming this is an array of customers
+    const customers = req.body;  
     const addedByRole = req.user.user.role;
     const addedBy = req.user.user.userId;
 
@@ -75,8 +56,7 @@ const createCustomer = async (req, res) => {
   }
 };
 
-// not in use
-//getSurveyData
+ 
 const getCustomer = async (req, res) => {
   try {
     const { page, limit } = req.query;
@@ -96,8 +76,7 @@ const getCustomer = async (req, res) => {
   }
 };
 
-// role based get
-const getCustomers = async (req, res) => {
+ const getCustomers = async (req, res) => {
   try {
     const { role, userId } = req.user.user;
     const { agentId } = req.query;
@@ -224,20 +203,7 @@ const getCustomers = async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 };
-
-// const getCustomer = async (req, res) => {
-//   try {
-
-//     const customerData = await userModel.find({ role: 3 }).select('-password').sort({ createdAt: -1 });
-
-//     res.status(200).json(customerData);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
-
-// mobile
+ 
 const customerBasedOnAddedBy = async (req, res) => {
   try {
     const userId = req.user.user.userId;
@@ -320,8 +286,7 @@ const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER;
 const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.EMAIL_PASS;
 
-// helper function for WhatsApp with multiple properties in one message
-const sendWhatsAppMessageWithMultipleProperties = async (
+ const sendWhatsAppMessageWithMultipleProperties = async (
   messageBody,
   contactValue,
   imageUrls
@@ -337,8 +302,7 @@ const sendWhatsAppMessageWithMultipleProperties = async (
   });
 };
 
-// Modified helper function for email with multiple properties
-const sendEmailWithMultipleProperties = async (
+ const sendEmailWithMultipleProperties = async (
   messageBody,
   contactValue,
   propertyImages
@@ -381,7 +345,7 @@ const sendEmailWithMultipleProperties = async (
   await transporter.sendMail(mailOptions);
 };
 
-// Controller for sending combined property details to customer
+ 
 const sendPropertyDetailsToCustomer = async (req, res) => {
   try {
     const propertyData = req.body.propertyData;
@@ -450,8 +414,7 @@ const userModel = require("../models/userModel");
 const dealsModel = require("../models/propertyDealsModel");
 const cloudinary = require("cloudinary").v2;
 
-// Configure Cloudinary for file upload
-cloudinary.config({
+ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -573,8 +536,7 @@ const uploadPDFToCloudinary = async (filePath) => {
   return fileUrl;
 };
 
-// Function to send WhatsApp message with PDF
-const sendWhatsAppWithPDF = async (contactValue, pdfUrl) => {
+ const sendWhatsAppWithPDF = async (contactValue, pdfUrl) => {
   try {
     console.log(pdfUrl, " in sending whatsapp initial step url fetching");
     const message = await client.messages.create({
@@ -589,8 +551,7 @@ const sendWhatsAppWithPDF = async (contactValue, pdfUrl) => {
   }
 };
 
-// Controller function to handle request
-const sendPropertyToCustomer = async (req, res) => {
+ const sendPropertyToCustomer = async (req, res) => {
   try {
     const { propertyData, customerData } = req.body;
 
@@ -637,8 +598,7 @@ const sendPropertyToCustomer = async (req, res) => {
   }
 };
 
-// Function to send Email with PDF attachment
-const sendEmailWithPDF = async (contactValue, pdfPath) => {
+ const sendEmailWithPDF = async (contactValue, pdfPath) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {

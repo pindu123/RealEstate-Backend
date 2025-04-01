@@ -6,7 +6,7 @@ const complaintSchema = joi.object({
 
   message: joi.string().required(),
   category: joi.string().optional(),
-  attachment:joi.string().optional()
+  attachment: joi.string().optional(),
 });
 
 module.exports = {

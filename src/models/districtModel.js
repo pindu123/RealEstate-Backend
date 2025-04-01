@@ -6,7 +6,6 @@ const districtSchema = new mongoose.Schema({
   villages: Array,
 });
 
-// Create a model
 const districtModel = mongoose.model("districts", districtSchema);
 
 module.exports = districtModel;

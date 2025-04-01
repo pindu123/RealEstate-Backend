@@ -48,11 +48,7 @@ const bidByBuyer = async (req, res) => {
     let buyers = auctionData[0].buyers;
 
     const date = new Date();
-    // for (let buyer of buyers) {
-    //     if (buyer.buyerId === bid.buyerId) {
-    //         return res.status(400).json({ "message": "You have already placed a bid in this auction." })
-    //     }
-    // }
+ 
 
     if (date < auctionData[0].startDate) {
       console.log("erere");
@@ -549,16 +545,7 @@ const registerPushToken = async (req, res) => {
   }
 };
 
-// const auctionNotification=async(req,res)=>{
-//     try
-//     {
-
-//     }
-//     catch(error)
-//     {
-
-//     }
-// }
+ 
 
 const AuctionPushNotification = async (message) => {
   try {
@@ -590,27 +577,7 @@ const AuctionPushNotification = async (message) => {
     console.error("Error sending notification:", error);
   }
 };
-
-// const testNotification=async(req,res)=>{
-//     try
-//     {
-//         await axios.post('https://api.expo.dev/v2/push/send', {
-//             to: "ExponentPushToken[ZaPymxHF8bZnmeVP-mCbVw]",
-//             sound: 'default',
-//             title: 'Auction Reminder',
-//             body: "Hello! How are you",
-//         }).then((response)=>{
-
-//             res.status(200).json({"resp":response})
-//         })
-
-//     }
-//     catch(error)
-//     {
-// console.log(error)
-// res.status(500).json({"message":"Internal Server Error"})
-//     }
-// }
+ 
 
 const testNotification = async (req, res) => {
   try {

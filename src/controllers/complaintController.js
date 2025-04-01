@@ -15,7 +15,7 @@ const postComplaint = async (req, res) => {
     };
 
     if (req.file) {
-      complaintData.attachment = req.file.path; // Assuming you save the file on the server
+      complaintData.attachment = req.file.path;  
     }
     const complaint = new complaintModel(complaintData);
 
@@ -33,46 +33,7 @@ const postComplaint = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// const getCompliants = async (req, res) => {
-//   try {
-//     const userData = await userModel.find({ role: req.params.role });
-//     let com = [];
-//     for (const user of userData) {
-//       let userId = user.id;
-//       const complaintData = await complaintModel.find({ userId: userId });
-//       let complaints = [];
-//       for (const complaint of complaintData) {
-//         complaints.push({
-//           message: complaint.message,
-//           time: complaint.createdAt,
-//           attachment: complaint.attachment,
-//           category: complaint.category,
-//         });
-//       }
-
-//       let data = {
-//         name: `${user.firstName} ${user.lastName}`,
-//         profile: user.profilePicture,
-//         contact: user.phoneNumber,
-//         email: user.email,
-//         city: user.city,
-//         state: user.state,
-//         district: user.district,
-//         userId: user.id,
-//         messages: complaints,
-//       };
-//       com.push(data);
-//     }
-
-
-//     res.status(200).json(com);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json("Internal Server Error");
-//   }
-// };
-
+ 
 
 const getCompliants = async (req, res) => {
   try {

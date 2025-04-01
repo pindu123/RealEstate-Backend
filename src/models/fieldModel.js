@@ -4,7 +4,7 @@
 
 // const fieldSchema = new mongoose.Schema(
 //   {
-    
+
 //     userId: {
 //       type: String,
 //       required: true,
@@ -87,7 +87,7 @@
 //       },
 //       crops: {
 //         type: [String],
-        
+
 //       },
 //       litigation: {
 //         type: Boolean,
@@ -183,7 +183,6 @@
 
 // module.exports = fieldModel;
 
-
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
@@ -195,11 +194,11 @@ const fieldSchema = new mongoose.Schema(
     },
     enteredBy: {
       type: String,
-      required: false,  
+      required: false,
     },
     role: {
       type: Number,
-      required: true,  // Required to determine user actions
+      required: true, // Required to determine user actions
     },
     propertyType: {
       type: String,
@@ -239,7 +238,7 @@ const fieldSchema = new mongoose.Schema(
         type: String, // Translated field for Telugu
       },
       phoneNumber: {
-        type: String,  // Changed to String to handle numbers correctly (e.g., with leading zeros)
+        type: String, // Changed to String to handle numbers correctly (e.g., with leading zeros)
         required: true,
       },
     },
@@ -264,8 +263,8 @@ const fieldSchema = new mongoose.Schema(
         type: String,
         required: true,
       },
-      documentsVerified:{
-          type:String
+      documentsVerified: {
+        type: String,
       },
       price: {
         type: Number,
@@ -312,11 +311,9 @@ const fieldSchema = new mongoose.Schema(
         type: String, // Translated field for Telugu
       },
 
-
-      propertyOrigin:{
-        type:String
-      }
-
+      propertyOrigin: {
+        type: String,
+      },
     },
 
     address: {
@@ -386,13 +383,13 @@ const fieldSchema = new mongoose.Schema(
         type: String,
       },
       electricityTe: {
-        type: String, 
+        type: String,
       },
       roadType: {
         type: String,
       },
       roadTypeTe: {
-        type: String, 
+        type: String,
       },
       distanceFromRoad: {
         type: String,
@@ -409,13 +406,13 @@ const fieldSchema = new mongoose.Schema(
     propertyId: {
       type: String,
     },
-    propertyInterestedCount:{
-      type:Number,
+    propertyInterestedCount: {
+      type: Number,
     },
-    propertyOnHold:{
-      type:String,
-      default:'no'
-    }
+    propertyOnHold: {
+      type: String,
+      default: "no",
+    },
   },
   { timestamps: true }
 );

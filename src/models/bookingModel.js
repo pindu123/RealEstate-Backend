@@ -15,7 +15,7 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    propertyId:{
+    propertyId: {
       type: String,
       required: true,
     },
@@ -41,9 +41,9 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
 
-  agentRole:{
-    type:String
-  }
+    agentRole: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

@@ -2854,8 +2854,7 @@ const getAssignedCsr = async (req, res) => {
   }
 };
 
-// api to assign customer to agnet
-
+ 
 const assignCustomerToAgent = async (req, res) => {
   try {
     const { assignedTo, customers, assignedBy, assignedDate } = req.body;
@@ -2947,8 +2946,7 @@ const assignPropertyToAgent = async (req, res) => {
   try {
     const { assignedTo, propertyIds, assignedBy, assignedDate } = req.body;
 
-    // Validate required fields
-    if (
+     if (
       !assignedTo ||
       !Array.isArray(propertyIds) ||
       propertyIds.length === 0 ||
@@ -2961,14 +2959,12 @@ const assignPropertyToAgent = async (req, res) => {
       });
     }
 
-    // Convert assignedDate to the start of the day (to standardize comparisons)
-    const startOfDay = new Date(assignedDate);
+     const startOfDay = new Date(assignedDate);
     startOfDay.setUTCHours(0, 0, 0, 0);
     const endOfDay = new Date(startOfDay);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
-    // Check if any property in the list is already assigned to the same agent on the same date
-    const conflictingAssignments = await propertyAssignmentModel.findOne({
+     const conflictingAssignments = await propertyAssignmentModel.findOne({
       assignedTo,
       assignedDate: { $gte: startOfDay, $lte: endOfDay },
       propertyIds: { $in: propertyIds },
@@ -3003,43 +2999,7 @@ const assignPropertyToAgent = async (req, res) => {
     });
   }
 };
-
-// const assignPropertyToAgent = async (req, res) => {
-//   try {
-//     const { assignedTo, propertyIds, assignedBy, assignedDate } = req.body;
-//     if (
-//       !assignedTo ||
-//       !Array.isArray(propertyIds) ||
-//       propertyIds.length === 0 ||
-//       !assignedBy
-//     ) {
-//       return res.status(400).json({
-//         message:
-//           "Required fields: assignedTo, assignedBy, propertyIds (array of IDs)",
-//       });
-//     }
-//     const newAssignment = new propertyAssignmentModel({
-//       propertyIds,
-//       assignedBy,
-//       assignedTo,
-//       assignedDate,
-//     });
-
-//     await newAssignment.save();
-
-//     res.status(201).json({
-//       message: "Properties successfully assigned to the agent",
-//       data: newAssignment,
-//     });
-//   } catch (error) {
-//     console.error("Error assigning Properties to agent:", error);
-//     res.status(500).json({
-//       message: "An error occurred while assigning Properties to the agent",
-//       error: error.message,
-//     });
-//   }
-// };
-
+ 
 module.exports = {
   getUnAssignedAgents,
   getAssignedAgents,

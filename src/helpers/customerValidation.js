@@ -5,7 +5,6 @@ const customerSchema = Joi.object({
     .required()
     .regex(/^[A-Za-z]+$/)
     .custom((value, helper) => {
-      // Convert the first character to uppercase and the rest to lowercase
       const formattedValue =
         value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
       return formattedValue;
@@ -15,7 +14,6 @@ const customerSchema = Joi.object({
     .required()
     .regex(/^[A-Za-z]+$/)
     .custom((value, helper) => {
-      // Convert the first character to uppercase and the rest to lowercase
       const formattedValue =
         value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
       return formattedValue;
@@ -67,13 +65,13 @@ const customerSchema = Joi.object({
   interestedIn: Joi.string().optional(),
   // expectedsize: Joi.string().optional(),
   // affordableBudget: Joi.string().optional(),
-  addedBy:Joi.string().optional(),
-  addedByRole:Joi.number().optional(),
-  whatsAppNumber:Joi.any().optional(),
-  customerRole:Joi.string().optional(),
-  description:Joi.string().optional(),
-  pinCode:Joi.any().optional(),
-  city:Joi.any().optional(),
+  addedBy: Joi.string().optional(),
+  addedByRole: Joi.number().optional(),
+  whatsAppNumber: Joi.any().optional(),
+  customerRole: Joi.string().optional(),
+  description: Joi.string().optional(),
+  pinCode: Joi.any().optional(),
+  city: Joi.any().optional(),
 });
 
 module.exports = { customerSchema };

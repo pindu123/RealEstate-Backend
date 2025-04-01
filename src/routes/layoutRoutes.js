@@ -8,7 +8,7 @@ const {
 
 const layoutRoutes = express.Router();
 
-const apicache = require('apicache');
+const apicache = require("apicache");
 const cache = apicache.middleware;
 
 layoutRoutes.get("/getlayouts", getLayouts);

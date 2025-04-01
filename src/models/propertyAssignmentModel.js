@@ -1,4 +1,3 @@
-
 const { required } = require("joi");
 const mongoose = require("mongoose");
 
@@ -11,7 +10,6 @@ const propertyAssignmentSchema = new mongoose.Schema(
       },
     ],
     assignedBy: {
-        // no ids will be in array of strings only
       type: String,
       required: true,
     },
@@ -19,9 +17,9 @@ const propertyAssignmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    assignedDate:{
-        type:Date,
-        required:true,
+    assignedDate: {
+      type: Date,
+      required: true,
     },
   },
   {

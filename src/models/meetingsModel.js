@@ -5,45 +5,44 @@ const meetingSchema = new mongoose.Schema(
   {
     meetingTitle: {
       type: String,
-     },
+    },
     meetingType: {
       type: String,
-     },
+    },
     propertyName: {
       type: String,
       required: true,
     },
     customerMail: {
-        type: String,
-        // required: true,
-      },
+      type: String,
+    },
     meetingInfo: {
       type: String,
     },
-    meetingStartTime:{
-        type:Date,
+    meetingStartTime: {
+      type: Date,
     },
-    meetingEndTime:{
-        type:Date,
+    meetingEndTime: {
+      type: Date,
     },
-    scheduledBy:{
-        type:String,
+    scheduledBy: {
+      type: String,
     },
-    agentId:{
-        type:String,
+    agentId: {
+      type: String,
     },
-    customerId:{
-      type:String
+    customerId: {
+      type: String,
     },
-    location:{
-      type:String
+    location: {
+      type: String,
     },
-    csrId:{
-      type:String,
+    csrId: {
+      type: String,
     },
-    propertyId:{
-      type:String
-    }
+    propertyId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

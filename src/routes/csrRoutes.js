@@ -23,14 +23,13 @@ csrRoutes.get("/getAssignedAgents/:csrId", getAssignedAgents);
 csrRoutes.get("/getAgentByPhone/:contact", getAgentByPhone);
 csrRoutes.put("/assignAgentToCSR", assignAgentToCSR);
 csrRoutes.get("/getPropsByCsr/:csrId", getPropsByCsr);
-csrRoutes.get("/getAssignedCsr/:agentId",getAssignedCsr)
+csrRoutes.get("/getAssignedCsr/:agentId", getAssignedCsr);
 csrRoutes.post("/assignCustomer", assignCustomerToAgent);
-csrRoutes.post("/assigneProperty",assignPropertyToAgent);
-csrRoutes.get("/abc",async(req,res)=>{
-  console.log("abc")
-  console.log(req.query)
-})
- 
+csrRoutes.post("/assigneProperty", assignPropertyToAgent);
+csrRoutes.get("/abc", async (req, res) => {
+  console.log("abc");
+  console.log(req.query);
+});
 
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
@@ -45,7 +44,7 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });  
+const upload = multer({ storage: storage });
 
 csrRoutes.post("/upload-excel", upload.single("file"), getCsrDataFromExcel);
 module.exports = csrRoutes;

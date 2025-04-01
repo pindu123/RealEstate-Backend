@@ -9,31 +9,26 @@ const layoutModel = require("../models/layoutModel");
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Function to find relevant answers from the knowledge base
-const findRelevantAnswer = (userMessage, knowledgeBase) => {
-  // Simple keyword match; you can use more advanced matching if needed
-  const lowerMessage = userMessage.toLowerCase();
+ const findRelevantAnswer = (userMessage, knowledgeBase) => {
+   const lowerMessage = userMessage.toLowerCase();
   for (const entry of knowledgeBase) {
     if (lowerMessage.includes(entry.question.toLowerCase())) {
       return entry.answer;
     }
   }
-  return null; // No relevant answer found in the knowledge base 
+  return null;  
 };
 
 function getSecondLastWord(str) {
-  // Split the string into an array of words using space as a delimiter
-  const words = str.trim().split(/\s+/); // Trim to remove leading/trailing spaces, split by whitespace
-  // Check if there are at least two words
+ 
+  const words = str.trim().split(/\s+/);  
   if (words.length < 2) {
-    return null; // Return null if there aren't enough words
+    return null;  
   }
-  // Return the second-to-last word
-  return words[words.length - 2];
+   return words[words.length - 2];
 }
 
-//function to get latest property based on type
-const getLatestProp = async (type) => {
+ const getLatestProp = async (type) => {
   let collection;
   console.log(type);
   if (type === "agriculture") {
@@ -56,8 +51,7 @@ const chatBot = async (req, res) => {
     const { userMessage } = req.body;
     console.log(userMessage);
 
-    //getting latest property
-    let latestPropId;
+     let latestPropId;
     const latestPropArray = [
       "get latest agriculture property",
       "get latest commercial property",

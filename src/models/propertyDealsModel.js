@@ -28,29 +28,29 @@ const dealsSchema = new mongoose.Schema(
       type: String,
     },
     agentId: { type: String },
-    dealStatus:{
-      type:String,
-      default:"open"
+    dealStatus: {
+      type: String,
+      default: "open",
     },
-    amount:{
-      type:String
+    amount: {
+      type: String,
     },
-    sellingStatus:{
-      type:String,
-      default:"unSold"
+    sellingStatus: {
+      type: String,
+      default: "unSold",
     },
-    expectedPrice:{
-      type:String,
+    expectedPrice: {
+      type: String,
     },
-    addedBy:{
-      type:String,
+    addedBy: {
+      type: String,
     },
-    addedByRole:{
-      type:Number,
+    addedByRole: {
+      type: Number,
     },
-    agentRole:{
-      type:String, 
-    }
+    agentRole: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
