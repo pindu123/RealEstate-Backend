@@ -597,6 +597,9 @@ const residentialSchema = new mongoose.Schema(
       apartmentLayout: {
         type: String,
       },
+      apartmentLayoutTe: {
+        type: String,
+      },
       flatSize: {
         type: Number,
       },
