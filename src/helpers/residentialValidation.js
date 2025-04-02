@@ -97,6 +97,8 @@ const residentialSchema = Joi.object({
           flatSize: Joi.number(),
           flatSizeUnit: Joi.string(),
           balconyCount: Joi.number(),
+          flatLength:Joi.number().optional(),
+          flatWidth:Joi.number().optional(),
           flatCost: Joi.number(),
           propertyLayout: Joi.string(),
         })
