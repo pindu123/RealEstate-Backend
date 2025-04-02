@@ -5,6 +5,7 @@ const { residentialSchema } = require("../helpers/residentialValidation");
 const userModel = require("../models/userModel");
 const notifyModel = require("../models/notificationModel");
 const propertyReservation = require("../models/propertyReservation");
+const { AgentpushNotification } = require("./pushNotifyController");
 
 const createResidentials = async (req, res) => {
   try {
